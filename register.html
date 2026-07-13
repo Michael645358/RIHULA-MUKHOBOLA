@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Registration</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-box">
+
+    <img src="images/logo.jpg" alt="Logo" width="100">
+
+    <h2>Member Registration</h2>
+
+    <input
+        type="text"
+        id="name"
+        placeholder="Full Name">
+
+    <input
+        type="tel"
+        id="phone"
+        placeholder="Phone Number">
+
+    <input
+        type="password"
+        id="password"
+        placeholder="Create Password">
+
+    <button onclick="registerMember()" class="btn">
+        Register
+    </button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
+<script>
+
+async function registerMember() {
+
+    const name =
+        document.getElementById("name").value;
+
+    const phone =
+        document.getElementById("phone").value;
+
+    const password =
+        document.getElementById("password").value;
+
+
+    const { data: existing } = await db
+        .from("members")
+        .select("phone")
+        .eq("phone", phone)
+        .maybeSingle();
+
+    if (existing) {
+        alert("Phone number already registered");
+        return;
+    }
+
+    const { error } = await db
+        .from("members")
+        .insert([
+            {
+                name: name,
+                phone: phone,
+                password: password,
+                role: "member",
+                status: "pending"
+            }
+        ]);
+
+    if (error) {
+        alert(error.message);
+    } else {
+        alert("Registration submitted. Await admin approval.");
+        window.location.href = "login.html";
+    }
+}
+
+</script>
+
+</body>
+</html>

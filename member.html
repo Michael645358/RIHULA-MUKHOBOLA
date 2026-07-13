@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <div class="logo-area">
+        <img src="images/logo.jpg" alt="Logo">
+        <div>
+            <h1>Member Dashboard</h1>
+            <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+        </div>
+    </div>
+</header>
+
+<div id="dashboardScreen">
+<section class="member-header">
+
+    <div class="member-top">
+
+        <img id="profileImage"
+             src="images/logo.jpg"
+             class="member-avatar">
+
+        <div>
+            <h2 id="welcomeName">Welcome Member</h2>
+            <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+        </div>
+
+    </div>
+
+    <button onclick="logout()" class="logout-btn">
+        Logout
+    </button>
+
+</section>
+
+<section class="stats-grid">
+
+    <div class="modern-stat">
+        <h3 id="mySavings">KSh 0</h3>
+        <p>My Contributions</p>
+    </div>
+
+    <div class="modern-stat">
+        <h3 id="groupSavings">KSh 0</h3>
+        <p>Group Savings</p>
+    </div>
+
+</section>
+<section class="admin-panel">
+
+<h2>My Savings Goal</h2>
+
+<div class="card">
+
+    <h3 id="goalAmount">KSh 500 / KSh 5,000</h3>
+
+    <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+    </div>
+
+    <p id="progressText">0%</p>
+
+</div>
+
+</section>
+<section class="quick-actions">
+
+    <div class="action-card" onclick="showContribute()">
+    💰
+    <p>Contribute</p>
+</div>
+
+    <div class="action-card" onclick="showHistory()">
+    📜
+    <p>History</p>
+</div>
+
+    <div class="action-card" onclick="showProfile()">
+    👤
+    <p>Profile</p>
+</div>
+
+    <div class="action-card" onclick="showLeaders()">
+    📞
+    <p>Leaders</p>
+</div>
+
+</section>    
+
+<section class="announcements">
+
+<h2>Latest Announcements</h2>
+
+<div id="announcementsContainer">
+
+<p>No announcements available.</p>
+
+</div>
+
+</section>
+
+</div>
+<div id="historyScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>My Contribution History</h2>
+
+    <div id="historyOnlyContainer"></div>
+
+</div>
+
+<div id="profileScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>My Profile</h2>
+
+    <div class="card">
+
+        <img id="profileScreenImage"
+             src="images/logo.jpg"
+             width="250"
+             height="250"
+             style="border-radius:50%; object-fit:cover;">
+             <input type="file"
+       id="photoUpload"
+       accept="image/*">
+
+<button onclick="uploadProfilePhoto()" class="btn">
+    Upload Photo
+</button>
+
+        <h3 id="passwordnName"></h3>
+
+        <p id="profileScreenPhone"></p>
+
+        <p>
+            <span id="profileScreenStatus"
+                  class="status-badge">
+            </span>
+        </p>
+       <hr>
+
+<h3>Change Password</h3>
+
+<input type="password"
+       id="currentPassword"
+       placeholder="Current Password">
+
+<input type="password"
+       id="newPassword"
+       placeholder="New Password">
+
+<input type="password"
+       id="confirmPassword"
+       placeholder="Confirm New Password">
+
+<button onclick="changePassword()" class="btn">
+    Update Password
+</button>
+
+<hr>
+
+<h3>My Savings Goal</h3>
+
+<input
+    type="number"
+    id="goalInput"
+    placeholder="Enter Goal Amount">
+
+<button onclick="saveGoal()" class="btn">
+    Save Goal
+</button>
+
+</div>
+
+</div>
+<div id="leadersScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>Leadership Team</h2>
+
+    <div class="card">
+        <h3>Chairman</h3>
+        <p><a href="tel:+254758211030">+254758211030</a></p>
+    </div>
+
+    <div class="card">
+        <h3>Secretary</h3>
+        <p><a href="tel:0758034140">0758034140</a></p>
+    </div>
+
+    <div class="card">
+        <h3>Treasurer</h3>
+        <p><a href="tel:0703927760">0703927760</a></p>
+    </div>
+
+        <div class="card">
+        <h3>Organiser</h3>
+        <p><a href="tel:0758438824">0758438824</a></p>
+    </div>
+
+</div>
+
+<div id="contributeScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>Make Contribution</h2>
+
+    <div class="card">
+    <h3>M-Pesa Contributions</h3>
+    <p>Send contributions to the Treasurer:</p>
+    <p><strong>0743361713</strong></p>
+</div>
+
+<div class="card">
+    <h3>Cash Contributions</h3>
+    <p>Cash contributions can be given directly to the Treasurer.</p>
+    <p><strong>0743361713</strong></p>
+</div>
+
+<div class="card">
+    <h3>Important</h3>
+    <p>Minimum contribution: KSh 50</p>
+    <p>All contributions are verified and recorded by the Treasurer or Admin.</p>
+</div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="member.js"></script>
+
+</body>
+</html>

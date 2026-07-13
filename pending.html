@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pending Approval</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-box">
+
+<img src="images/logo.jpg" width="100">
+
+<h2>Membership Pending</h2>
+
+<h3 id="memberName"></h3>
+
+<p>
+Your membership request has been received.
+</p>
+
+<p>
+Please wait for admin approval.
+</p>
+
+<p>
+Current Status:
+<strong>PENDING</strong>
+</p>
+
+<a href="index.html" class="btn">
+Back Home
+</a>
+
+</div>
+
+<script>
+
+const user =
+JSON.parse(localStorage.getItem("loggedUser"));
+
+if(user){
+document.getElementById("memberName").innerHTML =
+"Welcome " + user.name;
+}
+
+</script>
+
+</body>
+</html>

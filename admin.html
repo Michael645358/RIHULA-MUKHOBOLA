@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<div class="logo-area">
+    <img src="images/logo.jpg" alt="Logo">
+
+    <div>
+        <h1>Admin Dashboard</h1>
+
+        <button onclick="logout()" class="btn">
+            Logout
+        </button>
+
+        <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+    </div>
+</div>
+</header>
+
+<div class="stats-grid">
+
+    <div class="modern-stat">
+        <h3 id="totalMembers">0</h3>
+        <p>Total Members</p>
+    </div>
+
+    <div class="modern-stat">
+        <h3 id="pendingMembers">0</h3>
+        <p>Pending Members</p>
+    </div>
+
+    <div class="modern-stat">
+        <h3 id="totalSavings">KSh 0</h3>
+        <p>Total Savings</p>
+    </div>
+
+</div>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Add Member</h2>
+
+<input type="text"
+       id="memberName"
+       placeholder="Member Name">
+
+<input type="tel"
+       id="memberPhone"
+       placeholder="Phone Number">
+
+<input type="password"
+       id="memberPassword"
+       placeholder="Password">
+
+<button onclick="addMember()" class="btn">
+Add Member
+</button>
+
+</div>
+
+</section>
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Record Contribution</h2>
+
+<input type="tel"
+       id="contributorPhone"
+       placeholder="Phone Number">
+
+<input type="number"
+       id="contributionAmount"
+       placeholder="Amount">
+
+<button onclick="recordContribution()" class="btn">
+Save Contribution
+</button>
+
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Post Announcement</h2>
+
+<input
+    type="text"
+    id="announcementTitle"
+    placeholder="Announcement Title">
+
+<textarea
+    id="announcementMessage"
+    placeholder="Announcement Message">
+</textarea>
+
+<button onclick="addAnnouncement()" class="btn">
+Post Announcement
+</button>
+
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>Manage Announcements</h2>
+
+<div id="announcementsList">
+    <p>Loading announcements...</p>
+</div>
+
+</div>
+
+</section>
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Pending Members</h2>
+
+<div id="pendingMembersBody">
+    <p>No pending members</p>
+</div>
+
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>All Members</h2>
+
+<input
+    type="text"
+    id="memberSearch"
+    placeholder="🔍 Search by name or phone"
+    onkeyup="searchMembers()">
+
+<div id="membersBody">
+</div>
+
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Edit Member</h2>
+
+<input type="tel"
+       id="editPhone"
+       placeholder="Phone Number">
+
+<input type="text"
+       id="editName"
+       placeholder="New Name">
+
+<button onclick="editMember()" class="btn">
+Update Member
+</button>
+
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+<h2>Edit Contribution</h2>
+
+<input type="tel"
+       id="editContributionPhone"
+       placeholder="Phone Number">
+
+<input type="number"
+       id="editContributionAmount"
+       placeholder="New Amount">
+
+<button onclick="editContribution()" class="btn">
+Update Contribution
+</button>
+
+</div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

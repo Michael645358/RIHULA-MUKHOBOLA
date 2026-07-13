@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-box">
+
+<div onclick="window.location.href='admin-login.html'">
+    <img src="images/logo.jpg" alt="Logo" width="100">
+</div>
+
+    <h2>Member Login</h2>
+
+    <input
+        type="text"
+        id="phone"
+        placeholder="Phone Number">
+
+    <input
+        type="password"
+        id="password"
+        placeholder="Password">
+
+    <button onclick="login()" class="btn">
+    Login
+</button>
+
+<p style="margin-top:20px;">
+    Don't have an account?
+    <a href="register.html">Register Here</a>
+</p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
+<script>
+async function login() {
+
+    const phone =
+        document.getElementById("phone").value;
+
+    const password =
+        document.getElementById("password").value;
+
+    const { data, error } = await db
+        .from("members")
+        .select("*")
+        .eq("phone", phone)
+        .eq("password", password)
+        .single();
+
+    if (error || !data) {
+        alert("Invalid phone or password");
+        return;
+    }
+
+    localStorage.setItem(
+        "loggedUser",
+        JSON.stringify(data)
+    );
+
+    alert("Role: " + data.role);
+if (data.role === "admin") {
+
+    window.location.href = "admin.html";
+
+} else if (data.status === "pending") {
+
+    window.location.href = "pending.html";
+
+} else {
+
+    window.location.href = "member.html";
+
+}
+    
+}
+</script>
+</body>
+</html>
