@@ -7,6 +7,14 @@ async function addMember() {
 const password =
     document.getElementById("memberPassword").value;
 
+const answer1 =
+    document.getElementById("answer1").value;
+
+const answer2 =
+    document.getElementById("answer2").value;
+
+const idNumber =
+    document.getElementById("idNumber").value;
 
     console.log("Supabase object:", supabase);
 
@@ -19,6 +27,9 @@ const password =
     name: name,
     phone: phone,
     password: password,
+    answer1: answer1,
+    answer2: answer2,
+    id_number: idNumber,
     role: "member",
     status: "pending"
 }
