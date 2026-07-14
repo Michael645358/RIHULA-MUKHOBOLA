@@ -61,6 +61,18 @@
        id="memberPassword"
        placeholder="Password">
 
+<input type="text"
+       id="answer1"
+       placeholder="Village where member was born">
+
+<input type="text"
+       id="answer2"
+       placeholder="Primary School Attended">
+
+<input type="text"
+       id="idNumber"
+       placeholder="National ID Number">
+       
 <button onclick="addMember()" class="btn">
 Add Member
 </button>
@@ -115,7 +127,29 @@ Post Announcement
 <section class="admin-panel">
 
 <div class="admin-card">
+<section class="admin-panel">
 
+<div class="admin-card">
+
+<h2>Send Notification</h2>
+
+<input
+type="text"
+id="notificationTitle"
+placeholder="Notification Title">
+
+<textarea
+id="notificationMessage"
+placeholder="Notification Message">
+</textarea>
+
+<button onclick="sendNotification()" class="btn">
+Send Notification
+</button>
+
+</div>
+
+</section>
 <h2>Manage Announcements</h2>
 
 <div id="announcementsList">
@@ -201,6 +235,43 @@ Update Contribution
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="script.js"></script>
+
+<script>
+
+async function sendNotification() {
+
+    const title =
+        document.getElementById("notificationTitle").value;
+
+    const message =
+        document.getElementById("notificationMessage").value;
+
+    if (!title || !message) {
+        alert("Enter title and message");
+        return;
+    }
+
+    const { error } = await db
+        .from("notifications")
+        .insert([
+            {
+                title: title,
+                message: message
+            }
+        ]);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    alert("Notification sent!");
+
+    document.getElementById("notificationTitle").value = "";
+    document.getElementById("notificationMessage").value = "";
+}
+
+</script>
 
 </body>
 </html>

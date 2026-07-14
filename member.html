@@ -93,6 +93,11 @@
     <p>Leaders</p>
 </div>
 
+<div class="action-card" onclick="showChat()">
+    💬
+    <p>Chat</p>
+</div>
+
 </section>    
 
 <section class="announcements">
@@ -106,7 +111,13 @@
 </div>
 
 </section>
+<section class="announcements">
+    <h2>Notifications</h2>
 
+    <div id="notificationsContainer">
+        <p>No notifications available.</p>
+    </div>
+</section>
 </div>
 <div id="historyScreen" style="display:none;">
 
@@ -170,6 +181,29 @@
 
 <button onclick="changePassword()" class="btn">
     Update Password
+</button>
+
+<hr>
+
+<h3>Recovery Information</h3>
+
+<input
+    type="text"
+    id="answer1"
+    placeholder="Village where you were born">
+
+<input
+    type="text"
+    id="answer2"
+    placeholder="Primary School Attended">
+
+<input
+    type="text"
+    id="idNumber"
+    placeholder="National ID Number">
+
+<button onclick="saveRecoveryInfo()" class="btn">
+    Save Recovery Information
 </button>
 
 <hr>
@@ -246,6 +280,33 @@
 
 </div>
 
+<div id="chatScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>Community Chat</h2>
+
+    <div id="chatMessages">
+
+        <p>No messages yet.</p>
+
+    </div>
+
+    <textarea
+        id="chatMessage"
+        placeholder="Type your message..."
+        rows="4">
+    </textarea>
+
+    <br><br>
+
+    <button onclick="sendMessage()" class="btn">
+        Send Message
+    </button>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>

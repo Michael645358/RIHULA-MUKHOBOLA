@@ -23,6 +23,7 @@ async function loadMemberData() {
 
     await loadContributionHistory(user.phone);
     await loadAnnouncements();
+    await loadNotifications();
     await loadSavingsStats(user.phone);
 }
 
@@ -401,4 +402,156 @@ async function saveGoal() {
     alert("Goal updated successfully");
 
     loadSavingsStats(user.phone);
+}
+function showChat() {
+
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+
+    document.getElementById("chatScreen").style.display = "block";
+
+    loadMessages();
+}
+async function sendMessage() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    const message =
+        document.getElementById("chatMessage").value;
+
+    if (!message) {
+        alert("Type a message");
+        return;
+    }
+
+    const { error } = await db
+        .from("messages")
+        .insert([
+            {
+                name: user.name,
+                message: message
+            }
+        ]);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    document.getElementById("chatMessage").value = "";
+
+    loadMessages();
+}
+async function loadMessages() {
+
+    const { data, error } = await db
+        .from("messages")
+.select("*")
+.order("created_at", { ascending: false })
+.limit(10);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    const container =
+        document.getElementById("chatMessages");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(item => {
+
+        container.innerHTML += `
+        <div class="card">
+            <h3>${item.name}</h3>
+            <p>${item.message}</p>
+        </div>
+        `;
+    });
+}
+setInterval(() => {
+
+    const chatScreen =
+        document.getElementById("chatScreen");
+
+    if (
+        chatScreen &&
+        chatScreen.style.display === "block"
+    ) {
+        loadMessages();
+    }
+
+}, 5000);
+async function loadNotifications() {
+
+    const { data, error } = await db
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) return;
+
+    const container =
+        document.getElementById("notificationsContainer");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        container.innerHTML =
+            "<p>No notifications available.</p>";
+        return;
+    }
+
+    data.forEach(item => {
+        container.innerHTML += `
+        <div class="card">
+            <h3>${item.title}</h3>
+            <p>${item.message}</p>
+        </div>
+        `;
+    });
+} 
+async function saveRecoveryInfo() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    const answer1 =
+        document.getElementById("answer1").value;
+
+    const answer2 =
+        document.getElementById("answer2").value;
+
+    const idNumber =
+        document.getElementById("idNumber").value;
+
+    if (!answer1 || !answer2 || !idNumber) {
+        alert("Fill all fields");
+        return;
+    }
+
+    const { error } = await db
+        .from("members")
+        .update({
+            answer1: answer1,
+            answer2: answer2,
+            id_number: idNumber
+        })
+        .eq("phone", user.phone);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    alert("Recovery information saved successfully");
 }
