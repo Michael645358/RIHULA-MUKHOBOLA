@@ -1,12 +1,27 @@
 async function loadMemberData() {
 
-    const user =
+    let user =
         JSON.parse(localStorage.getItem("loggedUser"));
-
 
     if (!user) {
         window.location.href = "login.html";
         return;
+    }
+
+    const { data, error } = await db
+        .from("members")
+        .select("*")
+        .eq("phone", user.phone)
+        .single();
+
+    if (!error && data) {
+
+        user = data;
+
+        localStorage.setItem(
+            "loggedUser",
+            JSON.stringify(user)
+        );
     }
 
     document.getElementById("welcomeName").innerText =
@@ -20,6 +35,14 @@ async function loadMemberData() {
             img.src = user.photo_url;
         }
     });
+
+    if (
+        document.getElementById("profileScreenImage") &&
+        user.photo_url
+    ) {
+        document.getElementById("profileScreenImage").src =
+            user.photo_url;
+    }
 
     await loadContributionHistory(user.phone);
     await loadAnnouncements();
@@ -40,6 +63,9 @@ function showHistory() {
 
     document.getElementById("historyScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 
 function showDashboard() {
@@ -58,6 +84,9 @@ function showDashboard() {
 
     document.getElementById("contributeScreen")
         .style.display = "none";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 function showProfile() {
 
@@ -69,6 +98,9 @@ function showProfile() {
 
     document.getElementById("profileScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 
     document.getElementById("profileScreenName")
         .innerText = user.name;
@@ -99,6 +131,9 @@ function showLeaders() {
 
     document.getElementById("leadersScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 function showContribute() {
 
@@ -116,6 +151,9 @@ function showContribute() {
 
     document.getElementById("contributeScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 async function loadContributionHistory(phone) {
 
