@@ -883,3 +883,50 @@ h2{
 body{
     padding-bottom:80px;
 }
+.leader-photo{
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid #0a7a36;
+    display:block;
+    margin:10px auto;
+}
+
+#leadersScreen .card{
+    text-align:center;
+}
+.leader-photo{
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #0a7a36;
+    display:block;
+    margin:10px auto;
+}
+
+#leadersScreen .card{
+    text-align:center;
+    padding:20px;
+}
+.leader-buttons{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+}
+
+.leader-btn{
+    background:#0a7a36;
+    color:white;
+    padding:10px 15px;
+    border-radius:20px;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:14px;
+}
+
+.leader-btn:hover{
+    opacity:0.9;
+}
