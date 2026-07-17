@@ -1,12 +1,27 @@
 async function loadMemberData() {
 
-    const user =
+    let user =
         JSON.parse(localStorage.getItem("loggedUser"));
-
 
     if (!user) {
         window.location.href = "login.html";
         return;
+    }
+
+    const { data, error } = await db
+        .from("members")
+        .select("*")
+        .eq("phone", user.phone)
+        .single();
+
+    if (!error && data) {
+
+        user = data;
+
+        localStorage.setItem(
+            "loggedUser",
+            JSON.stringify(user)
+        );
     }
 
     document.getElementById("welcomeName").innerText =
@@ -21,17 +36,65 @@ async function loadMemberData() {
         }
     });
 
+    if (
+        document.getElementById("profileScreenImage") &&
+        user.photo_url
+    ) {
+        document.getElementById("profileScreenImage").src =
+            user.photo_url;
+    }
+
     await loadContributionHistory(user.phone);
     await loadAnnouncements();
     await loadNotifications();
     await loadSavingsStats(user.phone);
 }
 
-function logout() {
+async function logout() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    if (user) {
+
+        const { error } = await db
+            .from("members")
+            .update({
+                online: false,
+                last_seen: new Date().toISOString()
+            })
+            .eq("phone", user.phone);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+    }
+
     localStorage.removeItem("loggedUser");
+
     window.location.href = "login.html";
 }
+    
 loadMemberData();
+updateUnreadCount();
+updateOnlineStatus(true);
+loadMyRank();
+
+showDashboard();
+
+async function updateOnlineStatus(status) {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    if (!user) return;
+
+    await db
+        .from("members")
+        .update({ online: status })
+        .eq("phone", user.phone);
+}
 
 function showHistory() {
 
@@ -40,6 +103,9 @@ function showHistory() {
 
     document.getElementById("historyScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 
 function showDashboard() {
@@ -58,6 +124,9 @@ function showDashboard() {
 
     document.getElementById("contributeScreen")
         .style.display = "none";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 function showProfile() {
 
@@ -69,15 +138,21 @@ function showProfile() {
 
     document.getElementById("profileScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 
-    document.getElementById("profileScreenName")
-        .innerText = user.name;
+    document.getElementById("passwordnName")
+    .innerText = user.name;
 
     document.getElementById("profileScreenPhone")
         .innerText = user.phone;
 
     document.getElementById("profileScreenStatus")
-        .innerText = user.status || "Member";
+    .innerText =
+    user.online
+        ? "🟢 Online"
+        : "⏰ Last seen recently";
 
     if (user.photo_url) {
         document.getElementById("profileScreenImage")
@@ -99,6 +174,9 @@ function showLeaders() {
 
     document.getElementById("leadersScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 function showContribute() {
 
@@ -116,6 +194,9 @@ function showContribute() {
 
     document.getElementById("contributeScreen")
         .style.display = "block";
+        
+        document.getElementById("chatScreen")
+    .style.display = "none";
 }
 async function loadContributionHistory(phone) {
 
@@ -413,7 +494,12 @@ function showChat() {
 
     document.getElementById("chatScreen").style.display = "block";
 
-    loadMessages();
+document.getElementById("unreadBadge").style.display = "none";
+
+loadMessages();
+loadOnlineMembers();
+scrollToBottom();
+
 }
 async function sendMessage() {
 
@@ -431,10 +517,14 @@ async function sendMessage() {
     const { error } = await db
         .from("messages")
         .insert([
-            {
-                name: user.name,
-                message: message
-            }
+         {
+    name: user.name,
+    message: message,
+    status: "✓",
+    photo_url: user.photo_url || ""
+}
+    
+
         ]);
 
     if (error) {
@@ -448,11 +538,22 @@ async function sendMessage() {
 }
 async function loadMessages() {
 
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    await db
+        .from("messages")
+        .update({ status: "read" })
+        .neq("name", user.name)
+        .eq("status", "✓");
+
+updateUnreadCount();
+
     const { data, error } = await db
         .from("messages")
-.select("*")
-.order("created_at", { ascending: false })
-.limit(10);
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
 
     if (error) {
         alert(error.message);
@@ -466,29 +567,67 @@ async function loadMessages() {
 
     container.innerHTML = "";
 
-    data.forEach(item => {
+    data.reverse().forEach(item => {
+
+        const mine =
+            item.name === user.name;
+
+        const time =
+            new Date(item.created_at)
+            .toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
         container.innerHTML += `
-        <div class="card">
-            <h3>${item.name}</h3>
+        <div class="chat-message ${mine ? 'my-msg' : 'other-msg'}"
+     onmousedown="startHold(${item.id}, \`${item.message.replace(/`/g,'\\`')}\`)"
+     onmouseup="cancelHold()"
+     ontouchstart="startHold(${item.id}, \`${item.message.replace(/`/g,'\\`')}\`)"
+     ontouchend="cancelHold()">
+
+            <div class="chat-header">
+    <img src="${item.photo_url || 'images/logo.jpg'}" class="chat-avatar">
+    <h4>${item.name}</h4>
+</div>
+
             <p>${item.message}</p>
+
+
+            <div class="chat-footer">
+                <span class="chat-time">${time}</span>
+                ${mine ? `
+                <span class="chat-status">
+                    ${item.status === "read" ? "✓✓" : "✓"}
+                </span>
+                ` : ''}
+            </div>
+
         </div>
         `;
     });
+
+    container.scrollTop =
+        container.scrollHeight;
 }
+/*
 setInterval(() => {
+
+    updateUnreadCount();
 
     const chatScreen =
         document.getElementById("chatScreen");
-
-    if (
-        chatScreen &&
-        chatScreen.style.display === "block"
-    ) {
-        loadMessages();
-    }
+        
+        if (
+    chatScreen &&
+    chatScreen.style.display === "block"
+) {
+    loadMessages();
+    loadOnlineMembers();
+}
 
 }, 5000);
+*/
 async function loadNotifications() {
 
     const { data, error } = await db
@@ -524,6 +663,8 @@ async function saveRecoveryInfo() {
 
     const user =
         JSON.parse(localStorage.getItem("loggedUser"));
+        
+        console.log("Logged User:", user.name);
 
     const answer1 =
         document.getElementById("answer1").value;
@@ -554,4 +695,301 @@ async function saveRecoveryInfo() {
     }
 
     alert("Recovery information saved successfully");
+}   
+async function updateUnreadCount() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    const { data, error } = await db
+        .from("messages")
+        .select("*")
+        .neq("name", user.name)
+        .eq("status", "✓");
+
+    if (error) return;
+
+    const badge =
+        document.getElementById("unreadBadge");
+
+    if (!badge) return;
+
+    const count = data ? data.length : 0;
+
+    badge.innerText = count;
+
+    badge.style.display =
+        count > 0 ? "flex" : "none";
+}
+async function updateOnlineStatus(isOnline) {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    if (!user) return;
+
+    await db
+        .from("members")
+        .update({
+            online: isOnline,
+            last_seen: new Date().toISOString()
+        })
+        .eq("phone", user.phone);
+}
+
+
+        
+window.addEventListener("beforeunload", () => {
+    updateOnlineStatus(false);
+});
+setInterval(() => {
+    loadMemberData();
+    loadOnlineMembers();
+}, 30000);
+async function loadOnlineMembers() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("name, photo_url")
+        .eq("online", true);
+
+    if (error) return;
+
+    const container =
+        document.getElementById("onlineMembers");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(member => {
+
+        container.innerHTML += `
+        <div class="online-user">
+            <img src="${member.photo_url || 'images/logo.jpg'}"
+                 class="online-avatar">
+
+            <span>${member.name}</span>
+
+            <div class="online-dot"></div>
+        </div>
+        `;
+    });
+}
+
+async function loadOfflineMembers() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("name, photo_url, last_seen")
+        .eq("online", false);
+
+    if (error) return;
+
+    console.log(data);
+}
+async function deleteMessage(id) {
+
+    const confirmDelete =
+        confirm("Delete this message?");
+
+    if (!confirmDelete) return;
+
+    const { error } = await db
+        .from("messages")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    loadMessages();
+}
+function showMessageMenu(event, id) {
+
+    event.preventDefault();
+
+    const action = prompt(
+        "Type:\n1 = Delete\n2 = Copy"
+    );
+
+    if (action === "1") {
+        deleteMessage(id);
+    }
+}
+let selectedMessageId = null;
+let selectedMessageText = "";
+
+function showMessageMenu(id, text) {
+
+    selectedMessageId = id;
+    selectedMessageText = text;
+
+    document.getElementById("messageMenu")
+        .style.display = "block";
+}
+
+function closeMessageMenu() {
+
+    document.getElementById("messageMenu")
+        .style.display = "none";
+}
+
+async function deleteSelectedMessage() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    const { data, error } = await db
+        .from("messages")
+        .select("*")
+        .eq("id", selectedMessageId)
+        .single();
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    if (data.name !== user.name) {
+        alert("You can only delete your own messages");
+        return;
+    }
+
+    const { error: deleteError } = await db
+        .from("messages")
+        .delete()
+        .eq("id", selectedMessageId);
+
+    if (deleteError) {
+        alert(deleteError.message);
+        return;
+    }
+
+    closeMessageMenu();
+    loadMessages();
+}
+
+function copySelectedMessage() {
+
+    navigator.clipboard.writeText(
+        selectedMessageText
+    );
+
+    alert("Message copied");
+
+    closeMessageMenu();
+}
+let holdTimer;
+
+function startHold(id, text) {
+
+    holdTimer = setTimeout(() => {
+        showMessageMenu(id, text);
+    }, 800); // hold for 0.8 seconds
+}
+
+function cancelHold() {
+
+    clearTimeout(holdTimer);
+}
+async function loadMyRank() {
+
+    const user = JSON.parse(
+        localStorage.getItem("loggedUser")
+    );
+
+    if (!user) return;
+
+    const { data, error } = await supabase
+        .from("contributions")
+        .select("member_phone, amount");
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const totals = {};
+
+    data.forEach(item => {
+        const phone = item.member_phone;
+
+        if (!totals[phone]) {
+            totals[phone] = 0;
+        }
+
+        totals[phone] += Number(item.amount || 0);
+    });
+
+    const ranking = Object.entries(totals)
+        .sort((a, b) => b[1] - a[1]);
+
+    const myPhone = user.phone;
+
+    const myPosition =
+        ranking.findIndex(
+            item => item[0] === myPhone
+        ) + 1;
+
+    document.getElementById("myRank").textContent =
+        myPosition > 0
+            ? "#" + myPosition
+            : "N/A";
+}
+async function loadMyRank() {
+
+    const user = JSON.parse(
+        localStorage.getItem("loggedUser")
+    );
+
+    if (!user) return;
+
+    const { data, error } = await db
+        .from("contributions")
+        .select("member_phone, amount");
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    const totals = {};
+
+    data.forEach(item => {
+
+        const phone = String(item.member_phone);
+
+        if (!totals[phone]) {
+            totals[phone] = 0;
+        }
+
+        totals[phone] += Number(item.amount || 0);
+
+    });
+
+    const ranking = Object.entries(totals)
+        .sort((a, b) => b[1] - a[1]);
+
+    const myPhone = String(user.phone);
+
+    const myPosition =
+        ranking.findIndex(
+            row => String(row[0]) === myPhone
+        ) + 1;
+
+    const rankElement =
+        document.getElementById("myRank");
+
+    if (!rankElement) return;
+
+    if (myPosition > 0) {
+        rankElement.innerText =
+            "#" + myPosition;
+    } else {
+        rankElement.innerText =
+            "Not Ranked";
+    }
 }
