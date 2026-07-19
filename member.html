@@ -6,6 +6,18 @@
 <title>Member Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "9785cd9a-e4e0-432b-b63c-8115c8a3b833"
+  });
+});
+</script>
+
 </head>
 <body>
 
@@ -98,6 +110,11 @@
     <p>Chat</p>
 </div>
 
+<div class="action-card" onclick="showAnnouncements()">
+    <span style="font-size:40px;">📢</span>
+    <p>Announcements</p>
+</div>
+
 </section>    
 <section class="rankings">
 
@@ -112,17 +129,7 @@
 </div>
 
 </section>
-<section class="announcements">
 
-<h2>Latest Announcements</h2>
-
-<div id="announcementsContainer">
-
-<p>No announcements available.</p>
-
-</div>
-
-</section>
 <section class="announcements">
     <h2>Notifications</h2>
 
@@ -140,6 +147,18 @@
     <h2>My Contribution History</h2>
 
     <div id="historyOnlyContainer"></div>
+
+</div>
+
+<div id="announcementsScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>Latest Announcements</h2>
+
+    <div id="announcementsOnlyContainer"></div>
 
 </div>
 
@@ -380,12 +399,12 @@
     </div>
 
     <div class="chat-input-area">
-        <textarea id="chatMessage"
-        placeholder="Type a message..."
-        rows="1"></textarea>
+    <button id="recordBtn" onclick="startRecording()">🎤</button>
 
-        <button onclick="sendMessage()" class="send-btn">➤</button>
-    </div>
+    <textarea id="chatMessage"></textarea>
+
+    <button onclick="sendMessage()" class="send-btn">➤</button>
+</div>
 
 </div>
 <nav class="bottom-nav">
@@ -434,4 +453,3 @@
 <script src="member.js"></script>
 
 </body>
-</html>

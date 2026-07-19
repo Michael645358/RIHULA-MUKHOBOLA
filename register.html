@@ -44,14 +44,35 @@
 async function registerMember() {
 
     const name =
-        document.getElementById("name").value;
+        document.getElementById("name").value.trim();
 
     const phone =
-        document.getElementById("phone").value;
+        document.getElementById("phone").value.trim();
 
     const password =
         document.getElementById("password").value;
 
+if (name.length < 3) {
+    alert("Enter your full name");
+    return;
+}
+
+if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+}
+if (phone.includes(" ")) {
+    alert("Phone number must not contain spaces");
+    return;
+}
+
+    // Kenya phone validation
+    const kenyaPhone = /^(07|01)\d{8}$/;
+
+    if (!kenyaPhone.test(phone)) {
+        alert("Enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX)");
+        return;
+    }
 
     const { data: existing } = await db
         .from("members")
@@ -83,7 +104,6 @@ async function registerMember() {
         window.location.href = "login.html";
     }
 }
-
 </script>
 
 </body>

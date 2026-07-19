@@ -1385,3 +1385,13 @@ body{
 .chat-input-area{
     flex-shrink:0;
 }
+#recordBtn{
+    width:55px;
+    height:55px;
+    border:none;
+    border-radius:50%;
+    background:#15803d;
+    color:white;
+    font-size:22px;
+    cursor:pointer;
+}
