@@ -83,19 +83,6 @@ loadMyRank();
 
 showDashboard();
 
-async function updateOnlineStatus(status) {
-
-    const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
-
-    if (!user) return;
-
-    await db
-        .from("members")
-        .update({ online: status })
-        .eq("phone", user.phone);
-}
-
 function showHistory() {
 
     document.getElementById("dashboardScreen")
@@ -127,6 +114,9 @@ function showDashboard() {
         
         document.getElementById("chatScreen")
     .style.display = "none";
+    
+    document.getElementById("announcementsScreen").style.display = "none";
+    
 }
 function showProfile() {
 
@@ -198,6 +188,19 @@ function showContribute() {
         document.getElementById("chatScreen")
     .style.display = "none";
 }
+
+function showAnnouncements() {
+
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
+
+    document.getElementById("announcementsScreen").style.display = "block";
+}
+
 async function loadContributionHistory(phone) {
 
     try {
@@ -484,6 +487,16 @@ async function saveGoal() {
 
     loadSavingsStats(user.phone);
 }
+function scrollToBottom() {
+    const container =
+        document.getElementById("chatMessages");
+
+    if (container) {
+        container.scrollTop =
+            container.scrollHeight;
+    }
+}
+
 function showChat() {
 
     document.getElementById("dashboardScreen").style.display = "none";
@@ -523,7 +536,6 @@ async function sendMessage() {
     status: "✓",
     photo_url: user.photo_url || ""
 }
-    
 
         ]);
 
@@ -536,6 +548,62 @@ async function sendMessage() {
 
     loadMessages();
 }
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+
+    try {
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+        mediaRecorder = new MediaRecorder(stream);
+
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+
+            const audioBlob =
+                new Blob(audioChunks, {
+                    type: "audio/webm"
+                });
+
+            console.log("Voice recorded:", audioBlob);
+
+            alert("Voice recorded successfully");
+        };
+
+        mediaRecorder.start();
+
+        document.getElementById("recordBtn").innerText = "⏹";
+
+        document.getElementById("recordBtn").onclick =
+            stopRecording;
+
+    } catch (err) {
+
+        alert("Microphone permission denied");
+
+    }
+}
+
+function stopRecording() {
+
+    mediaRecorder.stop();
+
+    document.getElementById("recordBtn").innerText = "🎤";
+
+    document.getElementById("recordBtn").onclick =
+        startRecording;
+}
+
 async function loadMessages() {
 
     const user =
@@ -578,6 +646,7 @@ updateUnreadCount();
                 hour: "2-digit",
                 minute: "2-digit"
             });
+        
 
         container.innerHTML += `
         <div class="chat-message ${mine ? 'my-msg' : 'other-msg'}"
@@ -903,7 +972,7 @@ async function loadMyRank() {
 
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from("contributions")
         .select("member_phone, amount");
 
@@ -915,6 +984,7 @@ async function loadMyRank() {
     const totals = {};
 
     data.forEach(item => {
+
         const phone = item.member_phone;
 
         if (!totals[phone]) {
@@ -922,74 +992,71 @@ async function loadMyRank() {
         }
 
         totals[phone] += Number(item.amount || 0);
+
     });
 
     const ranking = Object.entries(totals)
         .sort((a, b) => b[1] - a[1]);
 
-    const myPhone = user.phone;
-
-    const myPosition =
+    const rank =
         ranking.findIndex(
-            item => item[0] === myPhone
+            item => item[0] === user.phone
         ) + 1;
 
-    document.getElementById("myRank").textContent =
-        myPosition > 0
-            ? "#" + myPosition
-            : "N/A";
+    document.getElementById("myRank").innerText =
+        rank > 0 ? "#" + rank : "Unranked";
 }
-async function loadMyRank() {
+function showAnnouncements() {
 
-    const user = JSON.parse(
-        localStorage.getItem("loggedUser")
-    );
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
 
-    if (!user) return;
+    document.getElementById("announcementsScreen").style.display = "block";
+    
+    document.getElementById("announcementsScreen").style.display = "none";
+}
+
+async function showAnnouncements() {
+
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
+
+    document.getElementById("announcementsScreen").style.display = "block";
+
+    const container =
+        document.getElementById("announcementsOnlyContainer");
 
     const { data, error } = await db
-        .from("contributions")
-        .select("member_phone, amount");
+        .from("announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
 
     if (error) {
-        console.log(error);
+        container.innerHTML = "<p>Error loading announcements.</p>";
         return;
     }
 
-    const totals = {};
+    if (!data || data.length === 0) {
+        container.innerHTML = "<p>No announcements available.</p>";
+        return;
+    }
+
+    container.innerHTML = "";
 
     data.forEach(item => {
-
-        const phone = String(item.member_phone);
-
-        if (!totals[phone]) {
-            totals[phone] = 0;
-        }
-
-        totals[phone] += Number(item.amount || 0);
-
+        container.innerHTML += `
+            <div class="card">
+                <h3>${item.title}</h3>
+                <p>${item.message}</p>
+            </div>
+        `;
     });
-
-    const ranking = Object.entries(totals)
-        .sort((a, b) => b[1] - a[1]);
-
-    const myPhone = String(user.phone);
-
-    const myPosition =
-        ranking.findIndex(
-            row => String(row[0]) === myPhone
-        ) + 1;
-
-    const rankElement =
-        document.getElementById("myRank");
-
-    if (!rankElement) return;
-
-    if (myPosition > 0) {
-        rankElement.innerText =
-            "#" + myPosition;
-    } else {
-        rankElement.innerText =
-            "Not Ranked";
-    }
 }
