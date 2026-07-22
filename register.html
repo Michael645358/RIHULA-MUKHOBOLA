@@ -8,29 +8,34 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="register-card">
 
-<div class="login-box">
+    <img src="images/logo.jpg" class="register-logo">
 
-    <img src="images/logo.jpg" alt="Logo" width="100">
-
-    <h2>Member Registration</h2>
-
+    <h1>Member Registration</h1>
     <input
-        type="text"
-        id="name"
-        placeholder="Full Name">
+    type="text"
+    id="firstName"
+    placeholder="First Name">
 
-    <input
-        type="tel"
-        id="phone"
-        placeholder="Phone Number">
+<input
+    type="text"
+    id="lastName"
+    placeholder="Last Name">
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Create Password">
+<input
+    type="tel"
+    id="phone"
+    placeholder="Phone Number">
 
-    <button onclick="registerMember()" class="btn">
+<input
+    type="password"
+    id="password"
+    placeholder="Create Password">
+
+
+
+    <button onclick="registerMember()">
         Register
     </button>
 
@@ -42,18 +47,22 @@
 <script>
 
 async function registerMember() {
+const firstName =
+    document.getElementById("firstName").value.trim();
 
-    const name =
-        document.getElementById("name").value.trim();
+const lastName =
+    document.getElementById("lastName").value.trim();
 
-    const phone =
-        document.getElementById("phone").value.trim();
+const name =
+    firstName + " " + lastName;
 
-    const password =
-        document.getElementById("password").value;
+const phone =
+    document.getElementById("phone").value.trim();
 
-if (name.length < 3) {
-    alert("Enter your full name");
+const password =
+    document.getElementById("password").value;
+if (!firstName || !lastName) {
+    alert("Enter both first name and last name");
     return;
 }
 

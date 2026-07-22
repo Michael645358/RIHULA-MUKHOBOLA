@@ -115,7 +115,11 @@ OneSignalDeferred.push(async function(OneSignal) {
     <p>Announcements</p>
 </div>
 
-</section>    
+<div class="action-card" onclick="showAI()">
+    <span style="font-size:40px;">🤖</span>
+    <p>AI Assistant</p>
+</div>
+</section>
 <section class="rankings">
 
 <h2>🏆 My Contribution Rank</h2>
@@ -176,7 +180,7 @@ OneSignalDeferred.push(async function(OneSignal) {
      src="images/logo.jpg"
      class="profile-photo">
              
-<div class="upload-section">
+<div class="upuload-section">
 
 <input type="file"
        id="photoUpload"
@@ -407,6 +411,32 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 
 </div>
+
+<div id="aiScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>AI Assistant</h2>
+
+    <div id="aiMessages" class="chat-container"></div>
+
+    <div class="chat-input-area">
+
+        <textarea
+            id="aiInput"
+            placeholder="Ask me anything...">
+        </textarea>
+
+        <button onclick="askAI()">
+            Send
+        </button>
+
+    </div>
+
+</div>
+
 <nav class="bottom-nav">
 
 <div onclick="showDashboard()" class="nav-item">
@@ -450,6 +480,8 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
+<script src="ai.js"></script>
 <script src="member.js"></script>
 
 </body>
+</html>
