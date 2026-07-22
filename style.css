@@ -1721,3 +1721,116 @@ body{
 .bronze{
     border-left:6px solid #cd7f32;
 }
+.welcome-banner{
+    background:#0b6623;
+    color:white;
+    text-align:center;
+    padding:40px 20px;
+}
+.date-badge{
+    display:inline-block;
+    background:#0b6623;
+    color:white;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.announcement{
+    background:#fff;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+    border-left:5px solid #0b6623;
+}
+
+.announcement h3{
+    color:#0b6623;
+    margin:10px 0;
+}
+html{
+    scroll-behavior:smooth;
+}
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.modern-stat{
+    color:white;
+    text-align:center;
+    padding:30px 20px;
+    border-radius:25px;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    transition:.3s;
+}
+
+.modern-stat:hover{
+    transform:translateY(-5px);
+}
+
+.stats-grid .modern-stat:nth-child(1){
+    background:linear-gradient(135deg,#0f766e,#22c55e);
+}
+
+.stats-grid .modern-stat:nth-child(2){
+    background:linear-gradient(135deg,#d97706,#facc15);
+}
+
+.stats-grid .modern-stat:nth-child(3){
+    background:linear-gradient(135deg,#2563eb,#60a5fa);
+}
+
+.stat-icon{
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+.modern-stat h3{
+    font-size:36px;
+    margin:10px 0;
+    color:white;
+}
+
+.modern-stat p{
+    color:white;
+    font-size:15px;
+    opacity:.95;
+}
+.impact-section{
+    padding:60px 20px;
+    text-align:center;
+}
+
+.impact-section h2{
+    color:#0b6623;
+    margin-bottom:30px;
+}
+
+.impact-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.impact-card{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    transition:.3s;
+}
+
+.impact-card:hover{
+    transform:translateY(-5px);
+}
+
+.impact-card h3{
+    color:#0b6623;
+    margin-bottom:10px;
+}
