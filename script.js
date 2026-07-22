@@ -2,8 +2,12 @@
 console.log("DB:", db);
 async function addMember() {
 
-    const name = document.getElementById("memberName").value;
-    const phone = document.getElementById("memberPhone").value;
+    const name =
+    document.getElementById("memberName").value.trim();
+
+const phone =
+    document.getElementById("memberPhone").value.trim();
+
 const password =
     document.getElementById("memberPassword").value;
 
@@ -70,10 +74,16 @@ async function recordContribution() {
     if (error) {
         alert("ERROR: " + error.message);
     } else {
+
         alert("Contribution Saved Successfully");
 
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
+
+        loadLeaderboard();
+        loadStats();
+        loadDashboardStats();
+
     }
 }
 async function loadStats() {
@@ -82,7 +92,7 @@ async function loadStats() {
         .from("members")
         .select("*", { count: "exact", head: true });
 
-    document.getElementById("memberCount").innerText =
+    document.getElementById("totalMembers").innerText =
         memberCount || 0;
 
     const { data: contributions, error } = await db
@@ -100,7 +110,7 @@ async function loadStats() {
 
     console.log("Total Contributions:", total);
 
-    document.getElementById("totalContributions").innerText =
+    document.getElementById("totalSavings").innerText =
         "KSh " + total.toLocaleString();
 }
 
@@ -130,11 +140,15 @@ async function loadGroupSavings() {
 window.onload = function () {
 
     loadStats();
-loadGroupSavings();
-loadPendingMembers();
-loadAnnouncements();
-loadAnnouncementsList();
-loadLeadership();
+    loadOnlineCount();
+    loadGroupSavings();
+    loadPendingMembers();
+    loadAnnouncements();
+    loadAnnouncementsList();
+    loadLeadership();
+    loadLeaderboard(); 
+
+    
     if (document.getElementById("membersBody")) {
         loadMembers();
     }
@@ -314,6 +328,7 @@ await addActivity(
 loadMembers();
 loadPendingMembers();
 loadDashboardStats();
+loadLeaderboard();
     }
 }async function loadPendingMembers() {
 
@@ -483,7 +498,7 @@ async function loadAnnouncementsList() {
 
             <p>${item.message}</p>
 
-            <button onclick="deleteAnnouncement('${item.title}')">
+            <button onclick="deleteAnnouncement(${item.id})">
     Delete
 </button>
 
@@ -491,7 +506,7 @@ async function loadAnnouncementsList() {
         `;
     });
 }
-async function deleteAnnouncement(title) {
+async function deleteAnnouncement(id) {
 
     const confirmDelete =
         confirm("Delete this announcement?");
@@ -501,13 +516,12 @@ async function deleteAnnouncement(title) {
     const { error } = await db
         .from("announcements")
         .delete()
-        .eq("title", title);
+        .eq("id", id);
 
     if (error) {
-        alert(error.message);
+        alert("Delete Error: " + error.message);
     } else {
         alert("Announcement Deleted");
-
         loadAnnouncementsList();
     }
 }
@@ -535,8 +549,12 @@ async function loadLeadership() {
 
     if (position === "chairman") {
 
-    document.getElementById("chairmanName").innerText =
-        item.name;
+    const chairman =
+document.getElementById("chairmanName");
+
+if (chairman) {
+    chairman.innerText = item.name;
+}
 
     if (item.photo_url) {
         document.getElementById("chairmanPhoto").src =
@@ -547,37 +565,57 @@ async function loadLeadership() {
 
     if (position === "secretary") {
 
-    document.getElementById("secretaryName").innerText =
-        item.name;
+    const secretaryName =
+document.getElementById("secretaryName");
 
-    if (item.photo_url) {
-        document.getElementById("secretaryPhoto").src =
-            item.photo_url;
-    }
+const secretaryPhoto =
+document.getElementById("secretaryPhoto");
+
+if (secretaryName) {
+    secretaryName.innerText = item.name;
+}
+
+if (secretaryPhoto && item.photo_url) {
+    secretaryPhoto.src = item.photo_url;
+}
+    
 
 }
 
     if (position === "treasurer") {
 
-    document.getElementById("treasurerName").innerText =
-        item.name;
+    const treasurerName =
+document.getElementById("treasurerName");
 
-    if (item.photo_url) {
-        document.getElementById("treasurerPhoto").src =
-            item.photo_url;
-    }
+const treasurerPhoto =
+document.getElementById("treasurerPhoto");
+
+if (treasurerName) {
+    treasurerName.innerText = item.name;
+}
+
+if (treasurerPhoto && item.photo_url) {
+    treasurerPhoto.src = item.photo_url;
+}
+    
 
 }
 
     if (position === "organiser") {
 
-    document.getElementById("organiserName").innerText =
-        item.name;
+    const organiserName =
+document.getElementById("organiserName");
 
-    if (item.photo_url) {
-        document.getElementById("organiserPhoto").src =
-            item.photo_url;
-    }
+const organiserPhoto =
+document.getElementById("organiserPhoto");
+
+if (organiserName) {
+    organiserName.innerText = item.name;
+}
+
+if (organiserPhoto && item.photo_url) {
+    organiserPhoto.src = item.photo_url;
+}
 
 }
 });
@@ -589,8 +627,13 @@ async function loadDashboardStats() {
         .from("members")
         .select("*");
 
-    document.getElementById("totalMembers").innerText =
+    const totalMembers =
+document.getElementById("totalMembers");
+
+if (totalMembers) {
+    totalMembers.innerText =
         members ? members.length : 0;
+}
 
     // Pending Members
     const { data: pending } = await db
@@ -598,8 +641,13 @@ async function loadDashboardStats() {
         .select("*")
         .eq("status", "pending");
 
-    document.getElementById("pendingMembers").innerText =
-        pending ? pending.length : 0;
+     const totalSavingsElement =
+document.getElementById("totalSavings");
+
+if (totalSavingsElement) {
+    totalSavingsElement.innerText =
+        "KSh " + totalSavings.toLocaleString();
+}   
 
     // Total Savings
     const { data: contributions } = await db
@@ -688,4 +736,77 @@ async function addActivity(action) {
     if (error) {
         console.log(error.message);
     }
+}
+async function loadOnlineCount() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("phone")
+        .eq("online", true);
+
+    if (error) return;
+
+    document.getElementById("onlineMembers").innerText =
+        data.length;
+}
+
+async function loadLeaderboard() {
+
+    console.log("Leaderboard function running");
+
+    const container =
+        document.getElementById("leaderboardContainer");
+
+    if (!container) {
+        console.log("Container not found");
+        return;
+    }
+
+    console.log("Container found");
+
+    const { data: members } = await db
+        .from("members")
+        .select("*");
+
+    const rankings = [];
+
+    for (const member of members || []) {
+
+        const { data: contributions } = await db
+            .from("contributions")
+            .select("amount")
+            .eq("member_phone", member.phone);
+
+        let total = 0;
+
+        (contributions || []).forEach(item => {
+            total += Number(item.amount || 0);
+        });
+
+        rankings.push({
+            name: member.name,
+            total: total
+        });
+    }
+
+    rankings.sort((a, b) => b.total - a.total);
+
+    container.innerHTML = "";
+
+    rankings.forEach((member, index) => {
+
+        let medal = "";
+
+        if (index === 0) medal = "🥇";
+        else if (index === 1) medal = "🥈";
+        else if (index === 2) medal = "🥉";
+        else medal = "#" + (index + 1);
+
+        container.innerHTML += `
+        <div class="leaderboard-card">
+            <h3>${medal} ${member.name}</h3>
+            <p>KSh ${member.total.toLocaleString()}</p>
+        </div>
+        `;
+    });
 }

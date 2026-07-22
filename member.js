@@ -22,6 +22,7 @@ async function loadMemberData() {
             "loggedUser",
             JSON.stringify(user)
         );
+        updateOnlineStatus(true);
     }
 
     document.getElementById("welcomeName").innerText =
@@ -48,6 +49,7 @@ async function loadMemberData() {
     await loadAnnouncements();
     await loadNotifications();
     await loadSavingsStats(user.phone);
+    await loadMyRank();
 }
 
 async function logout() {
@@ -117,11 +119,28 @@ function showDashboard() {
     
     document.getElementById("announcementsScreen").style.display = "none";
     
+    document.getElementById("aiScreen").style.display = "none";
+    
 }
-function showProfile() {
+async function showProfile() {
 
-    const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
+    let user =
+    JSON.parse(localStorage.getItem("loggedUser"));
+
+const { data } = await db
+    .from("members")
+    .select("*")
+    .eq("phone", user.phone)
+    .single();
+
+if (data) {
+    user = data;
+
+    localStorage.setItem(
+        "loggedUser",
+        JSON.stringify(user)
+    );
+}
 
     document.getElementById("dashboardScreen")
         .style.display = "none";
@@ -138,11 +157,50 @@ function showProfile() {
     document.getElementById("profileScreenPhone")
         .innerText = user.phone;
 
+    if (user.online) {
+
     document.getElementById("profileScreenStatus")
-    .innerText =
-    user.online
-        ? "🟢 Online"
-        : "⏰ Last seen recently";
+    .innerText = "🟢 Online";
+
+} else if (user.last_seen) {
+
+    const lastSeen = new Date(user.last_seen);
+    const now = new Date();
+
+    const diffMinutes =
+        Math.floor((now - lastSeen) / 60000);
+
+    if (diffMinutes < 1) {
+
+        document.getElementById("profileScreenStatus")
+        .innerText = "⏰ Last seen just now";
+
+    } else if (diffMinutes < 60) {
+
+        document.getElementById("profileScreenStatus")
+        .innerText =
+        `⏰ Last seen ${diffMinutes} min ago`;
+
+    } else if (diffMinutes < 1440) {
+
+        document.getElementById("profileScreenStatus")
+        .innerText =
+        `⏰ Last seen ${Math.floor(diffMinutes / 60)} hr ago`;
+
+    } else {
+
+        document.getElementById("profileScreenStatus")
+        .innerText =
+        `⏰ Last seen ${Math.floor(diffMinutes / 1440)} day(s) ago`;
+    }
+
+} else {
+
+    document.getElementById("profileScreenStatus")
+    .innerText = "⚫ Offline";
+
+}
+
 
     if (user.photo_url) {
         document.getElementById("profileScreenImage")
@@ -308,6 +366,7 @@ const goal =
 
     }
 }
+
 async function changePassword() {
 
     const user =
@@ -378,7 +437,7 @@ async function loadAnnouncements() {
     if (error) return;
 
     const container =
-        document.getElementById("announcementsContainer");
+document.getElementById("announcementsOnlyContainer");
 
     if (!container) return;
 
@@ -497,6 +556,19 @@ function scrollToBottom() {
     }
 }
 
+function showAI() {
+
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
+    document.getElementById("announcementsScreen").style.display = "none";
+
+    document.getElementById("aiScreen").style.display = "block";
+}
+
 function showChat() {
 
     document.getElementById("dashboardScreen").style.display = "none";
@@ -507,12 +579,11 @@ function showChat() {
 
     document.getElementById("chatScreen").style.display = "block";
 
-document.getElementById("unreadBadge").style.display = "none";
+    document.getElementById("unreadBadge").style.display = "none";
 
-loadMessages();
-loadOnlineMembers();
-scrollToBottom();
-
+    loadMessages();
+    loadOnlineMembers();
+    scrollToBottom();
 }
 async function sendMessage() {
 
@@ -805,22 +876,15 @@ async function updateOnlineStatus(isOnline) {
         })
         .eq("phone", user.phone);
 }
-
-
-        
-window.addEventListener("beforeunload", () => {
-    updateOnlineStatus(false);
-});
-setInterval(() => {
-    loadMemberData();
-    loadOnlineMembers();
-}, 30000);
 async function loadOnlineMembers() {
 
-    const { data, error } = await db
-        .from("members")
-        .select("name, photo_url")
-        .eq("online", true);
+    const fiveMinutesAgo =
+new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+const { data, error } = await db
+    .from("members")
+    .select("name, photo_url, last_seen")
+    .gte("last_seen", fiveMinutesAgo);
 
     if (error) return;
 
@@ -966,41 +1030,41 @@ function cancelHold() {
 }
 async function loadMyRank() {
 
-    const user = JSON.parse(
-        localStorage.getItem("loggedUser")
-    );
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
 
     if (!user) return;
 
-    const { data, error } = await db
-        .from("contributions")
-        .select("member_phone, amount");
+    const { data: members } = await db
+        .from("members")
+        .select("*");
 
-    if (error) {
-        console.error(error);
-        return;
+    const rankings = [];
+
+    for (const member of members || []) {
+
+        const { data: contributions } = await db
+            .from("contributions")
+            .select("amount")
+            .eq("member_phone", member.phone);
+
+        let total = 0;
+
+        (contributions || []).forEach(item => {
+            total += Number(item.amount || 0);
+        });
+
+        rankings.push({
+            phone: member.phone,
+            total: total
+        });
     }
 
-    const totals = {};
-
-    data.forEach(item => {
-
-        const phone = item.member_phone;
-
-        if (!totals[phone]) {
-            totals[phone] = 0;
-        }
-
-        totals[phone] += Number(item.amount || 0);
-
-    });
-
-    const ranking = Object.entries(totals)
-        .sort((a, b) => b[1] - a[1]);
+    rankings.sort((a, b) => b.total - a.total);
 
     const rank =
-        ranking.findIndex(
-            item => item[0] === user.phone
+        rankings.findIndex(
+            item => item.phone == user.phone
         ) + 1;
 
     document.getElementById("myRank").innerText =
@@ -1060,3 +1124,42 @@ async function showAnnouncements() {
         `;
     });
 }
+// CONTRIBUTION REMINDER
+
+async function checkContributionReminder() {
+console.log("Reminder function running");
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+    if (!user) return;
+
+    const today = new Date().getDate();
+
+    // remind every 25th
+    if (today >= 1) {
+
+        const container =
+document.getElementById("notificationsContainer");
+
+if(container){
+
+container.innerHTML =
+`
+<div class="card">
+<h3>🔔 Contribution Reminder</h3>
+<p>
+Today is contribution day.
+Minimum contribution is KSh 50.
+Please make your contribution before midnight.
+</p>
+</div>
+`
++ container.innerHTML;
+
+}
+
+    }
+}
+
+// run when page loads
+checkContributionReminder();
