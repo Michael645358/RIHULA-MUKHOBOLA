@@ -137,12 +137,43 @@ padding:30px;
 border-radius:15px;
 }
 
-.stats{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:20px;
-padding:50px 10%;
-background:#0b6623;
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    margin:20px;
+}
+
+.modern-stat{
+    padding:25px;
+    border-radius:20px;
+    color:white;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+.modern-stat:nth-child(1){
+    background:linear-gradient(135deg,#2e7d32,#4caf50);
+}
+
+.modern-stat:nth-child(2){
+    background:linear-gradient(135deg,#ef6c00,#ff9800);
+}
+
+.modern-stat:nth-child(3){
+    background:linear-gradient(135deg,#1565c0,#42a5f5);
+}
+
+.modern-stat:nth-child(4){
+    background:linear-gradient(135deg,#6a1b9a,#ab47bc);
+}
+
+.modern-stat h3{
+    font-size:35px;
+}
+
+.modern-stat p{
+    margin-top:10px;
 }
 
 .stat{
@@ -524,13 +555,23 @@ box-shadow:0 5px 15px rgba(0,0,0,.1);
     margin:15px;
 }
 
-.modern-stat{
-    background:white;
-    border-radius:20px;
-    padding:20px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
+<div class="modern-stat">
+    <h2>⏳</h2>
+    <h3 id="pendingMembers">0</h3>
+    <p>Pending Members</p>
+</div>
+
+<div class="modern-stat">
+    <h2>💰</h2>
+    <h3 id="totalSavings">KSh 0</h3>
+    <p>Total Savings</p>
+</div>
+
+<div class="modern-stat">
+    <h2>🟢</h2>
+    <h3 id="onlineMembers">0</h3>
+    <p>Online Members</p>
+</div>
 
 .modern-stat h3{
     color:#15803d;
@@ -805,6 +846,21 @@ h2{
     text-align:center;
     box-shadow:0 5px 15px rgba(0,0,0,0.15);
     transition:0.3s;
+}
+.stats-grid .modern-stat:nth-child(1){
+    background:linear-gradient(135deg,#2e7d32,#4caf50);
+}
+
+.stats-grid .modern-stat:nth-child(2){
+    background:linear-gradient(135deg,#ef6c00,#ff9800);
+}
+
+.stats-grid .modern-stat:nth-child(3){
+    background:linear-gradient(135deg,#1565c0,#42a5f5);
+}
+
+.stats-grid .modern-stat:nth-child(4){
+    background:linear-gradient(135deg,#6a1b9a,#ab47bc);
 }
 
 .modern-stat:hover{
@@ -1394,4 +1450,274 @@ body{
     color:white;
     font-size:22px;
     cursor:pointer;
+}
+.chat-container{
+    display:flex;
+    flex-direction:column;
+    padding:10px;
+}
+
+.chat-message{
+    max-width:80%;
+    margin:8px 0;
+    padding:10px;
+    border-radius:12px;
+    word-wrap:break-word;
+}
+
+.my-msg{
+    align-self:flex-end;
+    background:#dcf8c6;
+    text-align:left;
+}
+
+.other-msg{
+    align-self:flex-start;
+    background:#ffffff;
+    text-align:left;
+}
+
+.chat-header{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:5px;
+}
+
+.chat-avatar{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    object-fit:cover;
+}
+
+.chat-footer{
+    display:flex;
+    justify-content:flex-end;
+    font-size:12px;
+    margin-top:5px;
+}
+.register-card{
+    width:90%;
+    max-width:500px;
+    margin:40px auto;
+    background:#fff;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.15);
+    text-align:center;
+}
+
+.register-logo{
+    width:100px;
+    height:100px;
+    object-fit:cover;
+    margin-bottom:15px;
+}
+
+.register-card h1{
+    color:#0b6b2a;
+    margin-bottom:25px;
+}
+
+.register-card input{
+    width:100%;
+    padding:15px;
+    margin-bottom:15px;
+    border:1px solid #ccc;
+    border-radius:10px;
+    font-size:16px;
+}
+
+.register-card button{
+    width:100%;
+    padding:15px;
+    background:gold;
+    border:none;
+    border-radius:30px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+/* Rankings Section */
+.rankings{
+    padding:20px;
+    text-align:center;
+}
+
+.rankings h2{
+    color:#0b6623;
+    margin-bottom:15px;
+}
+
+.rank-card{
+    background:white;
+    max-width:400px;
+    margin:0 auto;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.rank-card h3{
+    font-size:50px;
+    color:#0b6623;
+    margin-bottom:10px;
+}
+
+.rank-card p{
+    color:#666;
+    font-size:16px;
+}
+/* Add Member */
+.admin-card:nth-of-type(1){
+    background:linear-gradient(135deg,#e8f5e9,#c8e6c9);
+    border-left:6px solid #2e7d32;
+}
+
+/* Contributions */
+.admin-card:nth-of-type(2){
+    background:linear-gradient(135deg,#fff8e1,#ffecb3);
+    border-left:6px solid #f9a825;
+}
+
+/* Announcements */
+.admin-card:nth-of-type(3){
+    background:linear-gradient(135deg,#e3f2fd,#bbdefb);
+    border-left:6px solid #1976d2;
+}
+
+/* Notifications */
+.admin-card:nth-of-type(4){
+    background:linear-gradient(135deg,#f3e5f5,#e1bee7);
+    border-left:6px solid #8e24aa;
+}
+
+/* Pending Members */
+.admin-card:nth-of-type(5){
+    background:linear-gradient(135deg,#fff3e0,#ffcc80);
+    border-left:6px solid #ef6c00;
+}
+
+/* All Members */
+.admin-card:nth-of-type(6){
+    background:linear-gradient(135deg,#e0f7fa,#b2ebf2);
+    border-left:6px solid #00838f;
+}
+
+/* Edit Member */
+.admin-card:nth-of-type(7){
+    background:linear-gradient(135deg,#fce4ec,#f8bbd0);
+    border-left:6px solid #c2185b;
+}
+
+/* Edit Contribution */
+.admin-card:nth-of-type(8){
+    background:linear-gradient(135deg,#ede7f6,#d1c4e9);
+    border-left:6px solid #512da8;
+}
+.admin-card h2{
+    color:#000;
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+.admin-card button{
+    background:#0b6623;
+    transition:0.3s;
+}
+
+.admin-card button:hover{
+    background:#15803d;
+    transform:scale(1.03);
+}
+/* Leaderboard */
+
+#leaderboardContainer{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.leaderboard-card{
+    padding:20px;
+    border-radius:15px;
+    color:white;
+    font-weight:bold;
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
+}
+
+.gold{
+    background:linear-gradient(135deg,#FFD700,#FFB300);
+    color:#000;
+}
+
+.silver{
+    background:linear-gradient(135deg,#E0E0E0,#BDBDBD);
+    color:#000;
+}
+
+.bronze{
+    background:linear-gradient(135deg,#CD7F32,#A0522D);
+}
+
+.normal-rank{
+    background:#0b6623;
+}
+.leaderboard-card{
+    padding:20px;
+    margin:12px 0;
+    border-radius:15px;
+    text-align:center;
+    color:white;
+    font-weight:bold;
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
+}
+
+.gold{
+    background:linear-gradient(135deg,#FFD700,#FFA500);
+}
+
+.silver{
+    background:linear-gradient(135deg,#C0C0C0,#A9A9A9);
+}
+
+.bronze{
+    background:linear-gradient(135deg,#CD7F32,#8B4513);
+}
+
+.normal-rank{
+    background:linear-gradient(135deg,#15803d,#0b6623);
+}
+.leaderboard-card{
+    background:#ffffff;
+    padding:15px;
+    margin:10px 0;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+.leaderboard-card h3{
+    color:#000 !important;
+    font-size:20px;
+    font-weight:bold;
+    display:block;
+}
+
+.leaderboard-card p{
+    color:#15803d !important;
+    font-weight:bold;
+}
+
+.gold{
+    border-left:6px solid gold;
+}
+
+.silver{
+    border-left:6px solid silver;
+}
+
+.bronze{
+    border-left:6px solid #cd7f32;
 }
