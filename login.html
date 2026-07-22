@@ -72,8 +72,16 @@ async function login() {
     localStorage.setItem(
         "loggedUser",
         JSON.stringify(data)
-    );
-
+    )
+    
+    await db
+    .from("members")
+    .update({
+        last_seen: new Date().toISOString(),
+        online: true
+    })
+    .eq("phone", data.phone);
+    
     alert("Role: " + data.role);
 if (data.role === "admin") {
 
