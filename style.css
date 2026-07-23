@@ -555,24 +555,6 @@ box-shadow:0 5px 15px rgba(0,0,0,.1);
     margin:15px;
 }
 
-<div class="modern-stat">
-    <h2>⏳</h2>
-    <h3 id="pendingMembers">0</h3>
-    <p>Pending Members</p>
-</div>
-
-<div class="modern-stat">
-    <h2>💰</h2>
-    <h3 id="totalSavings">KSh 0</h3>
-    <p>Total Savings</p>
-</div>
-
-<div class="modern-stat">
-    <h2>🟢</h2>
-    <h3 id="onlineMembers">0</h3>
-    <p>Online Members</p>
-</div>
-
 .modern-stat h3{
     color:#15803d;
     font-size:28px;
@@ -1539,7 +1521,6 @@ body{
     font-weight:bold;
     cursor:pointer;
 }
-/* Rankings Section */
 .rankings{
     padding:20px;
     text-align:center;
@@ -1626,7 +1607,6 @@ body{
     background:#0b6623;
     transition:0.3s;
 }
-
 .admin-card button:hover{
     background:#15803d;
     transform:scale(1.03);
@@ -1697,7 +1677,6 @@ body{
     box-shadow:0 2px 8px rgba(0,0,0,0.1);
     text-align:center;
 }
-
 .leaderboard-card h3{
     color:#000 !important;
     font-size:20px;
@@ -1795,8 +1774,7 @@ html{
     font-size:36px;
     margin:10px 0;
     color:white;
-}
-
+} 
 .modern-stat p{
     color:white;
     font-size:15px;
@@ -1833,4 +1811,145 @@ html{
 .impact-card h3{
     color:#0b6623;
     margin-bottom:10px;
+}
+@media (max-width:768px){
+
+    header{
+        flex-direction:column;
+        text-align:center;
+        gap:15px;
+    }
+
+    nav{
+        flex-wrap:wrap;
+        justify-content:center;
+    }
+
+}
+.input-group{
+    margin:15px 0;
+}
+
+.input-group input{
+    width:100%;
+    padding:14px 18px;
+    border:1px solid #ddd;
+    border-radius:12px;
+    font-size:16px;
+    outline:none;
+    transition:.3s;
+}
+
+.input-group input:focus{
+    border-color:#0b6623;
+    box-shadow:0 0 8px rgba(11,102,35,.2);
+}
+
+.login-btn{
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:30px;
+    background:#0b6623;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.login-btn:hover{
+    background:#15803d;
+}
+/* ===== LOGIN PAGE ===== */
+
+.login-box{
+    width:90%;
+    max-width:420px;
+    margin:60px auto;
+    background:#fff;
+    padding:35px 25px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    text-align:center;
+}
+
+.login-box img{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    margin-bottom:15px;
+}
+
+.login-box input{
+    width:100%;
+    padding:14px;
+    margin:10px 0;
+    border:1px solid #ddd;
+    border-radius:12px;
+    font-size:16px;
+}
+
+.login-btn{
+    width:100%;
+    padding:15px;
+    background:#FFD700;
+    color:#000;
+    border:none;
+    border-radius:30px;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.login-btn:hover{
+    background:#f4c400;
+}
+
+.login-box a{
+    color:#0b6623;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.login-box a:hover{
+    text-decoration:underline;
+}
+/* Login Page */
+
+.login-box input{
+    width:100%;
+    padding:15px;
+    margin:10px 0;
+    border:2px solid #e5e5e5;
+    border-radius:12px;
+    font-size:16px;
+    outline:none;
+    transition:0.3s;
+}
+
+.login-box input:focus{
+    border-color:#0b6623;
+    box-shadow:0 0 8px rgba(11,102,35,.2);
+}
+
+.login-btn{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+    background:#f4c400;
+    color:#000;
+    border:none;
+    border-radius:30px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.login-btn:hover{
+    background:#e0b000;
+    transform:translateY(-2px);
 }

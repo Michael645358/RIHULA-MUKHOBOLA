@@ -9,6 +9,12 @@
 </head>
 <body>
 
+<script>
+if(sessionStorage.getItem("adminVerified") !== "true"){
+    window.location.href = "admin-login.html";
+}
+</script>
+
 <header>
 <div class="logo-area">
     <img src="images/logo.jpg" alt="Logo">
@@ -47,7 +53,6 @@
         <p>Online Members</p>
     </div>
 
-</div>
 </div>
 
 <section class="admin-panel">
@@ -293,6 +298,16 @@ async function sendNotification() {
     document.getElementById("notificationMessage").value = "";
 }
 
+</script>
+
+<script>
+function logout(){
+
+    localStorage.removeItem("adminAccess");
+    sessionStorage.removeItem("adminVerified");
+
+    window.location.href = "login.html";
+}
 </script>
 
 </body>

@@ -12,36 +12,49 @@
 
 <div class="login-box">
 
-<div onclick="window.location.href='admin-login.html'">
+<div>
     <img src="images/logo.jpg" alt="Logo" width="100">
 </div>
 
     <h2>Member Login</h2>
 
-    <input
-        type="text"
-        id="phone"
-        placeholder="Phone Number">
+<p style="margin-bottom:15px;">
+    <a href="admin-login.html">Admin Login</a>
+</p>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Password">
+<div class="security-notice">
+    <h3>Secure Member Login</h3>
+    <p>
+        This login page is only for registered members of
+        RIHULA MUKHOBOLA ASSOCIATION.
+    </p>
+</div>
 
-    <button onclick="login()" class="btn">
+    <div class="input-group">
+    <input type="text" id="phone" placeholder="📱 Phone Number">
+</div>
+
+<div class="input-group">
+    <input type="password" id="password" placeholder="🔒 Password">
+</div>
+
+<button onclick="login()" class="login-btn">
     Login
 </button>
 
-<p style="text-align:center; margin-top:10px;">
+<div class="links">
+
     <a href="forgot-password.html">
         Forgot Password?
     </a>
-</
 
-<p style="margin-top:20px;">
-    Don't have an account?
-    <a href="register.html">Register Here</a>
-</p>
+    <br><br>
+
+    <a href="register.html">
+        Register Here
+    </a>
+
+</div>
 
 </div>
 
