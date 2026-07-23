@@ -425,11 +425,18 @@ async function loadAnnouncements() {
     data.forEach(item => {
 
         container.innerHTML += `
-        <div class="announcement">
-            <h3>${item.title}</h3>
-            <p>${item.message}</p>
-        </div>
-        `;
+<div class="announcement">
+
+    <span class="date-badge">
+        ${new Date(item.created_at).toLocaleDateString()}
+    </span>
+
+    <h3>${item.title}</h3>
+
+    <p>${item.message}</p>
+
+</div>
+`;
     });
 
 }
@@ -810,3 +817,27 @@ async function loadLeaderboard() {
         `;
     });
 }
+async function loadHomeStats() {
+
+    const { count: memberCount } = await db
+        .from("members")
+        .select("*", { count: "exact", head: true });
+
+    document.getElementById("memberCount").innerText =
+        memberCount || 0;
+
+    const { data } = await db
+        .from("contributions")
+        .select("amount");
+
+    let total = 0;
+
+    (data || []).forEach(item => {
+        total += Number(item.amount || 0);
+    });
+
+    document.getElementById("totalContributions").innerText =
+        "KSh " + total.toLocaleString();
+}
+
+loadHomeStats();
