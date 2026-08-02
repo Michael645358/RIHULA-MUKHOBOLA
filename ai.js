@@ -76,42 +76,52 @@ if (
 
         // MY RANK
         else if (
-            q.includes("my rank") ||
-            q.includes("ranking")
-        ) {
+    q.includes("my rank") ||
+    q.includes("ranking")
+) {
 
-            const { data } = await db
-                .from("contributions")
-                .select("member_phone, amount");
+    const { data } = await db
+        .from("contributions")
+        .select("member_phone, amount");
 
-            const totals = {};
+    const totals = {};
 
-            data.forEach(item => {
+    data.forEach(item => {
 
-                if (!totals[item.member_phone]) {
-                    totals[item.member_phone] = 0;
-                }
+        const phone =
+            String(item.member_phone).replace(/\D/g,"");
 
-                totals[item.member_phone] +=
-                    Number(item.amount || 0);
-            });
-
-            const ranking =
-                Object.entries(totals)
-                .sort((a,b)=>b[1]-a[1]);
-
-            const rank =
-                ranking.findIndex(
-                    r => r[0] === user.phone
-                ) + 1;
-
-            answer =
-                rank > 0
-                ? `Your contribution rank is #${rank}.`
-                : "You are not ranked yet.";
+        if(!totals[phone]){
+            totals[phone] = 0;
         }
 
-   
+        totals[phone] += Number(item.amount || 0);
+
+    });
+
+    const ranking =
+        Object.entries(totals)
+        .sort((a,b)=>b[1]-a[1]);
+
+    const myPhone =
+        String(user.phone).replace(/\D/g,"");
+
+    const index =
+        ranking.findIndex(r => r[0] === myPhone);
+
+    if(index >= 0){
+
+        answer =
+        `🏆 ${user.name}, you are currently ranked #${index+1} with total contributions of KSh ${ranking[index][1].toLocaleString()}.`;
+
+    }else{
+
+        answer =
+        "I couldn't find your contribution record yet.";
+
+    }
+
+}
 
 // MY SAVINGS
 else if (

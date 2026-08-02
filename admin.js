@@ -83,6 +83,7 @@ async function recordContribution() {
         loadLeaderboard();
         loadStats();
         loadDashboardStats();
+loadAdminGroupGoal();
 
     }
 }
@@ -91,6 +92,9 @@ async function loadStats() {
     const { count: memberCount } = await db
         .from("members")
         .select("*", { count: "exact", head: true });
+
+    document.getElementById("totalMembers").innerText =
+        memberCount || 0;
 
     const { data: contributions, error } = await db
         .from("contributions")
@@ -107,18 +111,10 @@ async function loadStats() {
 
     console.log("Total Contributions:", total);
 
-    const totalMembers = document.getElementById("totalMembers");
-
-    if (totalMembers) {
-        totalMembers.innerText = memberCount || 0;
-    }
-
-    const totalSavings = document.getElementById("totalSavings");
-
-    if (totalSavings) {
-        totalSavings.innerText = "KSh " + total.toLocaleString();
-    }
+    document.getElementById("totalSavings").innerText =
+        "KSh " + total.toLocaleString();
 }
+
 async function loadGroupSavings() {
 
     const { data, error } = await db
@@ -335,14 +331,7 @@ loadPendingMembers();
 loadDashboardStats();
 loadLeaderboard();
     }
-}
-async function loadPendingMembers() {
-
-    const body = document.getElementById("pendingMembersBody");
-
-    if (!body) return;
-
-    body.innerHTML = "<p>Loading pending members...</p>";
+}async function loadPendingMembers() {
 
     const { data, error } = await db
         .from("members")
@@ -350,45 +339,43 @@ async function loadPendingMembers() {
         .eq("status", "pending");
 
     if (error) {
-        body.innerHTML = `
-            <div class="member-card">
-                <h3>Error</h3>
-                <p>${error.message}</p>
-            </div>
-        `;
+        alert(error.message);
         return;
     }
+
+    const body =
+        document.getElementById("pendingMembersBody");
+
+    if (!body) return;
 
     body.innerHTML = "";
+if (!data || data.length === 0) {
 
-    if (!data || data.length === 0) {
-
-        body.innerHTML = `
-            <div class="member-card">
-                <h3>✅ No Pending Members</h3>
-                <p>All members have been approved.</p>
-            </div>
-        `;
-
-        return;
-    }
-
-    data.forEach(member => {
-
-        body.innerHTML += `
+    body.innerHTML = `
         <div class="member-card">
-            <h3>${member.name}</h3>
-            <p><strong>Phone:</strong> ${member.phone}</p>
-            <p><strong>Status:</strong> ${member.status}</p>
-
-            <button class="btn"
-                onclick="approveMember('${member.phone}')">
-                Approve
-            </button>
+            <h3>No Pending Members</h3>
+            <p>All members have been approved.</p>
         </div>
-        `;
+    `;
 
-    });
+    return;
+}
+data.forEach(member => {
+        
+    body.innerHTML += `
+    <div class="member-card">
+        <h3>${member.name}</h3>
+        <p>${member.phone}</p>
+        <p>Status: ${member.status}</p>
+
+        <button onclick="approveMember('${member.phone}')"
+                class="btn">
+            Approve
+        </button>
+    </div>
+    `;
+
+});
 }
 const slides = document.querySelectorAll(".slide");
 
@@ -411,18 +398,7 @@ if (slides.length > 0) {
     }, 4000);
 
 }
-async function logout() {
-
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-
-    if (user) {
-        await db
-            .from("members")
-            .update({
-                online: false
-            })
-            .eq("phone", user.phone);
-    }
+function logout() {
 
     localStorage.removeItem("loggedUser");
 
@@ -468,13 +444,13 @@ async function loadAnnouncements() {
 async function addAnnouncement() {
 
     const title =
-        document.getElementById("announcementTitle").value.trim();
+        document.getElementById("announcementTitle").value;
 
     const message =
-        document.getElementById("announcementMessage").value.trim();
+        document.getElementById("announcementMessage").value;
 
     if (!title || !message) {
-        alert("Please enter both title and message.");
+        alert("Fill all fields");
         return;
     }
 
@@ -488,17 +464,19 @@ async function addAnnouncement() {
         ]);
 
     if (error) {
-        alert("Error: " + error.message);
-        return;
+        alert(error.message);
+    } else {
+
+        alert("Announcement Posted");
+
+        document.getElementById(
+            "announcementTitle"
+        ).value = "";
+
+        document.getElementById(
+            "announcementMessage"
+        ).value = "";
     }
-
-    alert("Announcement posted successfully!");
-
-    document.getElementById("announcementTitle").value = "";
-    document.getElementById("announcementMessage").value = "";
-
-    loadAnnouncementsList();
-    loadAnnouncements();
 }
 async function loadAnnouncementsList() {
 
@@ -507,49 +485,34 @@ async function loadAnnouncementsList() {
         .select("*")
         .order("created_at", { ascending: false });
 
-    const box = document.getElementById("announcementsList");
-
-    if (!box) return;
-
     if (error) {
-        box.innerHTML = error.message;
+        alert(error.message);
         return;
     }
 
-    if (data.length === 0) {
-        box.innerHTML = "<p>No announcements found.</p>";
-        return;
-    }
+    const container =
+        document.getElementById("announcementsList");
 
-    box.innerHTML = "";
+    if (!container) return;
+
+    container.innerHTML = "";
 
     data.forEach(item => {
 
-        box.innerHTML += `
-        <div class="announcement-card">
+        container.innerHTML += `
+        <div class="card">
 
             <h3>${item.title}</h3>
 
             <p>${item.message}</p>
 
-            <br>
-
-            <button onclick="editAnnouncement('${item.id}')">
-                ✏ Edit
-            </button>
-
-            <button onclick="deleteAnnouncement('${item.id}')">
-                🗑 Delete
-            </button>
-
-            <button onclick="pushAnnouncement('${item.title}','${item.message}')">
-                🔔 Send Push
-            </button>
+            <button onclick="deleteAnnouncement(${item.id})">
+    Delete
+</button>
 
         </div>
         `;
     });
-
 }
 async function deleteAnnouncement(id) {
 
@@ -570,55 +533,6 @@ async function deleteAnnouncement(id) {
         loadAnnouncementsList();
     }
 }
-async function editAnnouncement(id){
-
-    const title = prompt("New title:");
-
-    if(title == null) return;
-
-    const message = prompt("New message:");
-
-    if(message == null) return;
-
-    const { error } = await db
-        .from("announcements")
-        .update({
-            title:title,
-            message:message
-        })
-        .eq("id",id);
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    alert("Announcement updated.");
-
-    loadAnnouncementsList();
-
-} 
-
-async function pushAnnouncement(title,message){
-
-    const res = await fetch(
-    "https://ubyuscrigxgvchfofeyx.supabase.co/functions/v1/smart-function",
-    {
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            title:title,
-            message:message
-        })
-    });
-
-    const data = await res.json();
-
-    alert("Push notification sent.");
-}
-
 async function loadLeadership() {
 
     const { data, error } = await db
@@ -809,54 +723,18 @@ async function addActivity(action) {
 }
 async function loadOnlineCount() {
 
-    const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
+    const { data, error } = await db
+        .from("members")
+        .select("phone")
+        .eq("online", true);
 
-const { data, error } = await db
-    .from("members")
-    .select("*")
-    .eq("online", true)
-    .gte("last_seen", thirtySecondsAgo);
-    
     if (error) return;
 
-    // Dashboard counter
-    const onlineCount =
-        document.getElementById("onlineMembers");
+    const onlineMembers = document.getElementById("onlineMembers");
 
-    if (onlineCount) {
-        onlineCount.innerText = data.length;
-    }
-
-    // Online Members page
-    const list =
-        document.getElementById("onlineMembersList");
-
-    if (!list) return;
-
-    list.innerHTML = "";
-
-    if (data.length === 0) {
-
-        list.innerHTML = `
-        <div class="member-card">
-            <h3>No members online</h3>
-        </div>
-        `;
-        return;
-    }
-
-    data.forEach(member => {
-
-        list.innerHTML += `
-        <div class="member-card">
-            <h3>${member.name}</h3>
-            <p>${member.phone}</p>
-            <p>🟢 Online</p>
-        </div>
-        `;
-
-    });
-
+if (onlineMembers) {
+    onlineMembers.innerText = data.length;
+}
 }
 
 async function loadLeaderboard() {
@@ -948,27 +826,149 @@ async function loadHomeStats() {
     totalContributionsElement.innerText =
         "KSh " + total.toLocaleString();
 }
-if (
-    document.getElementById("memberCount") &&
-    document.getElementById("totalContributions")
-) {
+if (document.getElementById("memberCount")) {
     loadHomeStats();
 }
-function logout() {
+function showSection(sectionId) {
 
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
+    // Hide all admin sections
+    document.querySelectorAll(".admin-section").forEach(section => {
+        section.style.display = "none";
+    });
 
-    if (user) {
-        db.from("members")
-          .update({
-              online: false,
-              last_seen: new Date().toISOString()
-          })
-          .eq("phone", user.phone);
+    // Show the selected section
+    const selected = document.getElementById(sectionId);
+
+    if (selected) {
+        selected.style.display = "block";
     }
 
-    localStorage.removeItem("loggedUser");
-    sessionStorage.removeItem("adminVerified");
+}
+async function loadAdminGroupGoal() {
 
-    window.location.href = "login.html";
+    const { data, error } = await db
+        .from("settings")
+        .select("group_goal")
+        .eq("id", 1)
+        .single();
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const goal = Number(data.group_goal || 0);
+
+    document.getElementById("adminCurrentGroupGoal").innerText =
+        "KSh " + goal.toLocaleString();
+
+    document.getElementById("adminGroupGoalInput").value = goal;
+}
+
+
+async function updateGroupGoal() {
+
+    const input =
+        document.getElementById("adminGroupGoalInput");
+
+    const newGoal = Number(input.value);
+
+    if (!newGoal || newGoal <= 0) {
+        alert("Please enter a valid goal amount.");
+        return;
+    }
+
+    const { error } = await db
+        .from("settings")
+        .update({
+            group_goal: newGoal
+        })
+        .eq("id", 1);
+
+    if (error) {
+        console.error(error);
+        alert("Failed to update group goal: " + error.message);
+        return;
+    }
+
+    document.getElementById("adminCurrentGroupGoal").innerText =
+        "KSh " + newGoal.toLocaleString();
+
+    alert(
+        "✅ Group goal updated to KSh " +
+        newGoal.toLocaleString()
+    );
+}
+async function updateGroupGoal() {
+
+    const input = document.getElementById("adminGroupGoalInput");
+
+    if (!input) {
+        alert("Group goal input not found.");
+        return;
+    }
+
+    const newGoal = Number(input.value);
+
+    if (!newGoal || newGoal <= 0) {
+        alert("Please enter a valid goal amount.");
+        return;
+    }
+
+    const { error } = await db
+        .from("settings")
+        .update({
+            group_goal: newGoal
+        })
+        .eq("id", 1);
+
+    if (error) {
+        console.error("Update group goal error:", error);
+        alert("Failed to update group goal:\n" + error.message);
+        return;
+    }
+
+    const currentGoal =
+        document.getElementById("adminCurrentGroupGoal");
+
+    if (currentGoal) {
+        currentGoal.innerText =
+            "KSh " + newGoal.toLocaleString();
+    }
+
+    alert(
+        "✅ Group goal updated successfully!\n\n" +
+        "New goal: KSh " +
+        newGoal.toLocaleString()
+    );
+}
+async function loadAdminGroupGoal() {
+
+    const { data, error } = await db
+        .from("settings")
+        .select("group_goal")
+        .eq("id", 1)
+        .single();
+
+    if (error) {
+        console.error("Load group goal error:", error);
+        return;
+    }
+
+    const goal = Number(data.group_goal || 0);
+
+    const currentGoal =
+        document.getElementById("adminCurrentGroupGoal");
+
+    const input =
+        document.getElementById("adminGroupGoalInput");
+
+    if (currentGoal) {
+        currentGoal.innerText =
+            "KSh " + goal.toLocaleString();
+    }
+
+    if (input) {
+        input.value = goal;
+    }
 }

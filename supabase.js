@@ -6,3 +6,18 @@ window.db = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+OneSignalDeferred.push(async function (OneSignal) {
+
+    await OneSignal.init({
+
+        appId: "9785cd9a-e4e0-432b-b63c-8115c8a3b833",
+
+        notifyButton: {
+            enable: true
+        }
+
+    });
+
+});
