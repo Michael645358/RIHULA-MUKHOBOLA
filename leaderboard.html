@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savings Leaderboard</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>🏆 Savings Leaderboard</h1>
+
+    <button class="btn" onclick="location.href='admin.html'">
+        ← Back
+    </button>
+</header>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>Leaderboard</h2>
+
+<div id="leaderboardContainer">
+
+<p>Loading leaderboard...</p>
+
+</div>
+
+</div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="script.js"></script>
+
+<script>
+loadLeaderboard();
+</script>
+
+</body>
+</html>

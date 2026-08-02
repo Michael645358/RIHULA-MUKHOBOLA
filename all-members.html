@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Members</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<div class="logo-area">
+
+<img src="images/logo.jpg" alt="Logo">
+
+<div>
+<h1>All Members</h1>
+<p>RIHULA MUKHOBOLA ASSOCIATION</p>
+</div>
+
+</div>
+</header>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>All Members</h2>
+
+<input
+type="text"
+id="memberSearch"
+placeholder="🔍 Search by name or phone"
+onkeyup="searchMembers()">
+
+<div id="membersBody">
+<p>Loading members...</p>
+</div>
+
+<br>
+
+<button onclick="history.back()" class="btn">
+← Back to Dashboard
+</button>
+
+</div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="script.js"></script>
+
+<script>
+window.onload = function () {
+    loadMembers();
+};
+</script>
+
+</body>
+</html>

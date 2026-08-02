@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Members</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<div class="logo-area">
+    <img src="images/logo.jpg" alt="Logo">
+
+    <div>
+        <h1>Online Members</h1>
+        <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+    </div>
+</div>
+</header>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>🟢 Members Currently Online</h2>
+
+<div id="onlineMembersList">
+Loading...
+</div>
+
+</div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="script.js"></script>
+
+<script>
+loadOnlineCount();
+</script>
+
+</body>
+</html>

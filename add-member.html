@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Member</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<div class="logo-area">
+<img src="images/logo.jpg" alt="Logo">
+
+<div>
+<h1>Add Member</h1>
+<p>RIHULA MUKHOBOLA ASSOCIATION</p>
+</div>
+</div>
+</header>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>Add Member</h2>
+
+<input
+type="text"
+id="memberName"
+placeholder="Member Name">
+
+<input
+type="tel"
+id="memberPhone"
+placeholder="Phone Number">
+
+<input
+type="password"
+id="memberPassword"
+placeholder="Password">
+
+<input
+type="text"
+id="answer1"
+placeholder="Village where member was born">
+
+<input
+type="text"
+id="answer2"
+placeholder="Primary School Attended">
+
+<input
+type="text"
+id="idNumber"
+placeholder="National ID Number">
+
+<button onclick="addMember()" class="btn">
+Add Member
+</button>
+
+<br><br>
+
+<button onclick="history.back()" class="btn">
+← Back to Dashboard
+</button>
+
+</div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

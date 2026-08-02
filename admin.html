@@ -16,245 +16,120 @@ if(sessionStorage.getItem("adminVerified") !== "true"){
 </script>
 
 <header>
+
 <div class="logo-area">
-    <img src="images/logo.jpg" alt="Logo">
 
-    <div>
-        <h1>Admin Dashboard</h1>
+<img src="images/logo.jpg" alt="Logo">
 
-        <button onclick="logout()" class="btn">
-            Logout
-        </button>
-
-        <p>RIHULA MUKHOBOLA ASSOCIATION</p>
-    </div>
+<div>
+<h1>Admin Dashboard</h1>
+<p>RIHULA MUKHOBOLA ASSOCIATION</p>
 </div>
+
+</div>
+
+<button class="btn" onclick="logout()">
+Logout
+</button>
+
 </header>
 
-<div class="stats-grid">
+<section class="stats-grid">
 
-    <div class="modern-stat">
-        <h3 id="totalMembers">0</h3>
-        <p>Total Members</p>
+<div class="modern-stat">
+<h3 id="totalMembers">0</h3>
+<p>Total Members</p>
+</div>
+
+<div class="modern-stat">
+<h3 id="pendingMembers">0</h3>
+<p>Pending Members</p>
+</div>
+
+<div class="modern-stat">
+<h3 id="totalSavings">KSh 0</h3>
+<p>Total Savings</p>
+</div>
+
+<div class="modern-stat">
+<h3 id="onlineMembers">0</h3>
+<p>Online Members</p>
+</div>
+
+</section>
+
+<section class="admin-panel">
+
+    <h2>🎯 Group Savings Goal</h2>
+
+    <div class="card">
+
+        <p>Current Group Goal</p>
+
+        <h2 id="adminCurrentGroupGoal">
+            KSh 0
+        </h2>
+
+        <input
+            type="number"
+            id="adminGroupGoalInput"
+            placeholder="Enter new group goal"
+            min="1"
+        >
+
+        <button id="updateGroupGoalBtn" class="btn">
+    💾 Update Group Goal
+</button>
+
     </div>
 
-    <div class="modern-stat">
-        <h3 id="pendingMembers">0</h3>
-        <p>Pending Members</p>
-    </div>
-
-    <div class="modern-stat">
-        <h3 id="totalSavings">KSh 0</h3>
-        <p>Total Savings</p>
-    </div>
-
-    <div class="modern-stat">
-        <h3 id="onlineMembers">0</h3>
-        <p>Online Members</p>
-    </div>
-
-</div>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>Add Member</h2>
-
-<input type="text"
-       id="memberName"
-       placeholder="Member Name">
-
-<input type="tel"
-       id="memberPhone"
-       placeholder="Phone Number">
-
-<input type="password"
-       id="memberPassword"
-       placeholder="Password">
-
-<input type="text"
-       id="answer1"
-       placeholder="Village where member was born">
-
-<input type="text"
-       id="answer2"
-       placeholder="Primary School Attended">
-
-<input type="text"
-       id="idNumber"
-       placeholder="National ID Number">
-       
-<button onclick="addMember()" class="btn">
-Add Member
-</button>
-
-</div>
-
-</section>
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>Record Contribution</h2>
-
-<input type="tel"
-       id="contributorPhone"
-       placeholder="Phone Number">
-
-<input type="number"
-       id="contributionAmount"
-       placeholder="Amount">
-
-<button onclick="recordContribution()" class="btn">
-Save Contribution
-</button>
-
-</div>
-
 </section>
 
-<section class="admin-panel">
+<section class="quick-grid">
 
-<div class="admin-card">
-<h2>Post Announcement</h2>
-
-<input
-    type="text"
-    id="announcementTitle"
-    placeholder="Announcement Title">
-
-<textarea
-    id="announcementMessage"
-    placeholder="Announcement Message">
-</textarea>
-
-<button onclick="addAnnouncement()" class="btn">
-Post Announcement
-</button>
-
+<div class="quick-card" onclick="location.href='add-member.html'">
+➕
+<p>Add Member</p>
 </div>
 
-</section>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-<section class="admin-panel">
-
-<div class="admin-card">
-
-<h2>Send Notification</h2>
-
-<input
-type="text"
-id="notificationTitle"
-placeholder="Notification Title">
-
-<textarea
-id="notificationMessage"
-placeholder="Notification Message">
-</textarea>
-
-<button onclick="sendNotification()" class="btn">
-Send Notification
-</button>
-
+<div class="quick-card" onclick="location.href='all-members.html'">
+👥
+<p>All Members</p>
 </div>
 
-</section>
-<h2>Manage Announcements</h2>
-
-<div id="announcementsList">
-    <p>Loading announcements...</p>
+<div class="quick-card" onclick="location.href='pending-members.html'">
+⏳
+<p>Pending Members</p>
 </div>
 
+<div class="quick-card" onclick="location.href='online-members.html'">
+🟢
+<p>Online Members</p>
 </div>
 
-</section>
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>Pending Members</h2>
-
-<div id="pendingMembersBody">
-    <p>No pending members</p>
+<div class="quick-card" onclick="location.href='record-contribution.html'">
+💰
+<p>Record Contribution</p>
 </div>
 
+<div class="quick-card" onclick="location.href='leaderboard.html'">
+🏆
+<p>Leaderboard</p>
 </div>
 
-</section>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>All Members</h2>
-
-<input
-    type="text"
-    id="memberSearch"
-    placeholder="🔍 Search by name or phone"
-    onkeyup="searchMembers()">
-
-<div id="membersBody">
+<div class="quick-card" onclick="location.href='edit-member.html'">
+✏️
+<p>Edit Member</p>
 </div>
 
+<div class="quick-card" onclick="location.href='edit-contribution.html'">
+📝
+<p>Edit Contribution</p>
 </div>
 
-</section>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-
-<h2>🏆 Savings Leaderboard</h2>
-
-<div id="leaderboardContainer">
-
-<p>Loading leaderboard...</p>
-
-</div>
-
-</div>
-
-</section>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>Edit Member</h2>
-
-<input type="tel"
-       id="editPhone"
-       placeholder="Phone Number">
-
-<input type="text"
-       id="editName"
-       placeholder="New Name">
-
-<button onclick="editMember()" class="btn">
-Update Member
-</button>
-
-</div>
-
-</section>
-
-<section class="admin-panel">
-
-<div class="admin-card">
-<h2>Edit Contribution</h2>
-
-<input type="tel"
-       id="editContributionPhone"
-       placeholder="Phone Number">
-
-<input type="number"
-       id="editContributionAmount"
-       placeholder="New Amount">
-
-<button onclick="editContribution()" class="btn">
-Update Contribution
-</button>
-
+<div class="quick-card" onclick="location.href='announcements.html'">
+📢
+<p>Announcements</p>
 </div>
 
 </section>
@@ -265,49 +140,178 @@ Update Contribution
 
 <script>
 
-async function sendNotification() {
+window.onload = function () {
 
-    const title =
-        document.getElementById("notificationTitle").value;
+    loadDashboardStats();
+    loadOnlineCount();
 
-    const message =
-        document.getElementById("notificationMessage").value;
+    loadAdminGroupGoal();
 
-    if (!title || !message) {
-        alert("Enter title and message");
-        return;
+    document
+        .getElementById("updateGroupGoalBtn")
+        .addEventListener("click", updateGroupGoal);
+
+};
+
+
+// ===============================
+// LOAD CURRENT GROUP GOAL
+// ===============================
+
+async function loadAdminGroupGoal() {
+
+    const currentGoal =
+        document.getElementById("adminCurrentGroupGoal");
+
+    const input =
+        document.getElementById("adminGroupGoalInput");
+
+    try {
+
+        const { data, error } = await db
+            .from("settings")
+            .select("group_goal")
+            .eq("id", 1)
+            .single();
+
+        if (error) {
+
+            console.error(
+                "Load group goal error:",
+                error
+            );
+
+            currentGoal.innerText = "Error";
+
+            return;
+        }
+
+        const goal =
+            Number(data.group_goal || 0);
+
+        currentGoal.innerText =
+            "KSh " + goal.toLocaleString();
+
+        input.value = goal;
+
+    } catch (error) {
+
+        console.error(error);
+
     }
-
-    const { error } = await db
-        .from("notifications")
-        .insert([
-            {
-                title: title,
-                message: message
-            }
-        ]);
-
-    if (error) {
-        alert(error.message);
-        return;
-    }
-
-    alert("Notification sent!");
-
-    document.getElementById("notificationTitle").value = "";
-    document.getElementById("notificationMessage").value = "";
 }
 
-</script>
 
-<script>
-function logout(){
+// ===============================
+// UPDATE GROUP GOAL
+// ===============================
+
+async function updateGroupGoal() {
+
+    const input =
+        document.getElementById("adminGroupGoalInput");
+
+    const currentGoal =
+        document.getElementById("adminCurrentGroupGoal");
+
+    const button =
+        document.getElementById("updateGroupGoalBtn");
+
+    const newGoal =
+        Number(input.value);
+
+    if (!newGoal || newGoal <= 0) {
+
+        alert("Please enter a valid goal amount.");
+
+        return;
+    }
+
+    button.disabled = true;
+
+    button.innerText =
+        "⏳ Updating...";
+
+    try {
+
+        const { data, error } = await db
+            .from("settings")
+            .update({
+                group_goal: newGoal
+            })
+            .eq("id", 1)
+            .select();
+
+        if (error) {
+
+            console.error(
+                "Supabase update error:",
+                error
+            );
+
+            alert(
+                "Failed to update group goal:\n\n" +
+                error.message
+            );
+
+            return;
+        }
+
+        console.log(
+            "Group goal updated:",
+            data
+        );
+
+        currentGoal.innerText =
+            "KSh " +
+            newGoal.toLocaleString();
+
+        alert(
+            "✅ Group goal updated successfully!\n\n" +
+            "New goal: KSh " +
+            newGoal.toLocaleString()
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected error:",
+            error
+        );
+
+        alert(
+            "Something went wrong:\n\n" +
+            error.message
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+        button.innerText =
+            "💾 Update Group Goal";
+    }
+
+}
+
+
+// ===============================
+// LOGOUT
+// ===============================
+
+function logout() {
 
     localStorage.removeItem("adminAccess");
-    sessionStorage.removeItem("adminVerified");
 
-    window.location.href = "login.html";
+    sessionStorage.removeItem(
+        "adminVerified"
+    );
+
+    window.location.href =
+        "login.html";
+
 }
+
 </script>
 
 </body>

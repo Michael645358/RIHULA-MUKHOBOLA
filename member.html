@@ -42,7 +42,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
         <div>
             <h2 id="welcomeName">Welcome Member</h2>
-            <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+
         </div>
 
     </div>
@@ -84,7 +84,13 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </section>
 <section class="quick-actions">
+<div class="action-card" onclick="showGroupGoal()">
 
+    <span style="font-size:40px;">🎯</span>
+
+    <p>Group Goal</p>
+
+</div>
     <div class="action-card" onclick="showContribute()">
 <span style="font-size:40px;">💰</span>
 <p>Contribute</p>
@@ -95,6 +101,7 @@ OneSignalDeferred.push(async function(OneSignal) {
     <p>History</p>
 </div>
 
+
     <div class="action-card" onclick="showProfile()">
 <span style="font-size:40px;">👤</span>
     <p>Profile</p>
@@ -103,6 +110,11 @@ OneSignalDeferred.push(async function(OneSignal) {
     <div class="action-card" onclick="showLeaders()">
     <span style="font-size:40px;">👥</span>
     <p>Leaders</p>
+</div>
+
+<div class="action-card" onclick="showGroupMembers()">
+    <span style="font-size:40px;">👥</span>
+    <p>Members</p>
 </div>
 
 <div class="action-card" onclick="showChat()">
@@ -119,6 +131,9 @@ OneSignalDeferred.push(async function(OneSignal) {
     <span style="font-size:40px;">🤖</span>
     <p>AI Assistant</p>
 </div>
+
+
+
 </section>
 <section class="rankings">
 
@@ -179,7 +194,7 @@ OneSignalDeferred.push(async function(OneSignal) {
         <img id="profileScreenImage"
      src="images/logo.jpg"
      class="profile-photo">
-             
+
 <div class="upuload-section">
 
 <input type="file"
@@ -192,7 +207,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 </button>
 
 </div>
-    <h3 id="passwordnName"></h3>    
+    <h3 id="passwordnName"></h3>
 
         <p id="profileScreenPhone"></p>
 
@@ -205,17 +220,27 @@ OneSignalDeferred.push(async function(OneSignal) {
 <div class="profile-card">
 <h3>Change Password</h3>
 
-<input type="password"
-       id="currentPassword"
-       placeholder="Current Password">
+<input
+    type="password"
+    id="currentPassword"
+    placeholder="Current Password">
 
-<input type="password"
-       id="newPassword"
-       placeholder="New Password">
+<input
+    type="password"
+    id="newPassword"
+    placeholder="New Password">
 
-<input type="password"
-       id="confirmPassword"
-       placeholder="Confirm New Password">
+<input
+    type="password"
+    id="confirmPassword"
+    placeholder="Confirm New Password">
+
+<label style="display:block;margin:10px 0;">
+    <input
+        type="checkbox"
+        onclick="togglePasswordVisibility()">
+    Show Passwords
+</label>
 
 <button onclick="changePassword()" class="btn">
     Update Password
@@ -362,8 +387,103 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </div>
 
-<div id="contributeScreen" style="display:none;">
 
+<div id="groupMembersScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>Association Members</h2>
+    
+<input
+    type="text"
+    id="memberSearch"
+    placeholder="🔍 Search member..."
+    onkeyup="filterMembers()"
+    class="search-box">
+
+    <div id="membersContainer">
+
+        <p>Loading members...</p>
+
+    </div>
+
+</div>
+
+<!-- GROUP GOAL SCREEN -->
+<div id="groupGoalScreen" style="display:none;">
+
+    <button onclick="showDashboard()" class="btn">
+        ← Back
+    </button>
+
+    <h2>🎯 Group Goal</h2>
+
+    <div class="card">
+
+        <h3>🎯 Group Goal</h3>
+
+        <h1 id="groupGoalAmount">
+            KSh 500,000
+        </h1>
+
+        <p>Target amount</p>
+
+    </div>
+
+    <div class="card">
+
+        <h3>💰 Collected</h3>
+
+        <h1 id="groupGoalCollected">
+            KSh 360,000
+        </h1>
+
+    </div>
+
+    <div class="card">
+
+        <h3>📉 Remaining</h3>
+
+        <h1 id="groupGoalRemaining">
+            KSh 140,000
+        </h1>
+
+    </div>
+
+    <div class="card progress-card">
+
+        <div class="progress-header">
+
+            <h3>📊 Progress</h3>
+
+            <span id="groupGoalPercent">
+                72%
+            </span>
+
+        </div>
+
+        <div class="progress-bar-modern">
+
+            <div
+    id="groupGoalProgress"
+    class="progress-fill-modern">
+</div>
+
+        </div>
+
+        <p id="groupGoalComplete"
+           style="text-align:center;">
+            72% Complete
+        </p>
+
+    </div>
+
+</div>
+
+<div id="contributeScreen" style="display:none;">
+    
     <button onclick="showDashboard()" class="btn">
         ← Back
     </button>
@@ -390,7 +510,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </div>
 
-<div id="chatScreen" style="display:none;">
+<div id="chatScreen" class="chat-screen" style="display:none;">
 
     <div class="chat-topbar">
         <button onclick="showDashboard()" class="back-btn">←</button>
@@ -434,9 +554,10 @@ OneSignalDeferred.push(async function(OneSignal) {
         </button>
 
     </div>
-
 </div>
 
+
+    
 <nav class="bottom-nav">
 
 <div onclick="showDashboard()" class="nav-item">
@@ -476,12 +597,28 @@ OneSignalDeferred.push(async function(OneSignal) {
         ❌ Cancel
     </div>
 
-</div>  
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="ai.js"></script>
 <script src="member.js"></script>
+
+<div id="memberStatusPopup" class="member-status-popup">
+
+    <div class="member-status-card">
+
+        <img id="popupPhoto" class="popup-photo">
+
+        <h3 id="popupName"></h3>
+
+        <p id="popupStatus"></p>
+
+        <button onclick="closeMemberStatus()">Close</button>
+
+    </div>
+
+</div>
 
 </body>
 </html>
