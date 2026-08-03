@@ -25,9 +25,32 @@ async function loadMemberData() {
         updateOnlineStatus(true);
     }
 
-    document.getElementById("welcomeName").innerText =
-        "Welcome " + user.name;
+    const hour = new Date().getHours();
 
+let greeting = "";
+
+if (hour >= 5 && hour < 12) {
+    greeting = "🌅 Good Morning";
+} else if (hour >= 12 && hour < 17) {
+    greeting = "☀️ Good Afternoon";
+} else if (hour >= 17 && hour < 21) {
+    greeting = "🌇 Good Evening";
+} else {
+    greeting = "🌙 Good Night";
+}
+
+const firstName = user.name.split(" ")[0];
+
+document.getElementById("welcomeName").innerHTML = `
+<div style="line-height:1.4;">
+    <div style="font-size:30px;font-weight:bold;">
+        ${greeting}, ${firstName} 👋
+    </div>
+    <div style="font-size:16px;opacity:0.9;">
+        Welcome back!
+    </div>
+</div>
+`;
     const images =
         document.querySelectorAll("#profileImage");
 
@@ -50,6 +73,7 @@ async function loadMemberData() {
     await loadNotifications();
     await loadSavingsStats(user.phone);
     await loadMyRank();
+   await loadGroupGoal(); 
 }
 
 async function logout() {
@@ -77,14 +101,19 @@ async function logout() {
 
     window.location.href = "login.html";
 }
-    
+
 loadMemberData();
 updateUnreadCount();
 updateOnlineStatus(true);
 loadMyRank();
-
 showDashboard();
+updateLastSeen();
+loadOnlineMembers();
 
+setInterval(() => {
+    updateLastSeen();
+    loadOnlineMembers();
+}, 30000); // Refresh every 30 seconds
 function showHistory() {
 
     document.getElementById("dashboardScreen")
@@ -92,36 +121,12 @@ function showHistory() {
 
     document.getElementById("historyScreen")
         .style.display = "block";
-        
+
         document.getElementById("chatScreen")
     .style.display = "none";
 }
 
-function showDashboard() {
 
-    document.getElementById("dashboardScreen")
-        .style.display = "block";
-
-    document.getElementById("historyScreen")
-        .style.display = "none";
-
-    document.getElementById("profileScreen")
-        .style.display = "none";
-
-    document.getElementById("leadersScreen")
-        .style.display = "none";
-
-    document.getElementById("contributeScreen")
-        .style.display = "none";
-        
-        document.getElementById("chatScreen")
-    .style.display = "none";
-    
-    document.getElementById("announcementsScreen").style.display = "none";
-    
-    document.getElementById("aiScreen").style.display = "none";
-    
-}
 async function showProfile() {
 
     let user =
@@ -147,7 +152,7 @@ if (data) {
 
     document.getElementById("profileScreen")
         .style.display = "block";
-        
+
         document.getElementById("chatScreen")
     .style.display = "none";
 
@@ -222,9 +227,255 @@ function showLeaders() {
 
     document.getElementById("leadersScreen")
         .style.display = "block";
-        
+
         document.getElementById("chatScreen")
     .style.display = "none";
+}
+function showGroupMembers() {
+
+    document.getElementById("dashboardScreen").style.display = "none";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
+    document.getElementById("announcementsScreen").style.display = "none";
+    document.getElementById("aiScreen").style.display = "none";
+
+    document.getElementById("groupMembersScreen").style.display = "block";
+    
+    loadGroupMembers();
+}
+async function loadGroupMembers() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("name, phone, photo_url, online, role")
+data.sort((a, b) => {
+
+    const leaderOrder = {
+        "Chairperson": 1,
+        "Secretary": 2,
+        "Treasurer": 3
+    };
+
+    const aOrder = leaderOrder[a.role] || 99;
+    const bOrder = leaderOrder[b.role] || 99;
+
+    if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+    }
+
+    return a.name.localeCompare(b.name);
+
+});
+    const container = document.getElementById("membersContainer");
+
+    if (error) {
+    console.log(error);
+    container.innerHTML = `<p>${error.message}</p>`;
+    return;
+}
+
+    if (!data || data.length === 0) {
+        container.innerHTML = "<p>No members found.</p>";
+        return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(member => {
+
+        container.innerHTML += `
+            <div class="card">
+                <img src="${member.photo_url || 'images/logo.jpg'}"
+                     class="leader-photo">
+
+                <h3>${member.name}</h3>
+                
+                <p class="member-position">
+${member.role || "👤 Member"}
+</p>
+
+<p>
+    ${member.online ? "🟢 Online" : "⚫ Offline"}
+</p>
+
+<div class="leader-buttons">
+
+    <a href="tel:${member.phone}" class="leader-btn">
+    📞 Call
+</a>
+
+<a href="https://wa.me/254${member.phone.toString().replace(/^0/, "")}" class="leader-btn">
+    💬 WhatsApp
+</a>
+    
+    
+
+</div>
+        `;
+    });
+}
+async function loadGroupGoal() {
+
+    try {
+
+        // Get group goal from settings
+        const { data: settings, error: settingsError } = await db
+            .from("settings")
+            .select("group_goal")
+            .eq("id", 1)
+            .single();
+
+        if (settingsError) {
+            console.error("Group goal error:", settingsError);
+            return;
+        }
+
+        const goal = Number(settings.group_goal || 0);
+
+        // Get all contributions
+        const { data: contributions, error: contributionError } =
+            await db
+                .from("contributions")
+                .select("amount");
+
+        if (contributionError) {
+            console.error(
+                "Contribution error:",
+                contributionError
+            );
+            return;
+        }
+
+        // Calculate total collected
+        let collected = 0;
+
+        (contributions || []).forEach(item => {
+            collected += Number(item.amount || 0);
+        });
+
+        // Calculate remaining
+        const remaining = Math.max(goal - collected, 0);
+
+        // Calculate percentage
+        let percent = 0;
+
+        if (goal > 0) {
+            percent = Math.round(
+                (collected / goal) * 100
+            );
+        }
+
+        // Don't allow progress to visually exceed 100%
+        const progressPercent = Math.min(percent, 100);
+
+        // =========================
+        // DASHBOARD GROUP GOAL
+        // =========================
+
+        const groupGoal =
+            document.getElementById("groupGoal");
+
+        if (groupGoal) {
+            groupGoal.innerText =
+                "KSh " + goal.toLocaleString();
+        }
+
+        const groupCollected =
+            document.getElementById("groupCollected");
+
+        if (groupCollected) {
+            groupCollected.innerText =
+                "KSh " + collected.toLocaleString();
+        }
+
+        const groupRemaining =
+            document.getElementById("groupRemaining");
+
+        if (groupRemaining) {
+            groupRemaining.innerText =
+                "KSh " + remaining.toLocaleString();
+        }
+
+        const groupPercent =
+            document.getElementById("groupPercent");
+
+        if (groupPercent) {
+            groupPercent.innerText =
+                percent + "% Complete";
+        }
+
+        const groupProgress =
+            document.getElementById("groupProgress");
+
+        if (groupProgress) {
+            groupProgress.style.width =
+                progressPercent + "%";
+        }
+
+
+        // =========================
+        // GROUP GOAL SCREEN
+        // =========================
+
+        const goalAmount =
+            document.getElementById("groupGoalAmount");
+
+        if (goalAmount) {
+            goalAmount.innerText =
+                "KSh " + goal.toLocaleString();
+        }
+
+        const goalCollected =
+            document.getElementById("groupGoalCollected");
+
+        if (goalCollected) {
+            goalCollected.innerText =
+                "KSh " + collected.toLocaleString();
+        }
+
+        const goalRemaining =
+            document.getElementById("groupGoalRemaining");
+
+        if (goalRemaining) {
+            goalRemaining.innerText =
+                "KSh " + remaining.toLocaleString();
+        }
+
+        const goalPercent =
+            document.getElementById("groupGoalPercent");
+
+        if (goalPercent) {
+            goalPercent.innerText =
+                percent + "%";
+        }
+
+        const goalProgress =
+            document.getElementById("groupGoalProgress");
+
+        if (goalProgress) {
+            goalProgress.style.width =
+                progressPercent + "%";
+        }
+
+        const goalComplete =
+            document.getElementById("groupGoalComplete");
+
+        if (goalComplete) {
+            goalComplete.innerText =
+                percent + "% Complete";
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Group Goal Error:",
+            error
+        );
+
+    }
 }
 function showContribute() {
 
@@ -242,21 +493,24 @@ function showContribute() {
 
     document.getElementById("contributeScreen")
         .style.display = "block";
-        
+
         document.getElementById("chatScreen")
     .style.display = "none";
 }
 
-function showAnnouncements() {
+function showGroupGoal() {
 
     document.getElementById("dashboardScreen").style.display = "none";
     document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("announcementsScreen").style.display = "none";
     document.getElementById("profileScreen").style.display = "none";
     document.getElementById("leadersScreen").style.display = "none";
     document.getElementById("contributeScreen").style.display = "none";
     document.getElementById("chatScreen").style.display = "none";
+    document.getElementById("aiScreen").style.display = "none";
+    document.getElementById("groupMembersScreen").style.display = "none";
 
-    document.getElementById("announcementsScreen").style.display = "block";
+    document.getElementById("groupGoalScreen").style.display = "block";
 }
 
 async function loadContributionHistory(phone) {
@@ -373,44 +627,59 @@ async function changePassword() {
         JSON.parse(localStorage.getItem("loggedUser"));
 
     const currentPassword =
-        document.getElementById("currentPassword").value;
+        document.getElementById("currentPassword").value.trim();
 
     const newPassword =
-        document.getElementById("newPassword").value;
+        document.getElementById("newPassword").value.trim();
 
     const confirmPassword =
-        document.getElementById("confirmPassword").value;
+        document.getElementById("confirmPassword").value.trim();
 
-    if (!currentPassword ||
-        !newPassword ||
-        !confirmPassword) {
-
-        alert("Fill all fields");
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        alert("Please fill all fields.");
         return;
     }
 
     if (newPassword !== confirmPassword) {
-
-        alert("New passwords do not match");
+        alert("New passwords do not match.");
         return;
     }
 
-    if (currentPassword !== user.password) {
-
-        alert("Current password is incorrect");
+    if (newPassword.length < 6) {
+        alert("Password must be at least 6 characters long.");
         return;
     }
 
-    const { error } = await db
+    const { data: memberData, error } = await db
+        .from("members")
+        .select("password")
+        .eq("phone", user.phone)
+        .single();
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    if (currentPassword !== memberData.password) {
+        alert("Current password is incorrect.");
+        return;
+    }
+
+    if (currentPassword === newPassword) {
+        alert("New password cannot be the same as your current password.");
+        return;
+    }
+
+    const { error: updateError } = await db
         .from("members")
         .update({
             password: newPassword
         })
         .eq("phone", user.phone);
 
-    if (error) {
-
-        alert(error.message);
+    if (updateError) {
+        alert(updateError.message);
         return;
     }
 
@@ -421,11 +690,32 @@ async function changePassword() {
         JSON.stringify(user)
     );
 
-    alert("Password updated successfully");
+    alert("Password updated successfully.");
 
     document.getElementById("currentPassword").value = "";
     document.getElementById("newPassword").value = "";
     document.getElementById("confirmPassword").value = "";
+}
+
+function togglePasswordVisibility() {
+
+    const fields = [
+        "currentPassword",
+        "newPassword",
+        "confirmPassword"
+    ];
+
+    fields.forEach(id => {
+
+        const input = document.getElementById(id);
+
+        input.type =
+            input.type === "password"
+            ? "text"
+            : "password";
+
+    });
+
 }
 async function loadAnnouncements() {
 
@@ -569,9 +859,24 @@ function showAI() {
     document.getElementById("aiScreen").style.display = "block";
 }
 
+function showDashboard() {
+
+    document.getElementById("dashboardScreen").style.display = "block";
+    document.getElementById("historyScreen").style.display = "none";
+    document.getElementById("profileScreen").style.display = "none";
+    document.getElementById("leadersScreen").style.display = "none";
+    document.getElementById("contributeScreen").style.display = "none";
+    document.getElementById("chatScreen").style.display = "none";
+    document.getElementById("announcementsScreen").style.display = "none";
+    document.getElementById("aiScreen").style.display = "none";
+    document.getElementById("groupGoalScreen").style.display = "none";
+    document.getElementById("groupMembersScreen").style.display = "none";
+
+    
+}
+
 function showChat() {
 
-    document.getElementById("dashboardScreen").style.display = "none";
     document.getElementById("historyScreen").style.display = "none";
     document.getElementById("profileScreen").style.display = "none";
     document.getElementById("leadersScreen").style.display = "none";
@@ -639,21 +944,55 @@ async function startRecording() {
             audioChunks.push(event.data);
         };
 
-        mediaRecorder.onstop = () => {
+    mediaRecorder.onstop = async () => {
 
-            const audioBlob =
-                new Blob(audioChunks, {
-                    type: "audio/webm"
-                });
+    const audioBlob = new Blob(audioChunks, {
+        type: "audio/webm"
+    });
 
-            console.log("Voice recorded:", audioBlob);
+    const fileName = `voice_${Date.now()}.webm`;
 
-            alert("Voice recorded successfully");
-        };
+    const { error } = await supabase.storage
+        .from("voice-notes")
+        .upload(fileName, audioBlob);
+
+    if (error) {
+        alert("Upload failed");
+        console.error(error);
+        return;
+    }
+const { data: publicUrlData } = db.storage
+    .from("voice-notes")
+    .getPublicUrl(fileName);
+
+const audioUrl = publicUrlData.publicUrl;
+    console.log("Voice URL:", audioUrl);
+
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
+
+const { error: msgError } = await db
+    .from("messages")
+    .insert([{
+        name: user.name,
+        message: "",
+        audio_url: audioUrl,
+        status: "✓",
+        photo_url: user.photo_url
+    }]);
+
+if (msgError) {
+    console.error(msgError);
+    alert("Failed to send voice message.");
+} else {
+    alert("Voice message sent.");
+}
+};
 
         mediaRecorder.start();
 
-        document.getElementById("recordBtn").innerText = "⏹";
+        const btn = document.getElementById("recordBtn");
+btn.innerHTML = "🔴 Recording";
+btn.style.background = "#dc2626";
 
         document.getElementById("recordBtn").onclick =
             stopRecording;
@@ -669,12 +1008,13 @@ function stopRecording() {
 
     mediaRecorder.stop();
 
-    document.getElementById("recordBtn").innerText = "🎤";
+    const btn = document.getElementById("recordBtn");
+btn.innerHTML = "🎤";
+btn.style.background = "#15803d";
 
     document.getElementById("recordBtn").onclick =
         startRecording;
 }
-
 async function loadMessages() {
 
     const user =
@@ -691,8 +1031,7 @@ updateUnreadCount();
     const { data, error } = await db
         .from("messages")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .order("created_at", { ascending: true });
 
     if (error) {
         alert(error.message);
@@ -706,7 +1045,7 @@ updateUnreadCount();
 
     container.innerHTML = "";
 
-    data.reverse().forEach(item => {
+    data.forEach(item => {
 
         const mine =
             item.name === user.name;
@@ -717,7 +1056,7 @@ updateUnreadCount();
                 hour: "2-digit",
                 minute: "2-digit"
             });
-        
+
 
         container.innerHTML += `
         <div class="chat-message ${mine ? 'my-msg' : 'other-msg'}"
@@ -731,7 +1070,13 @@ updateUnreadCount();
     <h4>${item.name}</h4>
 </div>
 
-            <p>${item.message}</p>
+            ${item.audio
+    ? `<audio controls style="width:100%;">
+           <source src="${item.audio}" type="audio/webm">
+           Your browser does not support audio.
+       </audio>`
+    : `<p>${item.message}</p>`
+}
 
 
             <div class="chat-footer">
@@ -757,7 +1102,7 @@ setInterval(() => {
 
     const chatScreen =
         document.getElementById("chatScreen");
-        
+
         if (
     chatScreen &&
     chatScreen.style.display === "block"
@@ -791,19 +1136,26 @@ async function loadNotifications() {
     }
 
     data.forEach(item => {
-        container.innerHTML += `
-        <div class="card">
-            <h3>${item.title}</h3>
-            <p>${item.message}</p>
-        </div>
-        `;
-    });
-} 
+    container.innerHTML += `
+    <div class="card">
+        <h3>${item.title}</h3>
+        <p>${item.message}</p>
+
+        <button
+            class="btn delete-btn"
+            onclick="deleteNotification(${item.id})">
+            🗑 Delete
+        </button>
+
+    </div>
+    `;
+});
+}
 async function saveRecoveryInfo() {
 
     const user =
         JSON.parse(localStorage.getItem("loggedUser"));
-        
+
         console.log("Logged User:", user.name);
 
     const answer1 =
@@ -835,7 +1187,7 @@ async function saveRecoveryInfo() {
     }
 
     alert("Recovery information saved successfully");
-}   
+}
 async function updateUnreadCount() {
 
     const user =
@@ -883,8 +1235,7 @@ new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
 const { data, error } = await db
     .from("members")
-    .select("name, photo_url, last_seen")
-    .gte("last_seen", fiveMinutesAgo);
+    .select("name, photo_url, last_seen");
 
     if (error) return;
 
@@ -897,19 +1248,66 @@ const { data, error } = await db
 
     data.forEach(member => {
 
-        container.innerHTML += `
-        <div class="online-user">
-            <img src="${member.photo_url || 'images/logo.jpg'}"
-                 class="online-avatar">
+    let status = "⚫ Offline";
 
-            <span>${member.name}</span>
+if (member.last_seen) {
 
-            <div class="online-dot"></div>
-        </div>
-        `;
-    });
+    const diffMinutes = Math.floor(
+        (Date.now() - new Date(member.last_seen)) / 60000
+    );
+
+    if (diffMinutes < 5) {
+        status = "🟢 Online";
+    } else if (diffMinutes < 60) {
+        status = ` ${diffMinutes} min ago`;
+    } else if (diffMinutes < 1440) {
+        status = `${Math.floor(diffMinutes / 60)} hr ago`;
+    } else {
+        status = `${Math.floor(diffMinutes / 1440)} day(s) ago`;
+    }
 }
 
+const firstName = member.name.split(" ")[0];
+
+container.innerHTML += `
+<div class="online-user"
+     onclick="showMemberStatus(
+        '${member.name}',
+        '${member.photo_url || "images/logo.jpg"}',
+        '${member.last_seen || ""}'
+     )">
+
+    <div style="position:relative;display:inline-block;">
+        <img src="${member.photo_url || 'images/logo.jpg'}"
+             class="online-avatar">
+
+        ${status === "🟢 Online"
+        ? `<span style="
+            position:absolute;
+            bottom:2px;
+            right:2px;
+            width:12px;
+            height:12px;
+            background:#22c55e;
+            border:2px solid white;
+            border-radius:50%;
+        "></span>`
+        : ""}
+    </div>
+
+    <small>${firstName}</small>
+
+</div>
+    <div>
+    <strong>${member.name.split(" ")[0]}</strong> <br>
+        <small>${status === "🟢 Online" ? "Online" : status}</small>
+    </div>
+
+    </div>
+</div>
+`;
+});
+}
 async function loadOfflineMembers() {
 
     const { data, error } = await db
@@ -940,28 +1338,55 @@ async function deleteMessage(id) {
 
     loadMessages();
 }
-function showMessageMenu(event, id) {
+async function updateLastSeen() {
 
-    event.preventDefault();
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
 
-    const action = prompt(
-        "Type:\n1 = Delete\n2 = Copy"
-    );
+    if (!user) return;
 
-    if (action === "1") {
-        deleteMessage(id);
-    }
+    await db
+        .from("members")
+        .update({
+            last_seen: new Date().toISOString()
+        })
+        .eq("phone", user.phone);
 }
-let selectedMessageId = null;
-let selectedMessageText = "";
+function showMemberStatus(name, photo, lastSeen) {
 
-function showMessageMenu(id, text) {
+    let status = "⚫ Offline";
 
-    selectedMessageId = id;
-    selectedMessageText = text;
+    if (lastSeen) {
 
-    document.getElementById("messageMenu")
-        .style.display = "block";
+        const diffMinutes = Math.floor(
+            (Date.now() - new Date(lastSeen)) / 60000
+        );
+
+        if (diffMinutes < 5) {
+            status = "🟢 Online";
+        } else if (diffMinutes < 60) {
+            status = `⏰ Last seen ${diffMinutes} min ago`;
+        } else if (diffMinutes < 1440) {
+            status = `⏰ Last seen ${Math.floor(diffMinutes / 60)} hr ago`;
+        } else {
+            status = `⏰ Last seen ${Math.floor(diffMinutes / 1440)} day(s) ago`;
+        }
+    }
+
+    document.getElementById("popupPhoto").src = photo;
+    document.getElementById("popupName").innerText = name;
+    document.getElementById("popupStatus").innerText = status;
+
+    document.getElementById("memberStatusPopup").style.display = "flex";
+}
+
+function closeMemberStatus() {
+    document.getElementById("memberStatusPopup").style.display = "none";
+
+    document.getElementById("memberStatusPopup").onclick = function(e) {
+    if (e.target === this) {
+        closeMemberStatus();
+    }
+};
 }
 
 function closeMessageMenu() {
@@ -1070,19 +1495,6 @@ async function loadMyRank() {
     document.getElementById("myRank").innerText =
         rank > 0 ? "#" + rank : "Unranked";
 }
-function showAnnouncements() {
-
-    document.getElementById("dashboardScreen").style.display = "none";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-
-    document.getElementById("announcementsScreen").style.display = "block";
-    
-    document.getElementById("announcementsScreen").style.display = "none";
-}
 
 async function showAnnouncements() {
 
@@ -1092,11 +1504,12 @@ async function showAnnouncements() {
     document.getElementById("leadersScreen").style.display = "none";
     document.getElementById("contributeScreen").style.display = "none";
     document.getElementById("chatScreen").style.display = "none";
+    document.getElementById("groupMembersScreen").style.display = "none";
+    document.getElementById("aiScreen").style.display = "none";
 
     document.getElementById("announcementsScreen").style.display = "block";
 
-    const container =
-        document.getElementById("announcementsOnlyContainer");
+    const container = document.getElementById("announcementsOnlyContainer");
 
     const { data, error } = await db
         .from("announcements")
@@ -1104,7 +1517,7 @@ async function showAnnouncements() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        container.innerHTML = "<p>Error loading announcements.</p>";
+        container.innerHTML = "<p>Failed to load announcements.</p>";
         return;
     }
 
@@ -1124,6 +1537,25 @@ async function showAnnouncements() {
         `;
     });
 }
+async function deleteNotification(id) {
+
+    const ok = confirm("Delete this notification?");
+
+    if (!ok) return;
+
+    const { error } = await db
+        .from("notifications")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    loadNotifications();
+}
+
 // CONTRIBUTION REMINDER
 
 async function checkContributionReminder() {
@@ -1160,6 +1592,26 @@ Please make your contribution before midnight.
 
     }
 }
+function filterMembers() {
 
-// run when page loads
-checkContributionReminder();
+    const input = document
+        .getElementById("memberSearch")
+        .value
+        .toLowerCase();
+
+    const cards = document
+        .querySelectorAll("#membersContainer .card");
+
+    cards.forEach(card => {
+
+        const text = card.innerText.toLowerCase();
+
+        if (text.includes(input)) {
+            card.style.display = "flex";
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+}
