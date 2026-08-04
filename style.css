@@ -3122,3 +3122,34 @@ background:#dc2626;
 .toast.success{
 background:#15803d;
 }
+/* M-Pesa Contribution Poster */
+
+.mpesa-poster{
+    width:100%;
+    max-width:900px;
+    display:block;
+    margin:20px auto;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+#contributeScreen h2{
+    text-align:center;
+    color:#0b6623;
+    margin:20px 0;
+}
+/* M-Pesa Action Buttons */
+
+.mpesa-actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:15px;
+    margin:20px 0;
+}
+
+.mpesa-actions .btn{
+    text-decoration:none;
+    min-width:180px;
+    text-align:center;
+}

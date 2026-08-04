@@ -623,17 +623,11 @@ const goal =
 
 async function changePassword() {
 
-    const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
 
-    const currentPassword =
-        document.getElementById("currentPassword").value.trim();
-
-    const newPassword =
-        document.getElementById("newPassword").value.trim();
-
-    const confirmPassword =
-        document.getElementById("confirmPassword").value.trim();
+    const currentPassword = document.getElementById("currentPassword").value.trim();
+    const newPassword = document.getElementById("newPassword").value.trim();
+    const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
         alert("Please fill all fields.");
@@ -650,24 +644,24 @@ async function changePassword() {
         return;
     }
 
-    const { data: memberData, error } = await db
+    const { data, error } = await db
         .from("members")
-        .select("password")
+        .select("id,password")
         .eq("phone", user.phone)
         .single();
 
-    if (error) {
-        alert(error.message);
+    if (error || !data) {
+        alert("Member not found.");
         return;
     }
 
-    if (currentPassword !== memberData.password) {
+    if (currentPassword !== data.password) {
         alert("Current password is incorrect.");
         return;
     }
 
-    if (currentPassword === newPassword) {
-        alert("New password cannot be the same as your current password.");
+    if (newPassword === data.password) {
+        alert("Your new password cannot be the same as your current password.");
         return;
     }
 
@@ -676,7 +670,7 @@ async function changePassword() {
         .update({
             password: newPassword
         })
-        .eq("phone", user.phone);
+        .eq("id", data.id);
 
     if (updateError) {
         alert(updateError.message);
@@ -684,19 +678,14 @@ async function changePassword() {
     }
 
     user.password = newPassword;
-
-    localStorage.setItem(
-        "loggedUser",
-        JSON.stringify(user)
-    );
-
-    alert("Password updated successfully.");
+    localStorage.setItem("loggedUser", JSON.stringify(user));
 
     document.getElementById("currentPassword").value = "";
     document.getElementById("newPassword").value = "";
     document.getElementById("confirmPassword").value = "";
-}
 
+    alert("Password changed successfully.");
+}
 function togglePasswordVisibility() {
 
     const fields = [

@@ -483,33 +483,36 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 
 <div id="contributeScreen" style="display:none;">
-    
+
     <button onclick="showDashboard()" class="btn">
         ← Back
     </button>
 
     <h2>Make Contribution</h2>
 
-    <div class="card">
-    <h3>M-Pesa Contributions</h3>
-    <p>Send contributions to the Treasurer:</p>
-    <p><strong>0743361713</strong></p>
-</div>
+    <a href="images/mpesa-poster.jpg" target="_blank">
+    <img
+        src="images/mpesa-poster.jpg"
+        alt="M-Pesa Poster"
+        class="mpesa-poster">
+</a>
+        
+        <div class="mpesa-actions">
 
-<div class="card">
-    <h3>Cash Contributions</h3>
-    <p>Cash contributions can be given directly to the Treasurer.</p>
-    <p><strong>0743361713</strong></p>
-</div>
+    <button onclick="copyMpesaNumber()" class="btn">
+        📋 Copy Number
+    </button>
 
-<div class="card">
-    <h3>Important</h3>
-    <p>Minimum contribution: KSh 50</p>
-    <p>All contributions are verified and recorded by the Treasurer or Admin.</p>
-</div>
+    <a href="tel:0743361713" class="btn">
+        📞 Call Treasurer
+    </a>
+
+    <a href="https://wa.me/254743361713" class="btn">
+        💬 WhatsApp
+    </a>
 
 </div>
-
+        
 <div id="chatScreen" class="chat-screen" style="display:none;">
 
     <div class="chat-topbar">

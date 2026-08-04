@@ -971,4 +971,61 @@ function logout() {
     sessionStorage.removeItem("adminVerified");
 
     window.location.href = "login.html";
+}async function loadPendingContributions() {
+
+    const container = document.getElementById("pendingContributions");
+
+    if (!container) return;
+
+    container.innerHTML = "Loading...";
+
+    const { data, error } = await db
+        .from("pending_contributions")
+        .select("*")
+        .eq("status", "Pending")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        container.innerHTML = "Failed to load requests.";
+        return;
+    }
+
+    if (!data.length) {
+        container.innerHTML = "<p>No pending contributions.</p>";
+        return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(item => {
+
+        container.innerHTML += `
+
+        <div class="card">
+
+            <h3>${item.member_name}</h3>
+
+            <p><strong>Phone:</strong> ${item.phone}</p>
+
+            <p><strong>Amount:</strong> KSh ${item.amount}</p>
+
+            <button class="btn"
+                onclick="approveContribution(${item.id})">
+                ✅ Approve
+            </button>
+
+            <button class="btn"
+                onclick="rejectContribution(${item.id})">
+                ❌ Reject
+            </button>
+
+        </div>
+
+        `;
+    });
+
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadPendingContributions();
+});
