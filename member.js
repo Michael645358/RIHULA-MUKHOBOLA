@@ -941,10 +941,10 @@ async function startRecording() {
 
     const fileName = `voice_${Date.now()}.webm`;
 
-    const { error } = await supabase.storage
-        .from("voice-notes")
-        .upload(fileName, audioBlob);
-
+const { error } = await db.storage
+    .from("voice-notes")
+    .upload(fileName, audioBlob);
+    
     if (error) {
         alert("Upload failed");
         console.error(error);
@@ -1059,9 +1059,10 @@ updateUnreadCount();
     <h4>${item.name}</h4>
 </div>
 
-            ${item.audio
+            ${item.audio_url
     ? `<audio controls style="width:100%;">
-           <source src="${item.audio}" type="audio/webm">
+           <source  src="${item.audio_url}"
+           type="audio/webm">
            Your browser does not support audio.
        </audio>`
     : `<p>${item.message}</p>`
