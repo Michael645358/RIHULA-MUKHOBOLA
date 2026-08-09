@@ -223,7 +223,7 @@ async function updateGroupGoal() {
 
     if (!newGoal || newGoal <= 0) {
 
-        alert("Please enter a valid goal amount.");
+        showPopup("Please enter a valid goal amount.", "warning");
 
         return;
     }
@@ -250,10 +250,9 @@ async function updateGroupGoal() {
                 error
             );
 
-            alert(
-                "Failed to update group goal:\n\n" +
-                error.message
-            );
+            showPopup("Failed to update group goal:
+
+" + error.message, "error");
 
             return;
         }
@@ -267,11 +266,9 @@ async function updateGroupGoal() {
             "KSh " +
             newGoal.toLocaleString();
 
-        alert(
-            "✅ Group goal updated successfully!\n\n" +
-            "New goal: KSh " +
-            newGoal.toLocaleString()
-        );
+        showPopup("Group goal updated successfully.
+
+New goal: KSh " + newGoal.toLocaleString(), "success");
 
     } catch (error) {
 
@@ -280,10 +277,9 @@ async function updateGroupGoal() {
             error
         );
 
-        alert(
-            "Something went wrong:\n\n" +
-            error.message
-        );
+        showPopup("Something went wrong:
+
+" + error.message, "error");
 
     } finally {
 
@@ -314,6 +310,8 @@ function logout() {
 }
 
 </script>
+
+<script src="popups.js"></script>
 
 </body>
 </html>

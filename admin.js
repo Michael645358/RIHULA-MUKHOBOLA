@@ -40,13 +40,13 @@ const idNumber =
             ]);
 
         if (error) {
-            alert("SUPABASE ERROR: " + error.message);
+            showPopup("Database error: " + error.message, "error");
         } else {
-            alert("Member Added Successfully");
+            showPopup("Member added successfully.", "success");
         }
 
     } catch(err) {
-        alert("CATCH ERROR: " + err.message);
+        showPopup("Unexpected error: " + err.message, "error");
     }
 }
 async function recordContribution() {
@@ -58,7 +58,7 @@ async function recordContribution() {
         document.getElementById("contributionAmount").value;
 
     if (!phone || !amount) {
-        alert("Fill all fields");
+        showPopup("Please fill in all required fields.", "warning");
         return;
     }
 
@@ -72,10 +72,10 @@ async function recordContribution() {
         ]);
 
     if (error) {
-        alert("ERROR: " + error.message);
+        showPopup("Could not save the contribution: " + error.message, "error");
     } else {
 
-        alert("Contribution Saved Successfully");
+        showPopup("Contribution saved successfully.", "success");
 
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
@@ -200,9 +200,9 @@ async function editMember() {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
     } else {
-        alert("Member Updated Successfully");
+        showPopup("Member updated successfully.", "success");
     }
 }
 
@@ -226,9 +226,9 @@ async function editContribution() {
         .eq("member_phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
     } else {
-        alert("Contribution Updated Successfully");
+        showPopup("Contribution updated successfully.", "success");
     }
 }
 async function loadMembers() {
@@ -238,7 +238,7 @@ async function loadMembers() {
         .select("*");
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -291,8 +291,7 @@ let totalSavings = 0;
 }
 async function deleteMember(phone) {
 
-    const confirmDelete =
-        confirm("Delete this member?");
+    const confirmDelete = await showConfirm("Delete this member? This action cannot be undone.", { title: "Delete member", confirmText: "Delete", danger: true });
 
     if (!confirmDelete) return;
 
@@ -302,9 +301,9 @@ async function deleteMember(phone) {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
     } else {
-        alert("Member Deleted");
+        showPopup("Member deleted successfully.", "success");
         loadMembers();
     }
 }
@@ -318,9 +317,9 @@ async function approveMember(phone) {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
     } else {
-        alert("Member Approved");
+        showPopup("Member approved successfully.", "success");
 
 await addActivity(
     "Approved member: " + phone
@@ -339,7 +338,7 @@ loadLeaderboard();
         .eq("status", "pending");
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -450,7 +449,7 @@ async function addAnnouncement() {
         document.getElementById("announcementMessage").value;
 
     if (!title || !message) {
-        alert("Fill all fields");
+        showPopup("Please fill in all required fields.", "warning");
         return;
     }
 
@@ -464,10 +463,10 @@ async function addAnnouncement() {
         ]);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
     } else {
 
-        alert("Announcement Posted");
+        showPopup("Announcement posted successfully.", "success");
 
         document.getElementById(
             "announcementTitle"
@@ -486,7 +485,7 @@ async function loadAnnouncementsList() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -516,8 +515,7 @@ async function loadAnnouncementsList() {
 }
 async function deleteAnnouncement(id) {
 
-    const confirmDelete =
-        confirm("Delete this announcement?");
+    const confirmDelete = await showConfirm("Delete this announcement? This action cannot be undone.", { title: "Delete announcement", confirmText: "Delete", danger: true });
 
     if (!confirmDelete) return;
 
@@ -527,9 +525,9 @@ async function deleteAnnouncement(id) {
         .eq("id", id);
 
     if (error) {
-        alert("Delete Error: " + error.message);
+        showPopup("Could not delete the announcement: " + error.message, "error");
     } else {
-        alert("Announcement Deleted");
+        showPopup("Announcement deleted successfully.", "success");
         loadAnnouncementsList();
     }
 }
@@ -540,7 +538,7 @@ async function loadLeadership() {
         .select("*");
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -657,7 +655,7 @@ async function viewHistory(phone, name) {
         .order("created_at", { ascending: false });
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -681,7 +679,7 @@ async function viewHistory(phone, name) {
         });
     }
 
-    alert(historyText);
+    showPopup(historyText, "info", "Contribution history", 6500);
 }
 function searchMembers() {
 
@@ -874,7 +872,7 @@ async function updateGroupGoal() {
     const newGoal = Number(input.value);
 
     if (!newGoal || newGoal <= 0) {
-        alert("Please enter a valid goal amount.");
+        showPopup("Please enter a valid goal amount.", "warning");
         return;
     }
 
@@ -887,31 +885,28 @@ async function updateGroupGoal() {
 
     if (error) {
         console.error(error);
-        alert("Failed to update group goal: " + error.message);
+        showPopup("Failed to update group goal: " + error.message, "error");
         return;
     }
 
     document.getElementById("adminCurrentGroupGoal").innerText =
         "KSh " + newGoal.toLocaleString();
 
-    alert(
-        "✅ Group goal updated to KSh " +
-        newGoal.toLocaleString()
-    );
+    showPopup("Group goal updated to KSh " + newGoal.toLocaleString(), "success");
 }
 async function updateGroupGoal() {
 
     const input = document.getElementById("adminGroupGoalInput");
 
     if (!input) {
-        alert("Group goal input not found.");
+        showPopup("Group goal input was not found.", "error");
         return;
     }
 
     const newGoal = Number(input.value);
 
     if (!newGoal || newGoal <= 0) {
-        alert("Please enter a valid goal amount.");
+        showPopup("Please enter a valid goal amount.", "warning");
         return;
     }
 
@@ -924,7 +919,7 @@ async function updateGroupGoal() {
 
     if (error) {
         console.error("Update group goal error:", error);
-        alert("Failed to update group goal:\n" + error.message);
+        showPopup("Failed to update group goal:\n" + error.message, "error");
         return;
     }
 
@@ -936,11 +931,7 @@ async function updateGroupGoal() {
             "KSh " + newGoal.toLocaleString();
     }
 
-    alert(
-        "✅ Group goal updated successfully!\n\n" +
-        "New goal: KSh " +
-        newGoal.toLocaleString()
-    );
+    showPopup("Group goal updated successfully.\n\nNew goal: KSh " + newGoal.toLocaleString(), "success");
 }
 async function loadAdminGroupGoal() {
 

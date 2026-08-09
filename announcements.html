@@ -111,7 +111,7 @@ async function sendNotification() {
         .value.trim();
 
     if (!title || !message) {
-        alert("Enter both title and message.");
+        showPopup("Please enter both a title and a message.", "warning");
         return;
     }
 
@@ -124,7 +124,7 @@ async function sendNotification() {
         }]);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message, "error");
         return;
     }
 
@@ -149,9 +149,11 @@ async function sendNotification() {
     document.getElementById("notificationTitle").value = "";
     document.getElementById("notificationMessage").value = "";
 
-    alert("✅ Notification sent to all subscribed members.");
+    showPopup("Notification sent to all subscribed members.", "success", "Notification sent");
 }
 </script>
+
+<script src="popups.js"></script>
 
 </body>
 </html>
