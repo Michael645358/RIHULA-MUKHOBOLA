@@ -40,13 +40,13 @@ const idNumber =
             ]);
 
         if (error) {
-            alert("SUPABASE ERROR: " + error.message);
+            showPopup("SUPABASE ERROR: " + error.message);
         } else {
-            alert("Member Added Successfully");
+            showPopup("Member Added Successfully");
         }
 
     } catch(err) {
-        alert("CATCH ERROR: " + err.message);
+        showPopup("CATCH ERROR: " + err.message);
     }
 }
 async function recordContribution() {
@@ -58,7 +58,7 @@ async function recordContribution() {
         document.getElementById("contributionAmount").value;
 
     if (!phone || !amount) {
-        alert("Fill all fields");
+        showPopup("Fill all fields");
         return;
     }
 
@@ -72,10 +72,10 @@ async function recordContribution() {
         ]);
 
     if (error) {
-        alert("ERROR: " + error.message);
+        showPopup("ERROR: " + error.message);
     } else {
 
-        alert("Contribution Saved Successfully");
+        showPopup("Contribution Saved Successfully");
 
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
@@ -157,36 +157,6 @@ window.onload = function () {
     if (document.getElementById("membersBody")) {
         loadMembers();
     }
-
-    const splash = document.getElementById("splash-screen");
-    const loadingText = document.getElementById("loading-text");
-
-    if (!splash || !loadingText) return;
-
-    if (sessionStorage.getItem("splashShown")) {
-        splash.style.display = "none";
-        return;
-    }
-
-    sessionStorage.setItem("splashShown", "true");
-
-    let percent = 0;
-
-    const timer = setInterval(function () {
-
-        percent++;
-
-        loadingText.innerHTML = percent + "%";
-
-        if (percent >= 100) {
-
-            clearInterval(timer);
-
-            splash.style.display = "none";
-        }
-
-    }, 50);
-
 };
 async function editMember() {
 
@@ -204,9 +174,9 @@ async function editMember() {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
     } else {
-        alert("Member Updated Successfully");
+        showPopup("Member Updated Successfully");
     }
 }
 
@@ -230,9 +200,9 @@ async function editContribution() {
         .eq("member_phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
     } else {
-        alert("Contribution Updated Successfully");
+        showPopup("Contribution Updated Successfully");
     }
 }
 async function loadMembers() {
@@ -242,7 +212,7 @@ async function loadMembers() {
         .select("*");
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -306,9 +276,9 @@ async function deleteMember(phone) {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
     } else {
-        alert("Member Deleted");
+        showPopup("Member Deleted");
         loadMembers();
     }
 }
@@ -322,9 +292,9 @@ async function approveMember(phone) {
         .eq("phone", phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
     } else {
-        alert("Member Approved");
+        showPopup("Member Approved");
 
 await addActivity(
     "Approved member: " + phone
@@ -342,7 +312,7 @@ async function loadPendingMembers() {
 
     if (!body) return;
 
-    body.innerHTML = "<p>Loading pending members...</p>";
+    body.innerHTML = "<p></p>";
 
     const { data, error } = await db
         .from("members")
@@ -474,7 +444,7 @@ async function addAnnouncement() {
         document.getElementById("announcementMessage").value.trim();
 
     if (!title || !message) {
-        alert("Please enter both title and message.");
+        showPopup("Please enter both title and message.");
         return;
     }
 
@@ -488,11 +458,11 @@ async function addAnnouncement() {
         ]);
 
     if (error) {
-        alert("Error: " + error.message);
+        showPopup("Error: " + error.message);
         return;
     }
 
-    alert("Announcement posted successfully!");
+    showPopup("Announcement posted successfully!");
 
     document.getElementById("announcementTitle").value = "";
     document.getElementById("announcementMessage").value = "";
@@ -564,9 +534,9 @@ async function deleteAnnouncement(id) {
         .eq("id", id);
 
     if (error) {
-        alert("Delete Error: " + error.message);
+        showPopup("Delete Error: " + error.message);
     } else {
-        alert("Announcement Deleted");
+        showPopup("Announcement Deleted");
         loadAnnouncementsList();
     }
 }
@@ -589,11 +559,11 @@ async function editAnnouncement(id){
         .eq("id",id);
 
     if(error){
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
-    alert("Announcement updated.");
+    showPopup("Announcement updated.");
 
     loadAnnouncementsList();
 
@@ -616,7 +586,7 @@ async function pushAnnouncement(title,message){
 
     const data = await res.json();
 
-    alert("Push notification sent.");
+    showPopup("Push notification sent.");
 }
 
 async function loadLeadership() {
@@ -626,7 +596,7 @@ async function loadLeadership() {
         .select("*");
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -743,7 +713,7 @@ async function viewHistory(phone, name) {
         .order("created_at", { ascending: false });
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -767,7 +737,7 @@ async function viewHistory(phone, name) {
         });
     }
 
-    alert(historyText);
+    showPopup(historyText);
 }
 function searchMembers() {
 
@@ -977,7 +947,7 @@ function logout() {
 
     if (!container) return;
 
-    container.innerHTML = "Loading...";
+    container.innerHTML = "";
 
     const { data, error } = await db
         .from("pending_contributions")

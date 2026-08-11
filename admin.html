@@ -137,7 +137,6 @@ Logout
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="supabase.js"></script>
-<script src="script.js"></script>
 <script src="admin.js"></script>
 <script>
 
@@ -250,9 +249,7 @@ async function updateGroupGoal() {
                 error
             );
 
-            showPopup("Failed to update group goal:
-
-" + error.message, "error");
+            showPopup("Failed to update group goal:\n" + error.message, "error");
 
             return;
         }
@@ -266,9 +263,7 @@ async function updateGroupGoal() {
             "KSh " +
             newGoal.toLocaleString();
 
-        showPopup("Group goal updated successfully.
-
-New goal: KSh " + newGoal.toLocaleString(), "success");
+        showPopup("Group goal updated successfully.\n\nNew goal: KSh " + newGoal.toLocaleString(), "success");
 
     } catch (error) {
 
@@ -277,9 +272,7 @@ New goal: KSh " + newGoal.toLocaleString(), "success");
             error
         );
 
-        showPopup("Something went wrong:
-
-" + error.message, "error");
+        showPopup("Something went wrong:\n" + error.message, "error");
 
     } finally {
 
@@ -310,8 +303,6 @@ function logout() {
 }
 
 </script>
-
-<script src="popups.js"></script>
 
 </body>
 </html>

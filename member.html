@@ -7,6 +7,7 @@
 
 <link rel="stylesheet" href="style.css">
 
+<script src="popups.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
 <script>
@@ -195,16 +196,21 @@ OneSignalDeferred.push(async function(OneSignal) {
      src="images/logo.jpg"
      class="profile-photo">
 
-<div class="upuload-section">
+<div class="upload-section">
 
 <input type="file"
        id="photoUpload"
-       accept="image/*">
+       accept="image/*"
+       hidden>
 
-<button onclick="uploadProfilePhoto()"
+<button type="button"
+        id="uploadPhotoButton"
+        onclick="document.getElementById('photoUpload').click()"
         class="btn upload-btn">
-    Upload Profile Photo
+    📷 Upload Profile Photo
 </button>
+
+<p class="upload-hint">Tap to choose a photo. It uploads automatically.</p>
 
 </div>
     <h3 id="passwordnName"></h3>
@@ -405,7 +411,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
     <div id="membersContainer">
 
-        <p>Loading members...</p>
+        <p></p>
 
     </div>
 

@@ -1,115 +1,177 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
-
+<title>Member Login</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="login-box">
-
-<div>
-    <img src="images/logo.jpg" alt="Logo" width="100">
-</div>
+    <div>
+        <img src="images/logo.jpg" alt="Logo" width="100">
+    </div>
 
     <h2>Member Login</h2>
 
-<p style="margin-bottom:15px;">
-    <a href="admin-login.html">Admin Login</a>
-</p>
-
-<div class="security-notice">
-    <h3>Secure Member Login</h3>
-    <p>
-        This login page is only for registered members of
-        RIHULA MUKHOBOLA ASSOCIATION.
+    <p style="margin-bottom:15px;">
+        <a href="admin-login.html">Admin Login</a>
     </p>
-</div>
+
+    <div class="security-notice">
+        <h3>Secure Member Login</h3>
+        <p>
+            This login page is only for registered members of
+            RIHULA MUKHOBOLA ASSOCIATION.
+        </p>
+    </div>
 
     <div class="input-group">
-    <input type="text" id="phone" placeholder="📱 Phone Number">
+        <input
+            type="text"
+            id="loginId"
+            placeholder="📱 Phone Number or 📧 Email"
+            autocomplete="username">
+    </div>
+
+    <div class="input-group">
+        <input
+            type="password"
+            id="password"
+            placeholder="🔒 Password"
+            autocomplete="current-password">
+    </div>
+
+    <button onclick="login()" class="login-btn">Login</button>
+
+    <div class="links">
+        <a href="forgot-password.html">Forgot Password?</a>
+        <br><br>
+        <a href="activate-account.html">Activate Existing Member Account</a>
+        <br><br>
+        <a href="register.html">Register Here</a>
+    </div>
 </div>
 
-<div class="input-group">
-    <input type="password" id="password" placeholder="🔒 Password">
-</div>
-
-<button onclick="login()" class="login-btn">
-    Login
-</button>
-
-<div class="links">
-
-    <a href="forgot-password.html">
-        Forgot Password?
-    </a>
-
-    <br><br>
-
-    <a href="register.html">
-        Register Here
-    </a>
-
-</div>
-
-</div>
-
+<script src="popups.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 
 <script>
-async function login() {
+async function redirectMember(member) {
+    localStorage.setItem("loggedUser", JSON.stringify(member));
 
-    const phone =
-        document.getElementById("phone").value;
-
-    const password =
-        document.getElementById("password").value;
-
-    const { data, error } = await db
+    await db
         .from("members")
-        .select("*")
-        .eq("phone", phone)
-        .eq("password", password)
-        .single();
+        .update({
+            last_seen: new Date().toISOString(),
+            online: true
+        })
+        .eq("id", member.id);
 
-    if (error || !data) {
-        alert("Invalid phone or password");
+    if (member.role === "admin") {
+        window.location.href = "admin.html";
+    } else if (member.status === "pending") {
+        window.location.href = "pending.html";
+    } else {
+        window.location.href = "member.html";
+    }
+}
+
+async function login() {
+    const loginId = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!loginId || !password) {
+        showPopup("Enter your email/phone and password.", "warning");
         return;
     }
 
-    localStorage.setItem(
-        "loggedUser",
-        JSON.stringify(data)
-    )
-    
-    await db
-    .from("members")
-    .update({
-        last_seen: new Date().toISOString(),
-        online: true
-    })
-    .eq("phone", data.phone);
-    
-    alert("Role: " + data.role);
-if (data.role === "admin") {
+    try {
+        /* New email/Supabase Auth login */
+        if (loginId.includes("@")) {
+            const { data: authData, error: authError } =
+                await db.auth.signInWithPassword({
+                    email: loginId.toLowerCase(),
+                    password: password
+                });
 
-    window.location.href = "admin.html";
+            if (authError) {
+                console.error("EMAIL LOGIN ERROR:", authError);
+                showPopup(
+                    "Email login failed:\n\n" + authError.message,
+                    "error"
+                );
+                return;
+            }
 
-} else if (data.status === "pending") {
+            if (!authData || !authData.user) {
+                showPopup("Login failed.", "error");
+                return;
+            }
 
-    window.location.href = "pending.html";
+            const { data: member, error: memberError } =
+                await db
+                    .from("members")
+                    .select("*")
+                    .eq("auth_id", authData.user.id)
+                    .maybeSingle();
 
-} else {
+            if (memberError) {
+                console.error("MEMBER LOOKUP ERROR:", memberError);
+                await db.auth.signOut();
+                showPopup(
+                    "Login succeeded, but your member record could not be loaded.",
+                    "error"
+                );
+                return;
+            }
 
-    window.location.href = "member.html";
+            if (!member) {
+                await db.auth.signOut();
+                showPopup(
+                    "This email is not linked to a RIHULA member account yet.",
+                    "warning"
+                );
+                return;
+            }
 
-}
-    
+            await redirectMember(member);
+            return;
+        }
+
+        /* Legacy phone login for members who have not activated email */
+        const { data: member, error } = await db
+            .from("members")
+            .select("*")
+            .eq("phone", loginId)
+            .eq("password", password)
+            .maybeSingle();
+
+        if (error) {
+            console.error("PHONE LOGIN ERROR:", error);
+            showPopup(
+                "Phone login failed:\n\n" + error.message,
+                "error"
+            );
+            return;
+        }
+
+        if (!member) {
+            showPopup("Invalid phone number or password.", "error");
+            return;
+        }
+
+        await redirectMember(member);
+
+    } catch (error) {
+        console.error("LOGIN ERROR:", error);
+        showPopup(
+            "Unexpected login error:\n\n" + error.message,
+            "error"
+        );
+    }
 }
 </script>
 </body>

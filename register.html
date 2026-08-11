@@ -4,113 +4,156 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Member Registration</title>
-
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="register-card">
 
-    <img src="images/logo.jpg" class="register-logo">
+<div class="register-card">
+    <img src="images/logo.jpg" class="register-logo" alt="RIHULA Logo">
 
     <h1>Member Registration</h1>
-    <input
-    type="text"
-    id="firstName"
-    placeholder="First Name">
 
-<input
-    type="text"
-    id="lastName"
-    placeholder="Last Name">
+    <input type="text" id="firstName" placeholder="First Name">
+    <input type="text" id="lastName" placeholder="Last Name">
+    <input type="tel" id="phone" placeholder="Phone Number">
+    <input type="email" id="email" placeholder="Email Address" autocomplete="email">
+    <input type="password" id="password" placeholder="Create Password" autocomplete="new-password">
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password">
 
-<input
-    type="tel"
-    id="phone"
-    placeholder="Phone Number">
+    <button onclick="registerMember()">Register</button>
 
-<input
-    type="password"
-    id="password"
-    placeholder="Create Password">
-
-
-
-    <button onclick="registerMember()">
-        Register
-    </button>
-
+    <p style="margin-top:15px;">
+        Already registered?
+        <a href="login.html">Login</a>
+    </p>
 </div>
 
+<script src="popups.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 
 <script>
-
 async function registerMember() {
-const firstName =
-    document.getElementById("firstName").value.trim();
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-const lastName =
-    document.getElementById("lastName").value.trim();
-
-const name =
-    firstName + " " + lastName;
-
-const phone =
-    document.getElementById("phone").value.trim();
-
-const password =
-    document.getElementById("password").value;
-if (!firstName || !lastName) {
-    alert("Enter both first name and last name");
-    return;
-}
-
-if (password.length < 6) {
-    alert("Password must be at least 6 characters");
-    return;
-}
-if (phone.includes(" ")) {
-    alert("Phone number must not contain spaces");
-    return;
-}
-
-    // Kenya phone validation
-    const kenyaPhone = /^(07|01)\d{8}$/;
-
-    if (!kenyaPhone.test(phone)) {
-        alert("Enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX)");
+    if (!firstName || !lastName) {
+        showPopup("Enter both first name and last name.", "warning");
         return;
     }
 
-    const { data: existing } = await db
-        .from("members")
-        .select("phone")
-        .eq("phone", phone)
-        .maybeSingle();
-
-    if (existing) {
-        alert("Phone number already registered");
+    if (!/^(07|01)\d{8}$/.test(phone)) {
+        showPopup(
+            "Enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX).",
+            "warning"
+        );
         return;
     }
 
-    const { error } = await db
-        .from("members")
-        .insert([
-            {
-                name: name,
-                phone: phone,
+    if (!email || !email.includes("@")) {
+        showPopup("Enter a valid email address.", "warning");
+        return;
+    }
+
+    if (password.length < 6) {
+        showPopup("Password must be at least 6 characters.", "warning");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showPopup("Passwords do not match.", "warning");
+        return;
+    }
+
+    try {
+        const { data: existingPhone } = await db
+            .from("members")
+            .select("id")
+            .eq("phone", phone)
+            .maybeSingle();
+
+        if (existingPhone) {
+            showPopup(
+                "That phone number is already registered. If you are an existing member, use Activate Existing Member Account.",
+                "warning"
+            );
+            return;
+        }
+
+        const { data: existingEmail } = await db
+            .from("members")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+
+        if (existingEmail) {
+            showPopup("That email address is already registered.", "warning");
+            return;
+        }
+
+        const { data: authData, error: authError } =
+            await db.auth.signUp({
+                email,
+                password
+            });
+
+        if (authError) {
+            showPopup(
+                "Could not create login account:\n\n" + authError.message,
+                "error"
+            );
+            return;
+        }
+
+        if (!authData || !authData.user) {
+            showPopup("Could not create the login account.", "error");
+            return;
+        }
+
+        const name = firstName + " " + lastName;
+
+        const { error: memberError } = await db
+            .from("members")
+            .insert([{
+                name,
+                phone,
+                email,
+                auth_id: authData.user.id,
                 password: password,
                 role: "member",
                 status: "pending"
-            }
-        ]);
+            }]);
 
-    if (error) {
-        alert(error.message);
-    } else {
-        alert("Registration submitted. Await admin approval.");
-        window.location.href = "login.html";
+        if (memberError) {
+            console.error("MEMBER INSERT ERROR:", memberError);
+            showPopup(
+                "Auth account was created, but the member record could not be saved:\n\n" +
+                memberError.message,
+                "error"
+            );
+            return;
+        }
+
+        await db.auth.signOut();
+
+        showPopup(
+            "Registration submitted successfully.\n\n" +
+            "If email confirmation is enabled, check your email first.\n\n" +
+            "Your account will remain pending until approved by the administrator.",
+            "success"
+        );
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1200);
+
+    } catch (error) {
+        console.error(error);
+        showPopup("Unexpected error:\n\n" + error.message, "error");
     }
 }
 </script>

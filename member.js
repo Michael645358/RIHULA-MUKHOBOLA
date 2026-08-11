@@ -92,7 +92,7 @@ async function logout() {
             .eq("phone", user.phone);
 
         if (error) {
-            alert(error.message);
+            showPopup(error.message);
             return;
         }
     }
@@ -524,7 +524,7 @@ async function loadContributionHistory(phone) {
             .order("created_at", { ascending: false });
 
         if (error) {
-            alert("Supabase Error: " + error.message);
+            showPopup("Supabase Error: " + error.message);
             return;
         }
 
@@ -551,7 +551,7 @@ async function loadContributionHistory(phone) {
 
     } catch (err) {
 
-        alert("Catch Error: " + err.message);
+        showPopup("Catch Error: " + err.message);
 
     }
 }
@@ -565,7 +565,7 @@ async function loadSavingsStats(phone) {
             .eq("member_phone", String(phone));
 
         if (myError) {
-            alert(myError.message);
+            showPopup(myError.message);
             return;
         }
 
@@ -583,7 +583,7 @@ async function loadSavingsStats(phone) {
             .select("amount");
 
         if (groupError) {
-            alert(groupError.message);
+            showPopup(groupError.message);
             return;
         }
 
@@ -616,7 +616,7 @@ const goal =
 
     } catch (err) {
 
-        alert("Savings Error: " + err.message);
+        showPopup("Savings Error: " + err.message);
 
     }
 }
@@ -630,17 +630,17 @@ async function changePassword() {
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-        alert("Please fill all fields.");
+        showPopup("Please fill all fields.");
         return;
     }
 
     if (newPassword !== confirmPassword) {
-        alert("New passwords do not match.");
+        showPopup("New passwords do not match.");
         return;
     }
 
     if (newPassword.length < 6) {
-        alert("Password must be at least 6 characters long.");
+        showPopup("Password must be at least 6 characters long.");
         return;
     }
 
@@ -651,17 +651,17 @@ async function changePassword() {
         .single();
 
     if (error || !data) {
-        alert("Member not found.");
+        showPopup("Member not found.");
         return;
     }
 
     if (currentPassword !== data.password) {
-        alert("Current password is incorrect.");
+        showPopup("Current password is incorrect.");
         return;
     }
 
     if (newPassword === data.password) {
-        alert("Your new password cannot be the same as your current password.");
+        showPopup("Your new password cannot be the same as your current password.");
         return;
     }
 
@@ -673,7 +673,8 @@ async function changePassword() {
         .eq("id", data.id);
 
     if (updateError) {
-        alert(updateError.message);
+        if (button) button.disabled = false;
+        showPopup(updateError.message, "error");
         return;
     }
 
@@ -684,7 +685,7 @@ async function changePassword() {
     document.getElementById("newPassword").value = "";
     document.getElementById("confirmPassword").value = "";
 
-    alert("Password changed successfully.");
+    showPopup("Password changed successfully.");
 }
 function togglePasswordVisibility() {
 
@@ -740,10 +741,10 @@ async function uploadProfilePhoto() {
     const file =
         document.getElementById("photoUpload").files[0];
 
-    if (!file) {
-        alert("Please select a photo");
-        return;
-    }
+    if (!file) return;
+
+    const button = document.getElementById("uploadPhotoButton");
+    if (button) button.disabled = true;
 
     const fileName =
         `${user.phone}_${Date.now()}`;
@@ -754,7 +755,7 @@ async function uploadProfilePhoto() {
 
 if (uploadError) {
     console.log(uploadError);
-    alert(uploadError.message);
+    showPopup(uploadError.message);
     return;
 }
 
@@ -772,7 +773,7 @@ if (uploadError) {
         .eq("phone", user.phone);
 
     if (updateError) {
-        alert(updateError.message);
+        showPopup(updateError.message);
         return;
     }
 
@@ -789,8 +790,38 @@ if (uploadError) {
     document.getElementById("profileScreenImage").src =
         photoUrl;
 
-    alert("Profile photo updated successfully");
+    if (button) button.disabled = false;
+    showPopup("Profile photo updated successfully", "success");
 }
+document.addEventListener("DOMContentLoaded", () => {
+    const photoInput = document.getElementById("photoUpload");
+    if (!photoInput) return;
+
+    photoInput.addEventListener("change", () => {
+        const file = photoInput.files && photoInput.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            photoInput.value = "";
+            showPopup("Please choose an image file.", "warning");
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            photoInput.value = "";
+            showPopup("Photo must be 5 MB or smaller.", "warning");
+            return;
+        }
+
+        // Preview immediately; upload starts automatically with no loading popup.
+        const preview = document.getElementById("profileScreenImage");
+        if (preview) preview.src = URL.createObjectURL(file);
+
+        uploadProfilePhoto();
+    });
+});
+
 async function saveGoal() {
 
     const user =
@@ -800,7 +831,7 @@ async function saveGoal() {
         Number(document.getElementById("goalInput").value);
 
     if (!goal || goal <= 0) {
-        alert("Enter a valid goal amount");
+        showPopup("Enter a valid goal amount");
         return;
     }
 
@@ -810,7 +841,7 @@ async function saveGoal() {
         .eq("phone", user.phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -821,7 +852,7 @@ async function saveGoal() {
         JSON.stringify(user)
     );
 
-    alert("Goal updated successfully");
+    showPopup("Goal updated successfully");
 
     loadSavingsStats(user.phone);
 }
@@ -863,7 +894,6 @@ function showDashboard() {
 
     
 }
-
 function showChat() {
 
     document.getElementById("historyScreen").style.display = "none";
@@ -888,7 +918,7 @@ async function sendMessage() {
         document.getElementById("chatMessage").value;
 
     if (!message) {
-        alert("Type a message");
+        showPopup("Type a message");
         return;
     }
 
@@ -905,7 +935,7 @@ async function sendMessage() {
         ]);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -915,7 +945,6 @@ async function sendMessage() {
 }
 let mediaRecorder;
 let audioChunks = [];
-
 async function startRecording() {
 
     try {
@@ -946,7 +975,7 @@ const { error } = await db.storage
     .upload(fileName, audioBlob);
     
     if (error) {
-        alert("Upload failed");
+        showPopup("Upload failed");
         console.error(error);
         return;
     }
@@ -971,9 +1000,9 @@ const { error: msgError } = await db
 
 if (msgError) {
     console.error(msgError);
-    alert("Failed to send voice message.");
+    showPopup("Failed to send voice message.");
 } else {
-    alert("Voice message sent.");
+    showPopup("Voice message sent.");
 }
 };
 
@@ -988,7 +1017,7 @@ btn.style.background = "#dc2626";
 
     } catch (err) {
 
-        alert("Microphone permission denied");
+        showPopup("Microphone permission denied");
 
     }
 }
@@ -1005,8 +1034,7 @@ btn.style.background = "#15803d";
         startRecording;
 }
 async function loadMessages() {
-
-    const user =
+const user =
         JSON.parse(localStorage.getItem("loggedUser"));
 
     await db
@@ -1023,7 +1051,7 @@ updateUnreadCount();
         .order("created_at", { ascending: true });
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -1158,7 +1186,7 @@ async function saveRecoveryInfo() {
         document.getElementById("idNumber").value;
 
     if (!answer1 || !answer2 || !idNumber) {
-        alert("Fill all fields");
+        showPopup("Fill all fields");
         return;
     }
 
@@ -1172,11 +1200,11 @@ async function saveRecoveryInfo() {
         .eq("phone", user.phone);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
-    alert("Recovery information saved successfully");
+    showPopup("Recovery information saved successfully");
 }
 async function updateUnreadCount() {
 
@@ -1193,7 +1221,6 @@ async function updateUnreadCount() {
 
     const badge =
         document.getElementById("unreadBadge");
-
     if (!badge) return;
 
     const count = data ? data.length : 0;
@@ -1322,7 +1349,7 @@ async function deleteMessage(id) {
         .eq("id", id);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -1397,12 +1424,12 @@ async function deleteSelectedMessage() {
         .single();
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
     if (data.name !== user.name) {
-        alert("You can only delete your own messages");
+        showPopup("You can only delete your own messages");
         return;
     }
 
@@ -1412,7 +1439,7 @@ async function deleteSelectedMessage() {
         .eq("id", selectedMessageId);
 
     if (deleteError) {
-        alert(deleteError.message);
+        showPopup(deleteError.message);
         return;
     }
 
@@ -1426,7 +1453,7 @@ function copySelectedMessage() {
         selectedMessageText
     );
 
-    alert("Message copied");
+    showPopup("Message copied");
 
     closeMessageMenu();
 }
@@ -1438,7 +1465,6 @@ function startHold(id, text) {
         showMessageMenu(id, text);
     }, 800); // hold for 0.8 seconds
 }
-
 function cancelHold() {
 
     clearTimeout(holdTimer);
@@ -1539,7 +1565,7 @@ async function deleteNotification(id) {
         .eq("id", id);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -1604,4 +1630,30 @@ function filterMembers() {
 
     });
 
+}
+
+
+function copyMpesaNumber() {
+    const number = "0743361713";
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(number)
+            .then(() => showPopup("M-Pesa number copied.", "success"))
+            .catch(() => showPopup("Could not copy the number.", "error"));
+        return;
+    }
+
+    const temp = document.createElement("textarea");
+    temp.value = number;
+    document.body.appendChild(temp);
+    temp.select();
+
+    try {
+        document.execCommand("copy");
+        showPopup("M-Pesa number copied.", "success");
+    } catch (error) {
+        showPopup("Could not copy the number.", "error");
+    }
+
+    temp.remove();
 }

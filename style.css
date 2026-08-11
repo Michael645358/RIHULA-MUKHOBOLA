@@ -409,21 +409,6 @@ box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
 /* Splash Screen */
 
-#splash-screen{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:white;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-    z-index:9999;
-}
-
 .splash-logo{
     width:150px;
     height:150px;
@@ -443,11 +428,6 @@ box-shadow:0 5px 15px rgba(0,0,0,.1);
     margin-bottom:20px;
 }
 
-#loading-text{
-    font-size:32px;
-    font-weight:bold;
-    color:#0b6623;
-}
 .login-box{
     width:90%;
     max-width:430px;
@@ -3152,4 +3132,103 @@ background:#15803d;
     text-decoration:none;
     min-width:180px;
     text-align:center;
+}
+.achievement-popup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.75);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.achievement-card{
+background:white;
+width:90%;
+max-width:350px;
+padding:25px;
+border-radius:20px;
+text-align:center;
+animation:popup .4s ease;
+}
+
+.achievement-card h1{
+font-size:70px;
+margin-bottom:10px;
+}
+
+@keyframes popup{
+from{
+transform:scale(.5);
+opacity:0;
+}
+to{
+transform:scale(1);
+opacity:1;
+}
+}
+#confettiContainer{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+overflow:hidden;
+z-index:10000;
+}
+
+.confetti{
+position:absolute;
+top:-20px;
+width:10px;
+height:10px;
+border-radius:2px;
+animation:fall 3s linear forwards;
+}
+
+@keyframes fall{
+
+0%{
+transform:translateY(0) rotate(0deg);
+opacity:1;
+}
+
+100%{
+transform:translateY(110vh) rotate(720deg);
+opacity:0;
+}
+
+}
+
+/* Modern single-button profile photo upload */
+.upload-section{
+    text-align:center;
+    margin:16px 0 10px;
+}
+.upload-btn{
+    width:100%;
+    max-width:320px;
+    min-height:48px;
+    margin:0 auto;
+    border-radius:999px;
+    font-weight:800;
+    letter-spacing:.1px;
+    box-shadow:0 6px 16px rgba(46,125,50,.18);
+    transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+.upload-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 9px 20px rgba(46,125,50,.24);
+}
+.upload-btn:active{transform:scale(.98)}
+.upload-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.upload-hint{
+    margin:8px 0 0;
+    color:#7a847d;
+    font-size:12px;
 }

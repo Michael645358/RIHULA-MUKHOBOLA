@@ -153,36 +153,6 @@ window.onload = function () {
     if (document.getElementById("membersBody")) {
         loadMembers();
     }
-
-    const splash = document.getElementById("splash-screen");
-    const loadingText = document.getElementById("loading-text");
-
-    if (!splash || !loadingText) return;
-
-    if (sessionStorage.getItem("splashShown")) {
-        splash.style.display = "none";
-        return;
-    }
-
-    sessionStorage.setItem("splashShown", "true");
-
-    let percent = 0;
-
-    const timer = setInterval(function () {
-
-        percent++;
-
-        loadingText.innerHTML = percent + "%";
-
-        if (percent >= 100) {
-
-            clearInterval(timer);
-
-            splash.style.display = "none";
-        }
-
-    }, 50);
-
 };
 async function editMember() {
 
@@ -842,8 +812,8 @@ function showSection(sectionId) {
     }
 
 }
-async function loadAdminGroupGoal() {
 
+async function loadAdminGroupGoal() {
     const { data, error } = await db
         .from("settings")
         .select("group_goal")
@@ -851,51 +821,25 @@ async function loadAdminGroupGoal() {
         .single();
 
     if (error) {
-        console.error(error);
+        console.error("Load group goal error:", error);
         return;
     }
 
     const goal = Number(data.group_goal || 0);
 
-    document.getElementById("adminCurrentGroupGoal").innerText =
-        "KSh " + goal.toLocaleString();
+    const currentGoal = document.getElementById("adminCurrentGroupGoal");
+    const input = document.getElementById("adminGroupGoalInput");
 
-    document.getElementById("adminGroupGoalInput").value = goal;
-}
-
-
-async function updateGroupGoal() {
-
-    const input =
-        document.getElementById("adminGroupGoalInput");
-
-    const newGoal = Number(input.value);
-
-    if (!newGoal || newGoal <= 0) {
-        showPopup("Please enter a valid goal amount.", "warning");
-        return;
+    if (currentGoal) {
+        currentGoal.innerText = "KSh " + goal.toLocaleString();
     }
 
-    const { error } = await db
-        .from("settings")
-        .update({
-            group_goal: newGoal
-        })
-        .eq("id", 1);
-
-    if (error) {
-        console.error(error);
-        showPopup("Failed to update group goal: " + error.message, "error");
-        return;
+    if (input) {
+        input.value = goal;
     }
-
-    document.getElementById("adminCurrentGroupGoal").innerText =
-        "KSh " + newGoal.toLocaleString();
-
-    showPopup("Group goal updated to KSh " + newGoal.toLocaleString(), "success");
 }
-async function updateGroupGoal() {
 
+async function updateGroupGoal() {
     const input = document.getElementById("adminGroupGoalInput");
 
     if (!input) {
@@ -912,54 +856,27 @@ async function updateGroupGoal() {
 
     const { error } = await db
         .from("settings")
-        .update({
-            group_goal: newGoal
-        })
+        .update({ group_goal: newGoal })
         .eq("id", 1);
 
     if (error) {
         console.error("Update group goal error:", error);
-        showPopup("Failed to update group goal:\n" + error.message, "error");
+        showPopup(
+            "Failed to update group goal:\n" + error.message,
+            "error"
+        );
         return;
     }
 
-    const currentGoal =
-        document.getElementById("adminCurrentGroupGoal");
+    const currentGoal = document.getElementById("adminCurrentGroupGoal");
 
     if (currentGoal) {
-        currentGoal.innerText =
-            "KSh " + newGoal.toLocaleString();
+        currentGoal.innerText = "KSh " + newGoal.toLocaleString();
     }
 
-    showPopup("Group goal updated successfully.\n\nNew goal: KSh " + newGoal.toLocaleString(), "success");
-}
-async function loadAdminGroupGoal() {
-
-    const { data, error } = await db
-        .from("settings")
-        .select("group_goal")
-        .eq("id", 1)
-        .single();
-
-    if (error) {
-        console.error("Load group goal error:", error);
-        return;
-    }
-
-    const goal = Number(data.group_goal || 0);
-
-    const currentGoal =
-        document.getElementById("adminCurrentGroupGoal");
-
-    const input =
-        document.getElementById("adminGroupGoalInput");
-
-    if (currentGoal) {
-        currentGoal.innerText =
-            "KSh " + goal.toLocaleString();
-    }
-
-    if (input) {
-        input.value = goal;
-    }
+    showPopup(
+        "Group goal updated successfully.\n\nNew goal: KSh " +
+        newGoal.toLocaleString(),
+        "success"
+    );
 }

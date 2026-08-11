@@ -17,7 +17,7 @@ async function loadMessages() {
         .order("created_at", { ascending: true });
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
@@ -68,7 +68,7 @@ async function sendMessage() {
         }]);
 
     if (error) {
-        alert(error.message);
+        showPopup(error.message);
         return;
     }
 
