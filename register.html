@@ -95,10 +95,16 @@ async function registerMember() {
             return;
         }
 
+        const emailRedirectTo =
+            new URL("auth-confirm.html", window.location.href).href;
+
         const { data: authData, error: authError } =
             await db.auth.signUp({
                 email,
-                password
+                password,
+                options: {
+                    emailRedirectTo
+                }
             });
 
         if (authError) {

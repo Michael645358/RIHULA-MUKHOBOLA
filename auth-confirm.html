@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Confirmation</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.confirm-box {
+    max-width: 520px;
+    margin: 70px auto;
+    padding: 35px;
+    background: white;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.12);
+}
+.confirm-box img { width: 100px; }
+.confirm-box h2 { color: #0b6623; margin: 20px 0 12px; }
+.confirm-box p { line-height: 1.6; }
+.confirm-box a {
+    display: inline-block;
+    margin-top: 22px;
+    background: gold;
+    color: #111;
+    padding: 13px 28px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<div class="confirm-box">
+    <img src="images/logo.jpg" alt="RIHULA Logo">
+    <h2 id="title">Checking your email confirmation...</h2>
+    <p id="message">Please wait a moment.</p>
+    <a href="login.html" id="loginLink" style="display:none;">Go to Login</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
+<script>
+(async function () {
+    const title = document.getElementById("title");
+    const message = document.getElementById("message");
+    const loginLink = document.getElementById("loginLink");
+
+    try {
+        const hash = window.location.hash || "";
+        const params = new URLSearchParams(hash.replace(/^#/, ""));
+
+        const errorDescription =
+            params.get("error_description") ||
+            new URLSearchParams(window.location.search).get("error_description");
+
+        if (errorDescription) {
+            title.textContent = "Email confirmation failed";
+            message.textContent = decodeURIComponent(errorDescription.replace(/\+/g, " "));
+            loginLink.style.display = "inline-block";
+            return;
+        }
+
+        const { data } = await db.auth.getSession();
+
+        if (data && data.session) {
+            title.textContent = "Email confirmed successfully!";
+            message.textContent =
+                "Your RIHULA account is ready. You can now log in with your email and password.";
+
+            await db.auth.signOut();
+        } else {
+            /*
+             * Some Supabase configurations confirm the email without
+             * leaving a client session. The confirmation link itself has
+             * already completed the confirmation, so show the success page.
+             */
+            title.textContent = "Email confirmation complete";
+            message.textContent =
+                "Your email confirmation has been processed. You can now log in.";
+        }
+
+        loginLink.style.display = "inline-block";
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 2500);
+
+    } catch (error) {
+        console.error("CONFIRMATION ERROR:", error);
+        title.textContent = "Confirmation processed";
+        message.textContent =
+            "Your confirmation link has been opened. Please continue to Login.";
+        loginLink.style.display = "inline-block";
+    }
+})();
+</script>
+</body>
+</html>

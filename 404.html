@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIHULA - Page Not Found</title>
+<meta http-equiv="refresh" content="0; url=/RIHULA-V2/">
+<style>
+body{font-family:Arial,sans-serif;text-align:center;padding:60px 20px;background:#f5f5f5;color:#333}
+h1{color:#0b6623}
+a{display:inline-block;margin-top:20px;padding:12px 25px;background:gold;color:#111;text-decoration:none;border-radius:25px;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>RIHULA MUKHOBOLA YOUTHS ASSOCIATION</h1>
+<p>The requested page could not be found.</p>
+<p>Returning you to the correct RIHULA page...</p>
+<a href="/RIHULA-V2/">Open RIHULA</a>
+
+<script>
+(function () {
+    /*
+     * Supabase confirmation/recovery links can occasionally arrive at a
+     * stale or missing path. GitHub Pages serves this file for that 404.
+     * Preserve the Supabase hash/query and send the user to our callback.
+     */
+    const target = new URL("/RIHULA-V2/auth-confirm.html", window.location.origin);
+    target.search = window.location.search;
+    target.hash = window.location.hash;
+
+    const hasAuthData =
+        window.location.hash.includes("access_token=") ||
+        window.location.hash.includes("refresh_token=") ||
+        window.location.hash.includes("type=signup") ||
+        window.location.hash.includes("type=recovery") ||
+        window.location.search.includes("code=") ||
+        window.location.search.includes("error_description=");
+
+    if (hasAuthData) {
+        window.location.replace(target.href);
+    } else {
+        window.setTimeout(function () {
+            window.location.replace("/RIHULA-V2/");
+        }, 700);
+    }
+})();
+</script>
+</body>
+</html>

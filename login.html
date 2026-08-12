@@ -99,10 +99,58 @@ async function login() {
 
             if (authError) {
                 console.error("EMAIL LOGIN ERROR:", authError);
-                showPopup(
-                    "Email login failed:\n\n" + authError.message,
-                    "error"
-                );
+
+                /*
+                 * If Supabase says the email is not confirmed, automatically
+                 * send the member a fresh confirmation link. This makes the
+                 * process self-service; the administrator does not need to
+                 * activate or resend anything manually.
+                 */
+                if (
+                    authError.code === "email_not_confirmed" ||
+                    /email not confirmed/i.test(authError.message || "")
+                ) {
+                    try {
+                        const emailRedirectTo =
+                            new URL("auth-confirm.html", window.location.href).href;
+
+                        const { error: resendError } =
+                            await db.auth.resend({
+                                type: "signup",
+                                email: loginId.toLowerCase(),
+                                options: { emailRedirectTo }
+                            });
+
+                        if (resendError) {
+                            showPopup(
+                                "Your email is not confirmed.\n\n" +
+                                "We could not resend the confirmation email:\n\n" +
+                                resendError.message,
+                                "error"
+                            );
+                        } else {
+                            showPopup(
+                                "Your email is not confirmed yet.\n\n" +
+                                "A fresh confirmation email has been sent to " +
+                                loginId.toLowerCase() +
+                                ". Open it and tap the confirmation link. " +
+                                "You will then be returned to RIHULA.",
+                                "warning"
+                            );
+                        }
+                    } catch (resendError) {
+                        console.error("RESEND CONFIRMATION ERROR:", resendError);
+                        showPopup(
+                            "Your email is not confirmed yet. Please use the latest confirmation email.",
+                            "warning"
+                        );
+                    }
+                } else {
+                    showPopup(
+                        "Email login failed:\n\n" + authError.message,
+                        "error"
+                    );
+                }
                 return;
             }
 
