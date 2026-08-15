@@ -36,7 +36,8 @@
 async function registerMember() {
     const firstName = document.getElementById("firstName").value.trim();
     const lastName = document.getElementById("lastName").value.trim();
-    const phone = document.getElementById("phone").value.trim();
+    const rawPhone = document.getElementById("phone").value.trim();
+    const phone = normalizeKenyanPhone(rawPhone);
     const email = document.getElementById("email").value.trim().toLowerCase();
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
@@ -46,7 +47,7 @@ async function registerMember() {
         return;
     }
 
-    if (!/^(07|01)\d{8}$/.test(phone)) {
+    if (!phone) {
         showPopup(
             "Enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX).",
             "warning"
@@ -95,16 +96,10 @@ async function registerMember() {
             return;
         }
 
-        const emailRedirectTo =
-            new URL("auth-confirm.html", window.location.href).href;
-
         const { data: authData, error: authError } =
             await db.auth.signUp({
                 email,
-                password,
-                options: {
-                    emailRedirectTo
-                }
+                password
             });
 
         if (authError) {
@@ -164,5 +159,6 @@ async function registerMember() {
 }
 </script>
 
+<script src="v22.js"></script>
 </body>
 </html>

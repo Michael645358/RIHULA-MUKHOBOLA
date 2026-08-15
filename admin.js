@@ -1,3 +1,8 @@
+// Admin dashboard session guard
+if (sessionStorage.getItem("adminVerified") !== "true") {
+    window.location.replace("admin-login.html");
+}
+
 
 console.log("DB:", db);
 async function addMember() {

@@ -6,7 +6,7 @@
 <title>RIHULA Admin Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="admin-dashboard-3.css">
+<link rel="stylesheet" href="admin-dashboard.css">
 </head>
 
 <body class="admin-dashboard-page">
@@ -84,11 +84,6 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
         </nav>
 
         <div class="admin-sidebar-bottom">
-            <a href="login.html" class="admin-nav-item admin-member-login-link">
-                <span>👤</span>
-                <span>Login as Member</span>
-            </a>
-
             <a href="index.html" class="admin-nav-item">
                 <span>🌐</span>
                 <span>View Website</span>
@@ -123,10 +118,6 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
                 <span class="admin-status">
                     <i></i> System Online
                 </span>
-
-                <a href="login.html" class="admin-mode-btn" title="Open member login">
-                    👤 Member
-                </a>
 
                 <button
                     type="button"
@@ -389,14 +380,6 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
                     <div class="system-status-row">
                         <span>Last refreshed</span>
                         <strong id="lastRefresh">Just now</strong>
-                    </div>
-
-                    <div class="admin-role-switch">
-                        <div>
-                            <strong>Need member access?</strong>
-                            <small>Use your member credentials without leaving the admin session.</small>
-                        </div>
-                        <a href="login.html">Open Member Login →</a>
                     </div>
 
                     <button

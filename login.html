@@ -29,9 +29,9 @@
 
     <div class="input-group">
         <input
-            type="text"
+            type="email"
             id="loginId"
-            placeholder="📱 Phone Number or 📧 Email"
+            placeholder="📧 Email address"
             autocomplete="username">
     </div>
 
@@ -62,152 +62,79 @@
 async function redirectMember(member) {
     localStorage.setItem("loggedUser", JSON.stringify(member));
 
-    await db
-        .from("members")
-        .update({
-            last_seen: new Date().toISOString(),
-            online: true
-        })
-        .eq("id", member.id);
-
-    if (member.role === "admin") {
-        window.location.href = "admin.html";
-    } else if (member.status === "pending") {
-        window.location.href = "pending.html";
-    } else {
-        window.location.href = "member.html";
+    try {
+        await db
+            .from("members")
+            .update({
+                last_seen: new Date().toISOString(),
+                online: true
+            })
+            .eq("id", member.id);
+    } catch (e) {
+        console.warn("Could not update member presence:", e);
     }
+
+    // Member login is always a member session, even when the account
+    // also has admin privileges. Admin access is controlled separately
+    // by the PIN on admin-login.html.
+    window.location.href = "member.html";
 }
 
 async function login() {
-    const loginId = document.getElementById("loginId").value.trim();
+    const email = document.getElementById("loginId").value.trim().toLowerCase();
     const password = document.getElementById("password").value;
 
-    if (!loginId || !password) {
-        showPopup("Enter your email/phone and password.", "warning");
+    if (!email || !password) {
+        showPopup("Enter your email and password.", "warning");
+        return;
+    }
+
+    if (!email.includes("@")) {
+        showPopup("Member login uses email + password. Admin login uses the admin PIN.", "warning");
         return;
     }
 
     try {
-        /* New email/Supabase Auth login */
-        if (loginId.includes("@")) {
-            const { data: authData, error: authError } =
-                await db.auth.signInWithPassword({
-                    email: loginId.toLowerCase(),
-                    password: password
-                });
+        const { data: authData, error: authError } =
+            await db.auth.signInWithPassword({
+                email,
+                password
+            });
 
-            if (authError) {
-                console.error("EMAIL LOGIN ERROR:", authError);
-
-                /*
-                 * If Supabase says the email is not confirmed, automatically
-                 * send the member a fresh confirmation link. This makes the
-                 * process self-service; the administrator does not need to
-                 * activate or resend anything manually.
-                 */
-                if (
-                    authError.code === "email_not_confirmed" ||
-                    /email not confirmed/i.test(authError.message || "")
-                ) {
-                    try {
-                        const emailRedirectTo =
-                            new URL("auth-confirm.html", window.location.href).href;
-
-                        const { error: resendError } =
-                            await db.auth.resend({
-                                type: "signup",
-                                email: loginId.toLowerCase(),
-                                options: { emailRedirectTo }
-                            });
-
-                        if (resendError) {
-                            showPopup(
-                                "Your email is not confirmed.\n\n" +
-                                "We could not resend the confirmation email:\n\n" +
-                                resendError.message,
-                                "error"
-                            );
-                        } else {
-                            showPopup(
-                                "Your email is not confirmed yet.\n\n" +
-                                "A fresh confirmation email has been sent to " +
-                                loginId.toLowerCase() +
-                                ". Open it and tap the confirmation link. " +
-                                "You will then be returned to RIHULA.",
-                                "warning"
-                            );
-                        }
-                    } catch (resendError) {
-                        console.error("RESEND CONFIRMATION ERROR:", resendError);
-                        showPopup(
-                            "Your email is not confirmed yet. Please use the latest confirmation email.",
-                            "warning"
-                        );
-                    }
-                } else {
-                    showPopup(
-                        "Email login failed:\n\n" + authError.message,
-                        "error"
-                    );
-                }
-                return;
-            }
-
-            if (!authData || !authData.user) {
-                showPopup("Login failed.", "error");
-                return;
-            }
-
-            const { data: member, error: memberError } =
-                await db
-                    .from("members")
-                    .select("*")
-                    .eq("auth_id", authData.user.id)
-                    .maybeSingle();
-
-            if (memberError) {
-                console.error("MEMBER LOOKUP ERROR:", memberError);
-                await db.auth.signOut();
-                showPopup(
-                    "Login succeeded, but your member record could not be loaded.",
-                    "error"
-                );
-                return;
-            }
-
-            if (!member) {
-                await db.auth.signOut();
-                showPopup(
-                    "This email is not linked to a RIHULA member account yet.",
-                    "warning"
-                );
-                return;
-            }
-
-            await redirectMember(member);
+        if (authError) {
+            console.error("EMAIL LOGIN ERROR:", authError);
+            showPopup("Invalid email or password.", "error");
             return;
         }
 
-        /* Legacy phone login for members who have not activated email */
-        const { data: member, error } = await db
-            .from("members")
-            .select("*")
-            .eq("phone", loginId)
-            .eq("password", password)
-            .maybeSingle();
+        if (!authData || !authData.user) {
+            showPopup("Login failed.", "error");
+            return;
+        }
 
-        if (error) {
-            console.error("PHONE LOGIN ERROR:", error);
-            showPopup(
-                "Phone login failed:\n\n" + error.message,
-                "error"
-            );
+        const { data: member, error: memberError } =
+            await db
+                .from("members")
+                .select("*")
+                .eq("auth_id", authData.user.id)
+                .maybeSingle();
+
+        if (memberError) {
+            console.error("MEMBER LOOKUP ERROR:", memberError);
+            await db.auth.signOut();
+            showPopup("Your member account could not be loaded.", "error");
             return;
         }
 
         if (!member) {
-            showPopup("Invalid phone number or password.", "error");
+            await db.auth.signOut();
+            showPopup("This email is not linked to a RIHULA member account.", "warning");
+            return;
+        }
+
+        if (member.status === "pending") {
+            localStorage.setItem("loggedUser", JSON.stringify(member));
+            window.location.href = "pending.html";
             return;
         }
 
@@ -215,12 +142,10 @@ async function login() {
 
     } catch (error) {
         console.error("LOGIN ERROR:", error);
-        showPopup(
-            "Unexpected login error:\n\n" + error.message,
-            "error"
-        );
+        showPopup("Unexpected login error. Please try again.", "error");
     }
 }
 </script>
+<script src="v22.js"></script>
 </body>
 </html>

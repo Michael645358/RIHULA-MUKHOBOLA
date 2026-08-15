@@ -7,9 +7,10 @@ async function askAI() {
 
     if (!question) return;
 
-    messages.innerHTML += `
-        <div class="my-msg">${question}</div>
-    `;
+    const userBubble = document.createElement("div");
+    userBubble.className = "my-msg";
+    userBubble.textContent = question;
+    messages.appendChild(userBubble);
 
     input.value = "";
 
@@ -303,9 +304,10 @@ else {
         answer = "Error: " + err.message;
     }
 
-    messages.innerHTML += `
-        <div class="other-msg">${answer}</div>
-    `;
+    const answerBubble = document.createElement("div");
+    answerBubble.className = "other-msg";
+    answerBubble.textContent = answer;
+    messages.appendChild(answerBubble);
 
     messages.scrollTop =
         messages.scrollHeight;

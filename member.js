@@ -72,8 +72,10 @@ document.getElementById("welcomeName").innerHTML = `
     await loadAnnouncements();
     await loadNotifications();
     await loadSavingsStats(user.phone);
+    await loadCollectionPeriods();
     await loadMyRank();
    await loadGroupGoal(); 
+   await loadContributionDayTotals();
 }
 
 async function logout() {
@@ -561,11 +563,11 @@ async function loadSavingsStats(phone) {
 
         const { data: myData, error: myError } = await db
             .from("contributions")
-            .select("amount")
+            .select("amount, created_at")
             .eq("member_phone", String(phone));
 
         if (myError) {
-            showPopup(myError.message);
+            console.error("Savings error:", myError);
             return;
         }
 
@@ -575,16 +577,22 @@ async function loadSavingsStats(phone) {
             myTotal += Number(item.amount || 0);
         });
 
-        document.getElementById("mySavings").innerText =
-            "KSh " + myTotal.toLocaleString();
+        // My savings
+        const mySavingsEl = document.getElementById("mySavings");
 
+        if (mySavingsEl) {
+            mySavingsEl.innerText =
+                "KSh " + myTotal.toLocaleString();
+        }
+
+
+        // Group savings
         const { data: groupData, error: groupError } = await db
             .from("contributions")
             .select("amount");
 
         if (groupError) {
-            showPopup(groupError.message);
-            return;
+            console.error("Group savings error:", groupError);
         }
 
         let groupTotal = 0;
@@ -593,31 +601,131 @@ async function loadSavingsStats(phone) {
             groupTotal += Number(item.amount || 0);
         });
 
-        document.getElementById("groupSavings").innerText =
-            "KSh " + groupTotal.toLocaleString();
+        const groupSavingsEl =
+            document.getElementById("groupSavings");
 
+        if (groupSavingsEl) {
+            groupSavingsEl.innerText =
+                "KSh " + groupTotal.toLocaleString();
+        }
+
+
+        // Member goal
         const user =
-    JSON.parse(localStorage.getItem("loggedUser"));
+            JSON.parse(localStorage.getItem("loggedUser")) || {};
 
-const goal =
-    Number(user.goal || 5000);
+        const goal =
+            Number(user.goal || 5000);
 
         const percent =
-            Math.round((myTotal / goal) * 100);
+            goal > 0
+                ? Math.min(100, Math.round((myTotal / goal) * 100))
+                : 0;
 
-        document.getElementById("goalAmount").innerText =
-            `KSh ${myTotal} / KSh ${goal}`;
 
-        document.getElementById("progressText").innerText =
-            percent + "%";
+        // Goal amount
+        const goalAmountEl =
+            document.getElementById("goalAmount");
 
-        document.getElementById("progressFill").style.width =
-            percent + "%";
+        if (goalAmountEl) {
+            goalAmountEl.innerText =
+                `KSh ${myTotal.toLocaleString()} / KSh ${goal.toLocaleString()}`;
+        }
+
+
+        // Percentage
+        const progressTextEl =
+            document.getElementById("progressText");
+
+        if (progressTextEl) {
+            progressTextEl.innerText =
+                percent + "%";
+        }
+
+
+        // Progress bar
+        const progressFillEl =
+            document.getElementById("progressFill");
+
+        if (progressFillEl) {
+            progressFillEl.style.width =
+                percent + "%";
+        }
 
     } catch (err) {
 
-        showPopup("Savings Error: " + err.message);
+        console.error("Savings Error:", err);
 
+        // Don't show the popup repeatedly
+        // The error is now logged in the console instead.
+
+    }
+}
+function toggleSinglePassword(inputId, button) {
+
+    const input =
+        document.getElementById(inputId);
+
+    if (!input) return;
+
+    if (input.type === "password") {
+
+        input.type = "text";
+
+        button.innerText = "🙈";
+
+    } else {
+
+        input.type = "password";
+
+        button.innerText = "👁";
+
+    }
+}
+async function loadCollectionPeriods() {
+    try {
+        const { data, error } = await db
+            .from("contributions")
+            .select("amount, created_at");
+
+        if (error) {
+            console.error("Collection period error:", error);
+            return;
+        }
+
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const day = startOfDay.getDay();
+        const daysFromMonday = (day + 6) % 7;
+        const startOfWeek = new Date(startOfDay);
+        startOfWeek.setDate(startOfWeek.getDate() - daysFromMonday);
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        let today = 0;
+        let week = 0;
+        let month = 0;
+
+        (data || []).forEach(item => {
+            const amount = Number(item.amount || 0);
+            const date = item.created_at ? new Date(item.created_at) : null;
+            if (!date || Number.isNaN(date.getTime())) return;
+
+            if (date >= startOfDay) today += amount;
+            if (date >= startOfWeek) week += amount;
+            if (date >= startOfMonth) month += amount;
+        });
+
+        const format = value => "KSh " + value.toLocaleString();
+
+        const todayEl = document.getElementById("collectedToday");
+        const weekEl = document.getElementById("collectedWeek");
+        const monthEl = document.getElementById("collectedMonth");
+
+        if (todayEl) todayEl.innerText = format(today);
+        if (weekEl) weekEl.innerText = format(week);
+        if (monthEl) monthEl.innerText = format(month);
+    } catch (error) {
+        console.error("Collection period error:", error);
     }
 }
 
@@ -723,6 +831,11 @@ document.getElementById("announcementsOnlyContainer");
 
     container.innerHTML = "";
 
+    if (!data || data.length === 0) {
+        container.innerHTML = "<p>No announcements available.</p>";
+        return;
+    }
+
     data.forEach(item => {
 
         container.innerHTML += `
@@ -732,6 +845,15 @@ document.getElementById("announcementsOnlyContainer");
         </div>
         `;
     });
+
+    const latest = data[0];
+    const featuredTitle = document.getElementById("dashboardAnnouncementTitle");
+    const featuredMessage = document.getElementById("dashboardAnnouncementMessage");
+
+    if (latest) {
+        if (featuredTitle) featuredTitle.innerText = latest.title || "Latest announcement";
+        if (featuredMessage) featuredMessage.innerText = latest.message || "Check the announcements section for more information.";
+    }
 }
 async function uploadProfilePhoto() {
 
@@ -773,7 +895,8 @@ if (uploadError) {
         .eq("phone", user.phone);
 
     if (updateError) {
-        showPopup(updateError.message);
+        if (button) button.disabled = false;
+        showPopup(updateError.message, "error");
         return;
     }
 
@@ -1077,9 +1200,9 @@ updateUnreadCount();
 
         container.innerHTML += `
         <div class="chat-message ${mine ? 'my-msg' : 'other-msg'}"
-     onmousedown="startHold(${item.id}, \`${item.message.replace(/`/g,'\\`')}\`)"
+     onmousedown="startHold(${item.id}, decodeURIComponent('${encodeURIComponent(item.message || "")}'))"
      onmouseup="cancelHold()"
-     ontouchstart="startHold(${item.id}, \`${item.message.replace(/`/g,'\\`')}\`)"
+     ontouchstart="startHold(${item.id}, decodeURIComponent('${encodeURIComponent(item.message || "")}'))"
      ontouchend="cancelHold()">
 
             <div class="chat-header">
@@ -1406,6 +1529,18 @@ function closeMemberStatus() {
 };
 }
 
+let selectedMessageId = null;
+let selectedMessageText = "";
+
+function showMessageMenu(id, text) {
+    selectedMessageId = id;
+    selectedMessageText = text || "";
+    const menu = document.getElementById("messageMenu");
+    if (!menu) return;
+    menu.style.display = "block";
+    menu.setAttribute("role", "menu");
+}
+
 function closeMessageMenu() {
 
     document.getElementById("messageMenu")
@@ -1447,14 +1582,25 @@ async function deleteSelectedMessage() {
     loadMessages();
 }
 
-function copySelectedMessage() {
-
-    navigator.clipboard.writeText(
-        selectedMessageText
-    );
-
-    showPopup("Message copied");
-
+async function copySelectedMessage() {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(selectedMessageText || "");
+        } else {
+            const area = document.createElement("textarea");
+            area.value = selectedMessageText || "";
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand("copy");
+            area.remove();
+        }
+        showPopup("Message copied", "success");
+    } catch (error) {
+        console.error(error);
+        showPopup("Could not copy this message.", "error");
+    }
     closeMessageMenu();
 }
 let holdTimer;
@@ -1656,4 +1802,150 @@ function copyMpesaNumber() {
     }
 
     temp.remove();
+}
+async function loadContributionDayTotals() {
+
+    try {
+
+        const { data, error } = await db
+            .from("contributions")
+            .select("amount, created_at");
+
+        if (error) {
+            console.error(
+                "Contribution day error:",
+                error
+            );
+            return;
+        }
+
+        const contributions = data || [];
+        const now = new Date();
+
+        /*
+         * Find the most recent completed Wednesday
+         */
+
+        const wednesday = new Date(now);
+        const currentDay = wednesday.getDay();
+
+        let daysSinceWednesday =
+            (currentDay - 3 + 7) % 7;
+
+        // If today is Wednesday, use today
+        wednesday.setDate(
+            wednesday.getDate() - daysSinceWednesday
+        );
+
+        wednesday.setHours(0, 0, 0, 0);
+
+        /*
+         * Find the most recent completed Saturday
+         */
+
+        const saturday = new Date(now);
+
+        let daysSinceSaturday =
+            (currentDay - 6 + 7) % 7;
+
+        saturday.setDate(
+            saturday.getDate() - daysSinceSaturday
+        );
+
+        saturday.setHours(0, 0, 0, 0);
+
+
+        /*
+         * End of each contribution day
+         */
+
+        const nextWednesday =
+            new Date(wednesday);
+
+        nextWednesday.setDate(
+            nextWednesday.getDate() + 1
+        );
+
+        const nextSaturday =
+            new Date(saturday);
+
+        nextSaturday.setDate(
+            nextSaturday.getDate() + 1
+        );
+
+
+        let wednesdayTotal = 0;
+        let saturdayTotal = 0;
+
+
+        contributions.forEach(item => {
+
+            if (!item.created_at) return;
+
+            const date =
+                new Date(item.created_at);
+
+            if (Number.isNaN(date.getTime())) {
+                return;
+            }
+
+            const amount =
+                Number(item.amount || 0);
+
+
+            // Wednesday
+            if (
+                date >= wednesday &&
+                date < nextWednesday
+            ) {
+                wednesdayTotal += amount;
+            }
+
+
+            // Saturday
+            if (
+                date >= saturday &&
+                date < nextSaturday
+            ) {
+                saturdayTotal += amount;
+            }
+
+        });
+
+
+        const wednesdayEl =
+            document.getElementById(
+                "wednesdayAmount"
+            );
+
+        const saturdayEl =
+            document.getElementById(
+                "saturdayAmount"
+            );
+
+
+        if (wednesdayEl) {
+            wednesdayEl.innerText =
+                "KSh " +
+                wednesdayTotal.toLocaleString() +
+                " collected";
+        }
+
+
+        if (saturdayEl) {
+            saturdayEl.innerText =
+                "KSh " +
+                saturdayTotal.toLocaleString() +
+                " collected";
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Contribution day error:",
+            error
+        );
+
+    }
 }

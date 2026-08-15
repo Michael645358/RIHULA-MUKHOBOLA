@@ -20,61 +20,94 @@
 </div>
 </header>
 
-<section class="admin-panel">
+<section class="admin-panel add-member-page">
 
-<div class="admin-card">
+    <div class="admin-card add-member-card">
 
-<h2>Add Member</h2>
+        <div class="add-member-title">
+            <h2>Add Member</h2>
+            <p>Register a new RIHULA MUKHOBOLA ASSOCIATION member</p>
+        </div>
 
-<input
-type="text"
-id="memberName"
-placeholder="Member Name">
+        <div class="member-form">
 
-<input
-type="tel"
-id="memberPhone"
-placeholder="Phone Number">
+            <div class="form-group">
+                <label for="memberName">Full Name</label>
+                <input
+                    type="text"
+                    id="memberName"
+                    placeholder="Enter member's full name"
+                    autocomplete="name">
+            </div>
 
-<input
-type="password"
-id="memberPassword"
-placeholder="Password">
+            <div class="form-group">
+                <label for="memberPhone">Phone Number</label>
+                <input
+                    type="tel"
+                    id="memberPhone"
+                    placeholder="e.g. 0712345678"
+                    autocomplete="tel">
+            </div>
 
-<input
-type="text"
-id="answer1"
-placeholder="Village where member was born">
+            <div class="form-group">
+                <label for="memberPassword">Password</label>
+                <input
+                    type="password"
+                    id="memberPassword"
+                    placeholder="Create member password"
+                    autocomplete="new-password">
+            </div>
 
-<input
-type="text"
-id="answer2"
-placeholder="Primary School Attended">
+            <div class="form-group">
+                <label for="answer1">Village Where Member Was Born</label>
+                <input
+                    type="text"
+                    id="answer1"
+                    placeholder="Enter village">
+            </div>
 
-<input
-type="text"
-id="idNumber"
-placeholder="National ID Number">
+            <div class="form-group">
+                <label for="answer2">Primary School Attended</label>
+                <input
+                    type="text"
+                    id="answer2"
+                    placeholder="Enter primary school">
+            </div>
 
-<button onclick="addMember()" class="btn">
-Add Member
-</button>
+            <div class="form-group">
+                <label for="idNumber">National ID Number</label>
+                <input
+                    type="text"
+                    id="idNumber"
+                    placeholder="Enter National ID number"
+                    inputmode="numeric">
+            </div>
 
-<br><br>
+            <button
+                type="button"
+                onclick="addMember()"
+                class="btn add-member-submit">
+                Add Member
+            </button>
 
-<button onclick="history.back()" class="btn">
-← Back to Dashboard
-</button>
+            <button
+                type="button"
+                onclick="history.back()"
+                class="btn back-dashboard-btn">
+                ← Back to Dashboard
+            </button>
 
-</div>
+        </div>
+
+    </div>
 
 </section>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="script.js"></script>
 
 <script src="popups.js"></script>
 
+<script src="v22.js"></script>
 </body>
 </html>

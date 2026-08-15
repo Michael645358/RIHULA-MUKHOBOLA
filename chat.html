@@ -71,6 +71,8 @@ header button{
     background:#0b6623;
     color:white;
 }
+
+.chat-row{display:flex;gap:8px;align-items:flex-end;margin:10px 0}.chat-row.mine{justify-content:flex-end}.chat-row.theirs{justify-content:flex-start}.chat-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#ddd;flex:none}.chat-avatar-fallback{display:flex;align-items:center;justify-content:center;font-weight:bold;color:#0b6623}.chat-bubble{display:inline-block;background:#fff;padding:10px 12px;border-radius:14px;max-width:min(80%,520px);box-shadow:0 1px 3px rgba(0,0,0,.08)}.mine .chat-bubble{background:#dcf8c6}.chat-name{font-weight:700;font-size:13px;margin-bottom:4px}.chat-text{word-break:break-word;white-space:normal}.chat-meta{font-size:10px;opacity:.55;margin-top:6px}.message-actions{display:flex;gap:6px;margin-top:7px}.message-actions button{border:0;background:transparent;font-size:11px;cursor:pointer;padding:2px 4px}.message-actions .danger{color:#b00020}.chat-empty{text-align:center;opacity:.6;padding:40px 10px}.chatInput button:disabled{opacity:.6;cursor:not-allowed}
 </style>
 
 </head>
@@ -109,5 +111,6 @@ Send
 <script src="chat.js"></script>
 <script src="popups.js"></script>
 
+<script src="v22.js"></script>
 </body>
 </html>

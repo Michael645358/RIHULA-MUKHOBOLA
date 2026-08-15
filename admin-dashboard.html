@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#087f3e">
+<title>RIHULA Admin Dashboard</title>
+
+<style>
+:root{
+  --green:#087f3e;--green2:#075e2b;--soft:#eaf7ef;--ink:#14231a;
+  --muted:#718078;--border:#dfeae3;--bg:#f4f8f5;--white:#fff;
+  --red:#b33e3e;--orange:#c47a00;--shadow:0 12px 35px rgba(20,55,35,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button,a{cursor:pointer}
+a{text-decoration:none;color:inherit}
+.app{min-height:100vh;display:flex}
+.sidebar{width:260px;flex:0 0 260px;position:fixed;left:0;top:0;bottom:0;background:#fff;border-right:1px solid var(--border);padding:18px 14px;z-index:1000;display:flex;flex-direction:column;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:8px 8px 18px;border-bottom:1px solid var(--border)}
+.brand img{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #dcebe1}
+.brand strong{display:block;color:var(--green2);font-size:16px}.brand small{color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:5px;margin-top:16px}
+.nav button{border:0;background:transparent;text-align:left;padding:12px;border-radius:12px;font-weight:700;color:#516058}
+.nav button:hover,.nav button.active{background:var(--soft);color:var(--green2)}
+.nav button.active{background:var(--green);color:#fff}
+.logout{margin-top:auto;border:0;background:#fff1f1;color:var(--red);padding:12px;border-radius:12px;font-weight:800}
+.main{margin-left:260px;min-width:0;flex:1}
+.topbar{height:72px;position:sticky;top:0;z-index:900;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:10px 28px}
+.menu{display:none;border:1px solid var(--border);background:#fff;border-radius:10px;width:42px;height:42px}
+.top-title{flex:1}.top-title small{color:var(--muted);font-weight:700}.top-title h1{margin:3px 0;font-size:22px}
+.status{color:#168044;background:#eef9f2;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800}
+.avatar{border:0;background:var(--green);color:#fff;width:40px;height:40px;border-radius:50%;font-weight:900}
+.content{max-width:1400px;margin:auto;padding:26px 28px 45px}
+.view{display:none}.view.active{display:block}
+.welcome{background:linear-gradient(135deg,#e9f8ee,#fff);border:1px solid #dceee2;border-radius:22px;padding:25px;margin-bottom:20px;box-shadow:var(--shadow)}
+.welcome .label,.kicker{color:var(--green);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.welcome h2{margin:7px 0;font-size:clamp(25px,3vw,35px)}.welcome p{color:var(--muted);max-width:760px;line-height:1.6;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card,.stat{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
+.stat{padding:18px;min-height:115px}.stat .icon{font-size:24px}.stat small{display:block;color:var(--muted);margin-top:8px;font-weight:700}.stat strong{display:block;font-size:28px;margin-top:4px;color:var(--ink)}
+.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:20px}
+.card{padding:21px}.card h3{margin:0 0 5px;font-size:20px}.muted{color:var(--muted);line-height:1.5}
+.goal-amount{font-size:42px;font-weight:900;color:var(--green2);margin:10px 0}
+.progress{height:12px;background:#e8eee9;border-radius:20px;overflow:hidden;margin:15px 0}.progress i{display:block;height:100%;background:var(--green);border-radius:20px}
+.form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{margin-bottom:13px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:#46544b}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:11px;padding:12px;background:#fbfdfb;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#75b88e;box-shadow:0 0 0 4px rgba(8,127,62,.08)}
+textarea{min-height:100px;resize:vertical}
+.btn{border:0;border-radius:11px;padding:11px 16px;font-weight:800;background:var(--green);color:#fff}
+.btn:hover{background:var(--green2)}.btn.secondary{background:#eef5f0;color:var(--green2)}.btn.danger{background:#fff0f0;color:var(--red)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.quick button{border:1px solid var(--border);background:#fbfdfb;border-radius:14px;padding:15px;text-align:left;font-weight:800}
+.quick button:hover{background:var(--soft)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.section-head h2{margin:0}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:650px}.table th,.table td{padding:12px;border-bottom:1px solid #edf2ee;text-align:left;font-size:13px}.table th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef9f2;color:#168044;font-size:11px;font-weight:800}.badge.pending{background:#fff6dc;color:#a66a00}.badge.off{background:#f2f2f2;color:#777}
+.search{max-width:280px}
+.list{display:grid;gap:10px}.list-item{border:1px solid var(--border);border-radius:13px;padding:14px;background:#fbfdfb;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.list-item strong{display:block}.list-item small{color:var(--muted)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:3000;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.modal-box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:22px}
+.close{float:right;border:0;background:#f1f4f2;border-radius:50%;width:34px;height:34px}
+.notice{padding:12px;border-radius:11px;background:#eef9f2;color:#176c3c;margin-bottom:12px;display:none}
+.footer{text-align:center;color:#8a968e;font-size:11px;padding:0 20px 25px}
+.overlay{display:none}
+
+@media(max-width:1000px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .sidebar{left:-275px;width:270px;transition:.25s}.sidebar.open{left:0}.overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:950}
+ .main{margin-left:0}.menu{display:block}.topbar{padding:10px 14px}.status{display:none}.content{padding:18px 13px 35px}
+ .form-row{grid-template-columns:1fr}.stats{gap:10px}.stat{padding:14px}.stat strong{font-size:23px}.quick{grid-template-columns:1fr 1fr}
+}
+@media(max-width:430px){.stats{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr}.welcome{padding:20px}.card{padding:17px}}
+</style>
+</head>
+
+<body>
+<div class="app">
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="logo.png" alt="RIHULA Logo" onerror="this.style.display='none'">
+    <div><strong>RIHULA</strong><small>Mukhobola Association</small></div>
+  </div>
+
+  <nav class="nav">
+    <button class="active" onclick="showView('dashboard',this)">📊 Dashboard</button>
+    <button onclick="showView('members',this)">👥 Members</button>
+    <button onclick="showView('savings',this)">💰 Savings</button>
+    <button onclick="showView('loans',this)">💳 Loans</button>
+    <button onclick="showView('announcements',this)">📢 Announcements</button>
+    <button onclick="showView('reports',this)">📄 Reports</button>
+    <button onclick="showView('settings',this)">⚙️ Settings</button>
+  </nav>
+  <button class="logout" onclick="logout()">🚪 Sign Out</button>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <button class="menu" onclick="toggleMenu()">☰</button>
+  <div class="top-title"><small>RIHULA MUKHOBOLA ASSOCIATION</small><h1 id="pageTitle">Admin Dashboard</h1></div>
+  <span class="status">● System Online</span><button class="avatar">A</button>
+</header>
+
+<div class="content">
+
+<section id="dashboard" class="view active">
+  <div class="welcome">
+    <span class="label">Administration</span>
+    <h2>Manage your association from one place.</h2>
+    <p>Monitor members, savings, loans, approvals and community activity from your RIHULA control centre.</p>
+    <div class="actions" style="margin-top:15px">
+      <button class="btn" onclick="openModal('memberModal')">＋ Add Member</button>
+      <button class="btn secondary" onclick="showView('reports')">📄 View Reports</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="icon">👥</div><small>Total Members</small><strong id="totalMembers">0</strong></div>
+    <div class="stat"><div class="icon">⏳</div><small>Pending Members</small><strong id="pendingMembers">0</strong></div>
+    <div class="stat"><div class="icon">💰</div><small>Total Savings</small><strong id="totalSavings">KSh 0</strong></div>
+    <div class="stat"><div class="icon">🟢</div><small>Online Members</small><strong id="onlineMembers">0</strong></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <span class="kicker">Savings Target</span><h3>Group Savings Goal</h3>
+      <div class="goal-amount" id="goalDisplay">KSh 50,000</div>
+      <p class="muted">Set the amount your association wants to reach.</p>
+      <div class="progress"><i id="progressBar" style="width:0%"></i></div>
+      <small id="progressText">0% of goal</small>
+      <div class="actions" style="margin-top:14px">
+        <input id="goalInput" type="number" value="50000" style="max-width:220px">
+        <button class="btn" onclick="saveGoal()">Save Goal</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="kicker">Quick Access</span><h3>Common Actions</h3>
+      <div class="quick" style="margin-top:15px">
+        <button onclick="openModal('memberModal')">➕ Add Member<br><small>Register a member</small></button>
+        <button onclick="openModal('savingModal')">💰 Add Savings<br><small>Record contribution</small></button>
+        <button onclick="openModal('loanModal')">💳 Add Loan<br><small>Create a loan</small></button>
+        <button onclick="openModal('announcementModal')">📢 Announcement<br><small>Post an update</small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-head"><div><span class="kicker">Activity</span><h2>Recent Admin Activity</h2></div></div>
+    <div class="list" id="activityList"><div class="muted">No activity recorded yet.</div></div>
+  </div>
+</section>
+
+<section id="members" class="view">
+  <div class="section-head"><div><span class="kicker">Management</span><h2>Members</h2></div><button class="btn" onclick="openModal('memberModal')">＋ Add Member</button></div>
+  <div class="card">
+    <input class="search" id="memberSearch" placeholder="Search name, phone or ID..." oninput="renderMembers()">
+    <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Member ID</th><th>Status</th><th>Actions</th></tr></thead><tbody id="memberTable"></tbody></table></div>
+  </div>
+</section>
+
+<section id="savings" class="view">
+  <div class="section-head"><div><span class="kicker">Finance</span><h2>Savings & Contributions</h2></div><button class="btn" onclick="openModal('savingModal')">＋ Record Savings</button></div>
+  <div class="stats">
+    <div class="stat"><small>Total Contributions</small><strong id="savingTotal2">KSh 0</strong></div>
+    <div class="stat"><small>Transactions</small><strong id="savingCount">0</strong></div>
+  </div>
+  <div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th>Amount</th><th>Date</th><th>Action</th></tr></thead><tbody id="savingTable"></tbody></table></div></div>
+</section>
+
+<section id="loans" class="view">
+  <div class="section-head"><div><span class="kicker">Finance</span><h2>Loans</h2></div><button class="btn" onclick="openModal('loanModal')">＋ Add Loan</button></div>
+  <div class="stats">
+    <div class="stat"><small>Total Loaned</small><strong id="loanTotal">KSh 0</strong></div>
+    <div class="stat"><small>Outstanding</small><strong id="outstandingTotal">KSh 0</strong></div>
+  </div>
+  <div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th>Amount</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead><tbody id="loanTable"></tbody></table></div></div>
+</section>
+
+<section id="announcements" class="view">
+  <div class="section-head"><div><span class="kicker">Communication</span><h2>Announcements</h2></div><button class="btn" onclick="openModal('announcementModal')">＋ New Announcement</button></div>
+  <div class="card"><div class="list" id="announcementList"></div></div>
+</section>
+
+<section id="reports" class="view">
+  <div class="section-head"><div><span class="kicker">Reports</span><h2>Association Reports</h2></div><button class="btn" onclick="window.print()">🖨 Print</button></div>
+  <div class="stats">
+    <div class="stat"><small>Members</small><strong id="reportMembers">0</strong></div>
+    <div class="stat"><small>Savings</small><strong id="reportSavings">KSh 0</strong></div>
+    <div class="stat"><small>Loans</small><strong id="reportLoans">KSh 0</strong></div>
+    <div class="stat"><small>Outstanding</small><strong id="reportOutstanding">KSh 0</strong></div>
+  </div>
+  <div class="card"><h3>Financial Summary</h3><p class="muted">Use the figures above for your current association summary. For official accounting, connect this dashboard to your server/database.</p></div>
+</section>
+
+<section id="settings" class="view">
+  <div class="section-head"><div><span class="kicker">Configuration</span><h2>Association Settings</h2></div></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Association Details</h3>
+      <div class="field"><label>Association Name</label><input id="assocName" value="RIHULA MUKHOBOLA ASSOCIATION"></div>
+      <div class="field"><label>Tagline</label><input id="tagline" value="Together We Prosper"></div>
+      <button class="btn" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div class="card">
+      <h3>Data Management</h3>
+      <p class="muted">Your demo data is stored in this browser using localStorage.</p>
+      <div class="actions"><button class="btn secondary" onclick="exportData()">Export Data</button><button class="btn danger" onclick="resetData()">Reset Demo Data</button></div>
+    </div>
+  </div>
+</section>
+
+</div>
+<div class="footer">RIHULA MUKHOBOLA ASSOCIATION · Admin Dashboard</div>
+</main>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="memberModal"><div class="modal-box">
+<button class="close" onclick="closeModal('memberModal')">×</button><h2>Add Member</h2><div id="memberNotice" class="notice"></div>
+<div class="form-row"><div class="field"><label>Full Name</label><input id="mName"></div><div class="field"><label>Phone</label><input id="mPhone"></div></div>
+<div class="form-row"><div class="field"><label>Member ID</label><input id="mId" placeholder="e.g. RIH-001"></div><div class="field"><label>Status</label><select id="mStatus"><option>Active</option><option>Pending</option></select></div></div>
+<div class="actions"><button class="btn" onclick="addMember()">Save Member</button><button class="btn secondary" onclick="closeModal('memberModal')">Cancel</button></div>
+</div></div>
+
+<div class="modal" id="savingModal"><div class="modal-box">
+<button class="close" onclick="closeModal('savingModal')">×</button><h2>Record Savings</h2><div class="field"><label>Member</label><select id="sMember"></select></div><div class="form-row"><div class="field"><label>Amount (KSh)</label><input id="sAmount" type="number" min="1"></div><div class="field"><label>Date</label><input id="sDate" type="date"></div></div>
+<div class="actions"><button class="btn" onclick="addSaving()">Record</button><button class="btn secondary" onclick="closeModal('savingModal')">Cancel</button></div>
+</div></div>
+
+<div class="modal" id="loanModal"><div class="modal-box">
+<button class="close" onclick="closeModal('loanModal')">×</button><h2>Add Loan</h2><div class="field"><label>Member</label><select id="lMember"></select></div><div class="form-row"><div class="field"><label>Amount (KSh)</label><input id="lAmount" type="number" min="1"></div><div class="field"><label>Repayment (KSh)</label><input id="lPaid" type="number" min="0" value="0"></div></div>
+<div class="actions"><button class="btn" onclick="addLoan()">Save Loan</button><button class="btn secondary" onclick="closeModal('loanModal')">Cancel</button></div>
+</div></div>
+
+<div class="modal" id="announcementModal"><div class="modal-box">
+<button class="close" onclick="closeModal('announcementModal')">×</button><h2>New Announcement</h2><div class="field"><label>Title</label><input id="aTitle"></div><div class="field"><label>Message</label><textarea id="aMessage"></textarea></div>
+<div class="actions"><button class="btn" onclick="addAnnouncement()">Publish</button><button class="btn secondary" onclick="closeModal('announcementModal')">Cancel</button></div>
+</div></div>
+
+<script>
+const KEY="rihula_admin_v4";
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||{
+ members:[
+  {id:"RIH-001",name:"Sample Member",phone:"0700000000",status:"Active"},
+  {id:"RIH-002",name:"Pending Member",phone:"0711111111",status:"Pending"}
+ ],
+ savings:[],loans:[],announcements:[],activity:[],goal:50000,
+ settings:{name:"RIHULA MUKHOBOLA ASSOCIATION",tagline:"Together We Prosper"}
+};
+function save(){localStorage.setItem(KEY,JSON.stringify(data));renderAll()}
+function money(n){return "KSh "+Number(n||0).toLocaleString("en-KE")}
+function log(x){data.activity.unshift({text:x,date:new Date().toLocaleString()});data.activity=data.activity.slice(0,20)}
+function showView(id,btn){
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ const names={dashboard:"Admin Dashboard",members:"Members",savings:"Savings & Contributions",loans:"Loans",announcements:"Announcements",reports:"Reports",settings:"Settings"};
+ document.getElementById("pageTitle").textContent=names[id]||"Admin Dashboard"; toggleMenu(false); renderAll();
+}
+function toggleMenu(force){
+ const s=document.getElementById("sidebar"),o=document.getElementById("overlay");
+ if(force===false){s.classList.remove("open");o.classList.remove("show");return}
+ s.classList.toggle("open");o.classList.toggle("show");
+}
+function openModal(id){populateMemberSelects();document.getElementById(id).classList.add("open")}
+function closeModal(id){document.getElementById(id).classList.remove("open")}
+function addMember(){
+ let name=mName.value.trim(),phone=mPhone.value.trim(),id=mId.value.trim()||"RIH-"+String(Date.now()).slice(-5);
+ if(!name||!phone){memberNotice.textContent="Please enter the member name and phone.";memberNotice.style.display="block";return}
+ data.members.push({name,phone,id,status:mStatus.value});log("Added member: "+name);save();closeModal("memberModal");mName.value=mPhone.value=mId.value="";
+}
+function addSaving(){
+ let member=sMember.value,amount=Number(sAmount.value),date=sDate.value||new Date().toISOString().slice(0,10);
+ if(!member||amount<=0)return alert("Enter a valid member and amount.");
+ data.savings.push({member,amount,date});log("Recorded "+money(amount)+" savings for "+member);save();closeModal("savingModal");sAmount.value="";
+}
+function addLoan(){
+ let member=lMember.value,amount=Number(lAmount.value),paid=Number(lPaid.value||0);
+ if(!member||amount<=0)return alert("Enter a valid member and loan amount.");
+ data.loans.push({member,amount,paid});log("Created "+money(amount)+" loan for "+member);save();closeModal("loanModal");lAmount.value=lPaid.value=0;
+}
+function addAnnouncement(){
+ let title=aTitle.value.trim(),message=aMessage.value.trim();if(!title||!message)return alert("Complete the announcement.");
+ data.announcements.unshift({title,message,date:new Date().toLocaleString()});log("Published announcement: "+title);save();closeModal("announcementModal");aTitle.value=aMessage.value="";
+}
+function deleteItem(type,index){if(!confirm("Delete this item?"))return;data[type].splice(index,1);log("Deleted "+type+" record");save()}
+function renderMembers(){
+ let q=(document.getElementById("memberSearch")?.value||"").toLowerCase();
+ memberTable.innerHTML=data.members.filter(m=>(m.name+" "+m.phone+" "+m.id).toLowerCase().includes(q)).map((m,i)=>`
+ <tr><td><b>${esc(m.name)}</b></td><td>${esc(m.phone)}</td><td>${esc(m.id)}</td><td><span class="badge ${m.status==="Pending"?"pending":""}">${m.status}</span></td>
+ <td><button class="btn danger" onclick="deleteItem('members',${data.members.indexOf(m)})">Delete</button></td></tr>`).join("")||"<tr><td colspan='5'>No members found.</td></tr>";
+}
+function renderSavings(){
+ let total=data.savings.reduce((a,x)=>a+Number(x.amount),0);savingTotal2.textContent=money(total);savingCount.textContent=data.savings.length;
+ savingTable.innerHTML=data.savings.map((x,i)=>`<tr><td>${esc(x.member)}</td><td><b>${money(x.amount)}</b></td><td>${esc(x.date)}</td><td><button class="btn danger" onclick="deleteItem('savings',${i})">Delete</button></td></tr>`).join("")||"<tr><td colspan='4'>No savings recorded.</td></tr>";
+}
+function renderLoans(){
+ let total=data.loans.reduce((a,x)=>a+Number(x.amount),0),out=data.loans.reduce((a,x)=>a+Math.max(0,Number(x.amount)-Number(x.paid)),0);
+ loanTotal.textContent=money(total);outstandingTotal.textContent=money(out);
+ loanTable.innerHTML=data.loans.map((x,i)=>{let bal=Math.max(0,x.amount-x.paid);return `<tr><td>${esc(x.member)}</td><td>${money(x.amount)}</td><td>${money(bal)}</td><td><span class="badge ${bal?"pending":""}">${bal?"Outstanding":"Paid"}</span></td><td><button class="btn danger" onclick="deleteItem('loans',${i})">Delete</button></td></tr>`}).join("")||"<tr><td colspan='5'>No loans recorded.</td></tr>";
+}
+function renderAnnouncements(){
+ announcementList.innerHTML=data.announcements.map((x,i)=>`<div class="list-item"><div><strong>📢 ${esc(x.title)}</strong><small>${esc(x.date)}</small><p class="muted">${esc(x.message)}</p></div><button class="btn danger" onclick="deleteItem('announcements',${i})">Delete</button></div>`).join("")||"<div class='muted'>No announcements yet.</div>";
+}
+function renderActivity(){activityList.innerHTML=data.activity.map(x=>`<div class="list-item"><div><strong>🕒 ${esc(x.text)}</strong><small>${esc(x.date)}</small></div></div>`).join("")||"<div class='muted'>No activity recorded yet.</div>"}
+function populateMemberSelects(){
+ let opts=data.members.map(m=>`<option value="${esc(m.name)}">${esc(m.name)} — ${esc(m.id)}</option>`).join("");
+ sMember.innerHTML=opts;lMember.innerHTML=opts;
+}
+function saveGoal(){let g=Number(goalInput.value);if(g>0){data.goal=g;log("Updated group savings goal to "+money(g));save()}}
+function saveSettings(){data.settings.name=assocName.value.trim()||data.settings.name;data.settings.tagline=tagline.value.trim()||data.settings.tagline;log("Updated association settings");save();alert("Settings saved.")}
+function renderAll(){
+ let totalSav=data.savings.reduce((a,x)=>a+Number(x.amount),0);
+ totalMembers.textContent=data.members.length;pendingMembers.textContent=data.members.filter(x=>x.status==="Pending").length;
+ totalSavings.textContent=money(totalSav);onlineMembers.textContent=Math.min(5,data.members.filter(x=>x.status==="Active").length);
+ goalDisplay.textContent=money(data.goal);goalInput.value=data.goal;
+ let pct=Math.min(100,data.goal?Math.round(totalSav/data.goal*100):0);progressBar.style.width=pct+"%";progressText.textContent=pct+"% of goal";
+ reportMembers.textContent=data.members.length;reportSavings.textContent=money(totalSav);
+ reportLoans.textContent=money(data.loans.reduce((a,x)=>a+Number(x.amount),0));
+ reportOutstanding.textContent=money(data.loans.reduce((a,x)=>a+Math.max(0,x.amount-x.paid),0));
+ renderMembers();renderSavings();renderLoans();renderAnnouncements();renderActivity();populateMemberSelects();
+ assocName.value=data.settings.name;tagline.value=data.settings.tagline;
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function exportData(){let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="rihula-admin-data.json";a.click();URL.revokeObjectURL(a.href)}
+function resetData(){if(confirm("Reset all demo data? This cannot be undone.")){localStorage.removeItem(KEY);location.reload()}}
+function logout(){if(confirm("Sign out of the admin dashboard?"))location.href="index.html"}
+document.addEventListener("DOMContentLoaded",()=>{sDate.value=new Date().toISOString().slice(0,10);renderAll()});
+</script>
+</body>
+</html>

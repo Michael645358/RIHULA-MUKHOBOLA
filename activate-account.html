@@ -12,31 +12,43 @@
     <img src="images/logo.jpg" alt="Logo" width="100">
 
     <h2>Activate Your Account</h2>
-    <p>Existing members can activate their account without registering again.</p>
+    <p>
+        Existing members can activate their account without registering again.
+    </p>
 
     <br>
 
     <div class="input-group">
-        <input type="tel" id="phone" placeholder="📱 Existing Phone Number" autocomplete="tel">
+        <input type="tel" id="phone"
+               placeholder="📱 Existing Phone Number">
     </div>
 
     <div class="input-group">
-        <input type="password" id="oldPassword" placeholder="🔒 Existing Password" autocomplete="current-password">
+        <input type="password" id="oldPassword"
+               placeholder="🔒 Existing Password">
     </div>
 
     <div class="input-group">
-        <input type="email" id="email" placeholder="📧 New Email Address" autocomplete="email">
+        <input type="email" id="email"
+               placeholder="📧 New Email Address"
+               autocomplete="email">
     </div>
 
     <div class="input-group">
-        <input type="password" id="newPassword" placeholder="🔐 Create New Password" autocomplete="new-password">
+        <input type="password" id="newPassword"
+               placeholder="🔐 Create New Password"
+               autocomplete="new-password">
     </div>
 
     <div class="input-group">
-        <input type="password" id="confirmPassword" placeholder="🔐 Confirm New Password" autocomplete="new-password">
+        <input type="password" id="confirmPassword"
+               placeholder="🔐 Confirm New Password"
+               autocomplete="new-password">
     </div>
 
-    <button onclick="activateAccount()" class="login-btn">Activate Account</button>
+    <button onclick="activateAccount()" class="login-btn">
+        Activate Account
+    </button>
 
     <br><br>
     <a href="login.html">← Back to Login</a>
@@ -80,10 +92,7 @@ async function activateAccount() {
     }
 
     try {
-        /*
-         * 1. Confirm that the phone belongs to an existing member.
-         *    The existing password is checked securely by the RPC below.
-         */
+        /* Make sure the old member exists before creating Auth */
         const { data: oldMember, error: memberCheckError } = await db
             .from("members")
             .select("id, phone, email, auth_id")
@@ -91,9 +100,8 @@ async function activateAccount() {
             .maybeSingle();
 
         if (memberCheckError) {
-            console.error(memberCheckError);
             showPopup(
-                "Could not check the member record:\n\n" +
+                "Could not check member record:\n\n" +
                 memberCheckError.message,
                 "error"
             );
@@ -113,39 +121,18 @@ async function activateAccount() {
             return;
         }
 
-        /*
-         * 2. Tell Supabase exactly where the confirmation email must return.
-         *    This works both on localhost and on the deployed GitHub Pages site.
-         */
-        const emailRedirectTo =
-            new URL("auth-confirm.html", window.location.href).href;
-
-        /*
-         * 3. Create the Supabase Auth account.
-         */
+        /* Create Supabase Auth account */
         const { data: authData, error: authError } =
             await db.auth.signUp({
-                email,
-                password: newPassword,
-                options: {
-                    emailRedirectTo
-                }
+                email: email,
+                password: newPassword
             });
 
         if (authError) {
             console.error("ACTIVATION AUTH ERROR:", authError);
-
-            let message = authError.message;
-
-            if (/already registered|already been registered|user already exists/i.test(message)) {
-                message =
-                    "This email address already has a Supabase login. " +
-                    "If this was from an earlier activation attempt, use that email and password on the Login page. " +
-                    "If it is not linked to this member yet, contact the administrator.";
-            }
-
             showPopup(
-                "Could not create the email account:\n\n" + message,
+                "Could not create the email account:\n\n" +
+                authError.message,
                 "error"
             );
             return;
@@ -156,10 +143,7 @@ async function activateAccount() {
             return;
         }
 
-        /*
-         * 4. Link the new Auth account to the EXISTING member.
-         *    The database function checks phone + old password.
-         */
+        /* Link Auth user to the existing member */
         const { data: result, error: rpcError } =
             await db.rpc("activate_old_member", {
                 p_phone: phone,
@@ -172,7 +156,8 @@ async function activateAccount() {
             console.error("ACTIVATION LINK ERROR:", rpcError);
             showPopup(
                 "The email account was created, but linking failed:\n\n" +
-                rpcError.message,
+                rpcError.message +
+                "\n\nRun the V2.1 database fix SQL included with this project.",
                 "error"
             );
             return;
@@ -189,22 +174,16 @@ async function activateAccount() {
 
         await db.auth.signOut();
 
-        /*
-         * If email confirmation is enabled, the member will receive a
-         * confirmation email and return through auth-confirm.html.
-         * If confirmation is disabled, they can log in immediately.
-         */
         showPopup(
             "Account activated successfully!\n\n" +
             "Your existing savings and contribution history were preserved.\n\n" +
-            "Check your email if Supabase asks you to confirm it. " +
-            "Then log in using your new email and password.",
+            "You can now log in using your email and new password.",
             "success"
         );
 
         setTimeout(() => {
             window.location.href = "login.html";
-        }, 1800);
+        }, 1200);
 
     } catch (error) {
         console.error("ACTIVATION ERROR:", error);
@@ -215,5 +194,6 @@ async function activateAccount() {
     }
 }
 </script>
+<script src="v22.js"></script>
 </body>
 </html>

@@ -22,140 +22,165 @@ OneSignalDeferred.push(async function(OneSignal) {
 </head>
 <body>
 
-<header>
-    <div class="logo-area">
-        <img src="images/logo.jpg" alt="Logo">
-        <div>
-            <h1>Member Dashboard</h1>
-            <p>RIHULA MUKHOBOLA ASSOCIATION</p>
-        </div>
-    </div>
-</header>
-
 <div id="dashboardScreen">
-<section class="member-header">
 
-    <div class="member-top">
+<!-- RIHULA mobile-style dashboard header -->
+<section class="pochi-hero">
+    <div class="pochi-hero-top">
+        <div class="pochi-brand">
+            <img id="dashboardLogo" src="images/logo.jpg" alt="RIHULA">
+            <div>
+                <h1>RIHULA MUKHOBOLA</h1>
+                <p>Members Dashboard</p>
+            </div>
+        </div>
+        <button class="hero-icon-btn" onclick="showProfile()" aria-label="Open profile">⋯</button>
+    </div>
 
-        <img id="profileImage"
-             src="images/logo.jpg"
-             class="member-avatar">
+    <div class="pochi-welcome">
+        <div class="member-top">
+            <img id="profileImage" src="images/logo.jpg" class="member-avatar" alt="Profile">
+            <div>
+                <div id="welcomeName" class="pochi-welcome-text">Welcome Member</div>
+                <span class="member-online-dot">● Member account</span>
+            </div>
+        </div>
+        <button onclick="logout()" class="pochi-logout">Logout</button>
+    </div>
 
+    <div class="collection-card">
+        <div class="collection-title">Total collected</div>
+        <div class="collection-periods">
+            <div>
+                <span>Today</span>
+                <strong id="collectedToday">KSh 0</strong>
+            </div>
+            <div>
+                <span>This week</span>
+                <strong id="collectedWeek">KSh 0</strong>
+            </div>
+            <div>
+                <span>This month</span>
+                <strong id="collectedMonth">KSh 0</strong>
+            </div>
+        </div>
+        <button class="insights-btn" onclick="showGroupGoal()">View Group Insights</button>
+    </div>
+</section>
+
+<!-- Dashboard tabs -->
+<div class="pochi-tabs">
+    <button class="pochi-tab active" onclick="showDashboard()">RIHULA Savings</button>
+    <button class="pochi-tab" onclick="showGroupGoal()">Group Goal</button>
+</div>
+
+<!-- Main dashboard content -->
+<section class="dashboard-content">
+
+    <div class="dashboard-section-heading">
         <div>
-            <h2 id="welcomeName">Welcome Member</h2>
+            <h2>Do more with your RIHULA account</h2>
+            <p>Manage savings, members and association activities.</p>
+        </div>
+    </div>
 
+    <section class="rihula-actions">
+        <button class="rihula-action" onclick="showContribute()">
+            <span class="action-icon">▣</span>
+            <span>Contribute</span>
+        </button>
+
+        <button class="rihula-action" onclick="showHistory()">
+            <span class="action-icon">⇩</span>
+            <span>My Savings</span>
+        </button>
+
+        <button class="rihula-action" onclick="showGroupGoal()">
+            <span class="action-icon">◎</span>
+            <span>Group Goal</span>
+        </button>
+
+        <button class="rihula-action" onclick="showGroupMembers()">
+            <span class="action-icon">⊙</span>
+            <span>Members</span>
+        </button>
+
+        <button class="rihula-action" onclick="showLeaders()">
+            <span class="action-icon">♙</span>
+            <span>Leadership</span>
+        </button>
+
+        <button class="rihula-action" onclick="showAnnouncements()">
+            <span class="action-icon">▤</span>
+            <span>Announcements</span>
+        </button>
+
+        <button class="rihula-action" onclick="showChat()">
+            <span class="action-icon">◌</span>
+            <span>Community Chat</span>
+        </button>
+
+        <button class="rihula-action" onclick="showProfile()">
+            <span class="action-icon">◯</span>
+            <span>My Account</span>
+        </button>
+    </section>
+
+    <!-- Personal savings summary -->
+    <section class="personal-summary-card">
+        <div class="summary-head">
+            <div>
+                <span class="summary-label">My savings</span>
+                <h2 id="mySavings">KSh 0</h2>
+            </div>
+            <span class="summary-pill">Active member</span>
         </div>
 
-    </div>
+        <div class="summary-progress-row">
+            <div>
+                <span>My goal</span>
+                <strong id="goalAmount">KSh 0 / KSh 5,000</strong>
+            </div>
+            <strong id="progressText">0%</strong>
+        </div>
 
-    <button onclick="logout()" class="logout-btn">
-        Logout
-    </button>
+        <div class="summary-progress">
+            <div id="progressFill"></div>
+        </div>
+    </section>
 
-</section>
+    <!-- Latest announcement styled like a featured deal -->
+    <section class="featured-update">
+        <div class="featured-heading">
+            <h2>RIHULA Updates 🔥</h2>
+            <button onclick="showAnnouncements()">View all</button>
+        </div>
+        <div class="featured-card">
+            <div class="featured-icon">📢</div>
+            <div>
+                <span class="featured-label">Latest announcement</span>
+                <h3 id="dashboardAnnouncementTitle">Welcome to RIHULA Mukhobola</h3>
+                <p id="dashboardAnnouncementMessage">Stay updated with contributions, meetings and association news.</p>
+            </div>
+        </div>
+    </section>
 
-<section class="stats-grid">
+    <!-- Rank -->
+    <section class="rankings dashboard-rank">
+        <div class="rank-card">
+            <span class="summary-label">Contribution ranking</span>
+            <h3 id="myRank">#0</h3>
+            <p>Your current position among all members</p>
+        </div>
+    </section>
 
-    <div class="modern-stat">
-        <h3 id="mySavings">KSh 0</h3>
-        <p>My Contributions</p>
-    </div>
+    <section class="announcements dashboard-notifications">
+        <h2>Notifications</h2>
+        <div id="notificationsContainer">
+            <p>No notifications available.</p>
+        </div>
+    </section>
 
-    <div class="modern-stat">
-        <h3 id="groupSavings">KSh 0</h3>
-        <p>Group Savings</p>
-    </div>
-
-</section>
-<section class="admin-panel">
-
-<h2>My Savings Goal</h2>
-
-<div class="card">
-
-    <h3 id="goalAmount">KSh 500 / KSh 5,000</h3>
-
-    <div class="progress-bar">
-        <div id="progressFill" class="progress-fill"></div>
-    </div>
-
-    <p id="progressText">0%</p>
-
-</div>
-
-</section>
-<section class="quick-actions">
-<div class="action-card" onclick="showGroupGoal()">
-
-    <span style="font-size:40px;">🎯</span>
-
-    <p>Group Goal</p>
-
-</div>
-    <div class="action-card" onclick="showContribute()">
-<span style="font-size:40px;">💰</span>
-<p>Contribute</p>
-</div>
-
-    <div class="action-card" onclick="showHistory()">
-<span style="font-size:40px;">📜</span>
-    <p>History</p>
-</div>
-
-
-    <div class="action-card" onclick="showProfile()">
-<span style="font-size:40px;">👤</span>
-    <p>Profile</p>
-</div>
-
-    <div class="action-card" onclick="showLeaders()">
-    <span style="font-size:40px;">👥</span>
-    <p>Leaders</p>
-</div>
-
-<div class="action-card" onclick="showGroupMembers()">
-    <span style="font-size:40px;">👥</span>
-    <p>Members</p>
-</div>
-
-<div class="action-card" onclick="showChat()">
-    <span style="font-size:40px;">💬</span>
-    <p>Chat</p>
-</div>
-
-<div class="action-card" onclick="showAnnouncements()">
-    <span style="font-size:40px;">📢</span>
-    <p>Announcements</p>
-</div>
-
-<div class="action-card" onclick="showAI()">
-    <span style="font-size:40px;">🤖</span>
-    <p>AI Assistant</p>
-</div>
-
-
-
-</section>
-<section class="rankings">
-
-<h2>🏆 My Contribution Rank</h2>
-
-<div class="rank-card">
-
-    <h3 id="myRank">#0</h3>
-
-    <p>Your current position among all members</p>
-
-</div>
-
-</section>
-
-<section class="announcements">
-    <h2>Notifications</h2>
-
-    <div id="notificationsContainer">
-        <p>No notifications available.</p>
-    </div>
 </section>
 </div>
 <div id="historyScreen" style="display:none;">
@@ -223,36 +248,59 @@ OneSignalDeferred.push(async function(OneSignal) {
             </span>
         </p>
        <hr>
-<div class="profile-card">
-<h3>Change Password</h3>
+<div class="profile-card password-card">
 
-<input
-    type="password"
-    id="currentPassword"
-    placeholder="Current Password">
+    <h3>🔐 Change Password</h3>
 
-<input
-    type="password"
-    id="newPassword"
-    placeholder="New Password">
+    <div class="password-input">
+        <input
+            type="password"
+            id="currentPassword"
+            placeholder="Current Password">
 
-<input
-    type="password"
-    id="confirmPassword"
-    placeholder="Confirm New Password">
+        <button
+            type="button"
+            onclick="toggleSinglePassword('currentPassword', this)">
+            👁
+        </button>
+    </div>
 
-<label style="display:block;margin:10px 0;">
-    <input
-        type="checkbox"
-        onclick="togglePasswordVisibility()">
-    Show Passwords
-</label>
 
-<button onclick="changePassword()" class="btn">
-    Update Password
-</button>
+    <div class="password-input">
+        <input
+            type="password"
+            id="newPassword"
+            placeholder="New Password">
+
+        <button
+            type="button"
+            onclick="toggleSinglePassword('newPassword', this)">
+            👁
+        </button>
+    </div>
+
+
+    <div class="password-input">
+        <input
+            type="password"
+            id="confirmPassword"
+            placeholder="Confirm New Password">
+
+        <button
+            type="button"
+            onclick="toggleSinglePassword('confirmPassword', this)">
+            👁
+        </button>
+    </div>
+
+
+    <button
+        onclick="changePassword()"
+        class="btn password-update-btn">
+        🔐 Update Password
+    </button>
+
 </div>
-
 <hr>
 <div class="profile-card">
 <h3>Recovery Information</h3>
@@ -416,78 +464,135 @@ OneSignalDeferred.push(async function(OneSignal) {
     </div>
 
 </div>
-
 <!-- GROUP GOAL SCREEN -->
-<div id="groupGoalScreen" style="display:none;">
+<div id="groupGoalScreen" class="modern-group-goal">
 
-    <button onclick="showDashboard()" class="btn">
-        ← Back
-    </button>
+    <div class="group-goal-topbar">
+        <button onclick="showDashboard()" class="group-back-btn">
+            ← Back
+        </button>
 
-    <h2>🎯 Group Goal</h2>
+        <h2>🎯 Group Goal</h2>
+    </div>
 
-    <div class="card">
 
-        <h3>🎯 Group Goal</h3>
+    <!-- Main Goal -->
+    <div class="goal-main-card">
+
+        <div class="goal-icon">
+            🎯
+        </div>
+
+        <div class="goal-label">
+            RIHULA GROUP GOAL
+        </div>
 
         <h1 id="groupGoalAmount">
-            KSh 500,000
+            KSh 0
         </h1>
 
         <p>Target amount</p>
 
     </div>
 
-    <div class="card">
 
-        <h3>💰 Collected</h3>
+    <!-- Financial Summary -->
+    <div class="goal-summary">
 
-        <h1 id="groupGoalCollected">
-            KSh 360,000
-        </h1>
+        <div class="goal-stat">
+            <span class="goal-stat-icon">💰</span>
 
-    </div>
-
-    <div class="card">
-
-        <h3>📉 Remaining</h3>
-
-        <h1 id="groupGoalRemaining">
-            KSh 140,000
-        </h1>
-
-    </div>
-
-    <div class="card progress-card">
-
-        <div class="progress-header">
-
-            <h3>📊 Progress</h3>
-
-            <span id="groupGoalPercent">
-                72%
+            <span class="goal-stat-label">
+                Collected
             </span>
 
+            <strong id="groupGoalCollected">
+                KSh 0
+            </strong>
         </div>
 
-        <div class="progress-bar-modern">
+
+        <div class="goal-stat">
+            <span class="goal-stat-icon">📉</span>
+
+            <span class="goal-stat-label">
+                Remaining
+            </span>
+
+            <strong id="groupGoalRemaining">
+                KSh 0
+            </strong>
+        </div>
+
+    </div>
+
+
+    <!-- Progress -->
+    <div class="goal-progress-card">
+
+        <div class="goal-progress-header">
+
+            <div>
+                <span>📊</span>
+                <strong>Progress</strong>
+            </div>
+
+            <strong id="groupGoalPercent">
+                0%
+            </strong>
+
+        </div>
+
+
+        <div class="goal-progress-track">
 
             <div
-    id="groupGoalProgress"
-    class="progress-fill-modern">
-</div>
+                id="groupGoalProgress"
+                class="goal-progress-fill">
+            </div>
 
         </div>
 
-        <p id="groupGoalComplete"
-           style="text-align:center;">
-            72% Complete
+
+        <p id="groupGoalComplete">
+            0% Complete
         </p>
 
     </div>
 
+
+    <!-- Contribution Days -->
+    <div class="contribution-days-card">
+
+        <h3>📅 Contribution Days</h3>
+
+        <p>
+            Members contribute every
+        </p>
+
+    <div class="contribution-days">
+
+    <div class="contribution-day">
+        <span>WED</span>
+        <strong>Wednesday</strong>
+        <small id="wednesdayAmount">KSh 0 collected</small>
+    </div>
+
+    <div class="contribution-day">
+        <span>SAT</span>
+        <strong>Saturday</strong>
+        <small id="saturdayAmount">KSh 0 collected</small>
+    </div>
+
 </div>
 
+        <small>
+            Every contribution helps RIHULA reach the group goal.
+        </small>
+
+    </div>
+
+</div>
 <div id="contributeScreen" style="display:none;">
 
     <button onclick="showDashboard()" class="btn">
@@ -632,5 +737,6 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </div>
 
+<script src="v22.js"></script>
 </body>
 </html>
