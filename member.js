@@ -945,95 +945,97 @@ document.getElementById("announcementsOnlyContainer");
     }
 }
 async function uploadProfilePhoto() {
-
-    const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
-
-    const file =
-        document.getElementById("photoUpload").files[0];
-
-    if (!file) return;
-
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
+    const input = document.getElementById("photoUpload");
     const button = document.getElementById("uploadPhotoButton");
+
+    const file = input?.files?.[0];
+
+    if (!user || !file) return;
+
     if (button) button.disabled = true;
 
-    const fileName =
-        `${user.phone}_${Date.now()}`;
+    try {
+        const extension = file.name.split(".").pop().toLowerCase();
+        const fileName = `${user.phone}_${Date.now()}.${extension}`;
 
-    const { error: uploadError } = await db.storage
-    .from("profile-pictures")
-    .upload(fileName, file);
+        // Upload image
+        const { error: uploadError } = await db.storage
+            .from("profile-pictures")
+            .upload(fileName, file);
 
-if (uploadError) {
-    console.log(uploadError);
-    showPopup(uploadError.message);
-    return;
-}
+        if (uploadError) {
+            console.error("Profile upload error:", uploadError);
+            showPopup("Could not upload your profile photo.", "error");
+            return;
+        }
 
-    const { data } = db.storage
-        .from("profile-pictures")
-        .getPublicUrl(fileName);
+        // Get public URL
+        const { data: publicData } = db.storage
+            .from("profile-pictures")
+            .getPublicUrl(fileName);
 
-    const photoUrl = data.publicUrl;
+        const photoUrl = publicData.publicUrl;
 
-    const { error: updateError } = await db
-        .from("members")
-        .update({
-            photo_url: photoUrl
-        })
-        .eq("phone", user.phone);
+        // Save URL to member
+        const { error: updateError } = await db
+            .from("members")
+            .update({
+                photo_url: photoUrl
+            })
+            .eq("phone", user.phone);
 
-    if (updateError) {
+        if (updateError) {
+            console.error("Profile database error:", updateError);
+            showPopup("Photo uploaded, but could not save your profile.", "error");
+            return;
+        }
+
+        // Update local user
+        user.photo_url = photoUrl;
+
+        localStorage.setItem(
+            "loggedUser",
+            JSON.stringify(user)
+        );
+
+        // Update images immediately
+        const profileImage =
+            document.getElementById("profileImage");
+
+        const profileScreenImage =
+            document.getElementById("profileScreenImage");
+
+        if (profileImage) {
+            profileImage.src = photoUrl;
+        }
+
+        if (profileScreenImage) {
+            profileScreenImage.src = photoUrl;
+        }
+
+        // Clear input
+        input.value = "";
+
+        showPopup(
+            "Profile photo updated successfully!",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error("Unexpected photo upload error:", error);
+
+        showPopup(
+            "Something went wrong while updating your photo.",
+            "error"
+        );
+
+    } finally {
+
         if (button) button.disabled = false;
-        showPopup(updateError.message, "error");
-        return;
     }
-
-    user.photo_url = photoUrl;
-
-    localStorage.setItem(
-        "loggedUser",
-        JSON.stringify(user)
-    );
-
-    document.getElementById("profileImage").src =
-        photoUrl;
-
-    document.getElementById("profileScreenImage").src =
-        photoUrl;
-
-    if (button) button.disabled = false;
-    showPopup("Profile photo updated successfully", "success");
 }
-document.addEventListener("DOMContentLoaded", () => {
-    const photoInput = document.getElementById("photoUpload");
-    if (!photoInput) return;
-
-    photoInput.addEventListener("change", () => {
-        const file = photoInput.files && photoInput.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            photoInput.value = "";
-            showPopup("Please choose an image file.", "warning");
-            return;
-        }
-
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            photoInput.value = "";
-            showPopup("Photo must be 5 MB or smaller.", "warning");
-            return;
-        }
-
-        // Preview immediately; upload starts automatically with no loading popup.
-        const preview = document.getElementById("profileScreenImage");
-        if (preview) preview.src = URL.createObjectURL(file);
-
-        uploadProfilePhoto();
-    });
-});
-
 async function saveGoal() {
 
     const user =
