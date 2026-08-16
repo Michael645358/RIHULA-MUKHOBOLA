@@ -684,51 +684,140 @@ function toggleSinglePassword(inputId, button) {
 }
 async function loadCollectionPeriods() {
     try {
-        const { data, error } = await db
+        // Get the currently logged-in member
+        const user = JSON.parse(
+            localStorage.getItem("currentUser") ||
+            sessionStorage.getItem("currentUser") ||
+            "null"
+        );
+
+        // Default values
+        let todayTotal = 0;
+        let weekTotal = 0;
+        let monthTotal = 0;
+
+        // No member logged in
+        if (!user) {
+            updateCollectionDisplay(0, 0, 0);
+            return;
+        }
+
+        // Use the member's phone as their unique identifier
+        const memberPhone =
+            user.phone ||
+            user.phone_number ||
+            user.member_phone;
+
+        if (!memberPhone) {
+            updateCollectionDisplay(0, 0, 0);
+            return;
+        }
+
+        // Get ONLY this member's contributions
+        const { data: contributions, error } = await supabase
             .from("contributions")
-            .select("amount, created_at");
+            .select("amount, created_at")
+            .eq("member_phone", memberPhone);
 
         if (error) {
-            console.error("Collection period error:", error);
+            console.error("Contribution loading error:", error);
+            updateCollectionDisplay(0, 0, 0);
             return;
         }
 
         const now = new Date();
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const day = startOfDay.getDay();
-        const daysFromMonday = (day + 6) % 7;
-        const startOfWeek = new Date(startOfDay);
-        startOfWeek.setDate(startOfWeek.getDate() - daysFromMonday);
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        let today = 0;
-        let week = 0;
-        let month = 0;
+        // Start of today
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
 
-        (data || []).forEach(item => {
-            const amount = Number(item.amount || 0);
-            const date = item.created_at ? new Date(item.created_at) : null;
-            if (!date || Number.isNaN(date.getTime())) return;
+        // Start of this week
+        const startOfWeek = new Date(now);
+        const day = startOfWeek.getDay();
+        const difference = day === 0 ? 6 : day - 1;
 
-            if (date >= startOfDay) today += amount;
-            if (date >= startOfWeek) week += amount;
-            if (date >= startOfMonth) month += amount;
+        startOfWeek.setDate(
+            startOfWeek.getDate() - difference
+        );
+
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        // Start of this month
+        const startOfMonth = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            1
+        );
+
+        (contributions || []).forEach(contribution => {
+
+            const amount =
+                Number(contribution.amount) || 0;
+
+            const date =
+                new Date(contribution.created_at);
+
+            // Today
+            if (date >= startOfToday) {
+                todayTotal += amount;
+            }
+
+            // This week
+            if (date >= startOfWeek) {
+                weekTotal += amount;
+            }
+
+            // This month
+            if (date >= startOfMonth) {
+                monthTotal += amount;
+            }
         });
 
-        const format = value => "KSh " + value.toLocaleString();
+        updateCollectionDisplay(
+            todayTotal,
+            weekTotal,
+            monthTotal
+        );
 
-        const todayEl = document.getElementById("collectedToday");
-        const weekEl = document.getElementById("collectedWeek");
-        const monthEl = document.getElementById("collectedMonth");
-
-        if (todayEl) todayEl.innerText = format(today);
-        if (weekEl) weekEl.innerText = format(week);
-        if (monthEl) monthEl.innerText = format(month);
     } catch (error) {
-        console.error("Collection period error:", error);
+
+        console.error(
+            "Unable to load personal contribution totals:",
+            error
+        );
+
+        updateCollectionDisplay(0, 0, 0);
     }
 }
+function updateCollectionDisplay(
+    today,
+    week,
+    month
+) {
+    const todayElement =
+        document.getElementById("todayTotal");
 
+    const weekElement =
+        document.getElementById("weekTotal");
+
+    const monthElement =
+        document.getElementById("monthTotal");
+
+    if (todayElement) {
+        todayElement.textContent =
+            `KSh ${today.toLocaleString()}`;
+    }
+
+    if (weekElement) {
+        weekElement.textContent =
+            `KSh ${week.toLocaleString()}`;
+    }
+
+    if (monthElement) {
+        monthElement.textContent =
+            `KSh ${month.toLocaleString()}`;
+    }
+}
 async function changePassword() {
 
     const user = JSON.parse(localStorage.getItem("loggedUser"));
@@ -1949,3 +2038,85 @@ async function loadContributionDayTotals() {
 
     }
 }
+/* =========================================================
+   ANDROID / PHONE BACK BUTTON NAVIGATION
+   Keeps member dashboard screens in browser history
+   ========================================================= */
+
+(function () {
+
+    const screens = [
+        "showDashboard",
+        "showHistory",
+        "showAnnouncements",
+        "showProfile",
+        "showLeaders",
+        "showGroupMembers",
+        "showGroupGoal",
+        "showContribute",
+        "showChat",
+        "showAI"
+    ];
+
+    const originalFunctions = {};
+    let handlingBack = false;
+
+    // Save the original functions
+    screens.forEach(name => {
+        if (typeof window[name] === "function") {
+            originalFunctions[name] = window[name];
+        }
+    });
+
+    // Replace each function with a history-aware version
+    screens.forEach(name => {
+
+        if (!originalFunctions[name]) return;
+
+        window[name] = function () {
+
+            // Don't create another history entry when
+            // the Android/browser Back button is being handled
+            if (!handlingBack) {
+                history.pushState(
+                    { rihulaScreen: name },
+                    "",
+                    "#" + name
+                );
+            }
+
+            originalFunctions[name]();
+        };
+    });
+
+    // Initial dashboard state
+    if (!history.state || !history.state.rihulaScreen) {
+        history.replaceState(
+            { rihulaScreen: "showDashboard" },
+            "",
+            "#dashboard"
+        );
+    }
+
+    // Android / browser Back button
+    window.addEventListener("popstate", function (event) {
+
+        const state = event.state;
+
+        if (!state || !state.rihulaScreen) {
+            return;
+        }
+
+        const screen = state.rihulaScreen;
+
+        if (originalFunctions[screen]) {
+
+            handlingBack = true;
+
+            originalFunctions[screen]();
+
+            handlingBack = false;
+        }
+    });
+
+})();

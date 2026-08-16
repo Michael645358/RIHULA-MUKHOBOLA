@@ -28,11 +28,11 @@
     </div>
 
     <div class="input-group">
-        <input
-            type="email"
-            id="loginId"
-            placeholder="📧 Email address"
-            autocomplete="username">
+      <input
+    type="text"
+    id="loginId"
+    placeholder="📧 Email or 📱 Phone number"
+    autocomplete="username">
     </div>
 
     <div class="input-group">
@@ -80,21 +80,105 @@ async function redirectMember(member) {
     window.location.href = "member.html";
 }
 
-async function login() {
-    const email = document.getElementById("loginId").value.trim().toLowerCase();
-    const password = document.getElementById("password").value;
+function normalizeKenyanPhone(phone) {
+    if (!phone) return "";
 
-    if (!email || !password) {
-        showPopup("Enter your email and password.", "warning");
-        return;
+    let value = String(phone).trim();
+
+    // Remove spaces, dashes and brackets
+    value = value.replace(/[\s\-()]/g, "");
+
+    // +254712345678 → 0712345678
+    if (value.startsWith("+254")) {
+        value = "0" + value.substring(4);
     }
 
-    if (!email.includes("@")) {
-        showPopup("Member login uses email + password. Admin login uses the admin PIN.", "warning");
+    // 254712345678 → 0712345678
+    else if (value.startsWith("254")) {
+        value = "0" + value.substring(3);
+    }
+
+    return value;
+}
+async function login() {
+    const loginId = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!loginId || !password) {
+        showPopup("Enter your email/phone and password.", "warning");
         return;
     }
 
     try {
+        let email = loginId.toLowerCase();
+
+        /*
+         * If the member entered a phone number,
+         * find the email linked to that phone.
+         */
+        if (!loginId.includes("@")) {
+
+            const phone = normalizeKenyanPhone(loginId);
+
+            if (!phone) {
+                showPopup(
+                    "Enter a valid email address or Kenyan phone number.",
+                    "warning"
+                );
+                return;
+            }
+
+            const { data: membersByPhone, error: phoneError } =
+    await db
+        .from("members")
+        .select("email, phone");
+
+if (phoneError) {
+    console.error("PHONE LOOKUP ERROR:", phoneError);
+    showPopup("Could not find the member account.", "error");
+    return;
+}
+
+const cleanPhone = normalizeKenyanPhone(loginId);
+
+const memberByPhone = membersByPhone?.find(member => {
+    return normalizeKenyanPhone(member.phone) === cleanPhone;
+});
+
+if (!memberByPhone || !memberByPhone.email) {
+    showPopup(
+        "No member account was found with that phone number.",
+        "warning"
+    );
+    return;
+}
+
+email = memberByPhone.email.toLowerCase();
+
+            if (phoneError) {
+                console.error("PHONE LOOKUP ERROR:", phoneError);
+                showPopup(
+                    "Could not find the member account.",
+                    "error"
+                );
+                return;
+            }
+
+            if (!memberByPhone || !memberByPhone.email) {
+                showPopup(
+                    "No member account was found with that phone number.",
+                    "warning"
+                );
+                return;
+            }
+
+            email = memberByPhone.email.toLowerCase();
+        }
+
+        /*
+         * Use the SAME Supabase password for both
+         * email login and phone login.
+         */
         const { data: authData, error: authError } =
             await db.auth.signInWithPassword({
                 email,
@@ -102,8 +186,8 @@ async function login() {
             });
 
         if (authError) {
-            console.error("EMAIL LOGIN ERROR:", authError);
-            showPopup("Invalid email or password.", "error");
+            console.error("LOGIN ERROR:", authError);
+            showPopup("Invalid email/phone or password.", "error");
             return;
         }
 
@@ -112,6 +196,10 @@ async function login() {
             return;
         }
 
+        /*
+         * Load the RIHULA member record linked
+         * to the authenticated Supabase account.
+         */
         const { data: member, error: memberError } =
             await db
                 .from("members")
@@ -122,18 +210,30 @@ async function login() {
         if (memberError) {
             console.error("MEMBER LOOKUP ERROR:", memberError);
             await db.auth.signOut();
-            showPopup("Your member account could not be loaded.", "error");
+
+            showPopup(
+                "Your member account could not be loaded.",
+                "error"
+            );
             return;
         }
 
         if (!member) {
             await db.auth.signOut();
-            showPopup("This email is not linked to a RIHULA member account.", "warning");
+
+            showPopup(
+                "This account is not linked to a RIHULA member.",
+                "warning"
+            );
             return;
         }
 
         if (member.status === "pending") {
-            localStorage.setItem("loggedUser", JSON.stringify(member));
+            localStorage.setItem(
+                "loggedUser",
+                JSON.stringify(member)
+            );
+
             window.location.href = "pending.html";
             return;
         }
@@ -142,7 +242,11 @@ async function login() {
 
     } catch (error) {
         console.error("LOGIN ERROR:", error);
-        showPopup("Unexpected login error. Please try again.", "error");
+
+        showPopup(
+            "Unexpected login error. Please try again.",
+            "error"
+        );
     }
 }
 </script>
