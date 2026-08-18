@@ -129,31 +129,9 @@ async function login() {
             }
 
             const { data: membersByPhone, error: phoneError } =
-    await db
-        .from("members")
-        .select("email, phone");
-
-if (phoneError) {
-    console.error("PHONE LOOKUP ERROR:", phoneError);
-    showPopup("Could not find the member account.", "error");
-    return;
-}
-
-const cleanPhone = normalizeKenyanPhone(loginId);
-
-const memberByPhone = membersByPhone?.find(member => {
-    return normalizeKenyanPhone(member.phone) === cleanPhone;
-});
-
-if (!memberByPhone || !memberByPhone.email) {
-    showPopup(
-        "No member account was found with that phone number.",
-        "warning"
-    );
-    return;
-}
-
-email = memberByPhone.email.toLowerCase();
+                await db
+                    .from("members")
+                    .select("email, phone");
 
             if (phoneError) {
                 console.error("PHONE LOOKUP ERROR:", phoneError);
@@ -163,6 +141,10 @@ email = memberByPhone.email.toLowerCase();
                 );
                 return;
             }
+
+            const memberByPhone = membersByPhone?.find(member =>
+                normalizeKenyanPhone(member.phone) === phone
+            );
 
             if (!memberByPhone || !memberByPhone.email) {
                 showPopup(
@@ -234,7 +216,7 @@ email = memberByPhone.email.toLowerCase();
                 JSON.stringify(member)
             );
 
-            window.location.href = "pending.html";
+            window.location.href = "pending-members.html";
             return;
         }
 

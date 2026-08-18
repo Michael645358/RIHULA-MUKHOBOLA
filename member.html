@@ -223,10 +223,12 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 <div class="upload-section">
 
-<input type="file"
-       id="photoUpload"
-       accept="image/*"
-       hidden>
+<input
+    type="file"
+    id="photoUpload"
+    accept="image/*"
+    hidden
+    onchange="uploadProfilePhoto()">
 
 <button type="button"
         id="uploadPhotoButton"
@@ -738,5 +740,6 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 
 <script src="v22.js"></script>
+<script src="finance.js"></script>
 </body>
 </html>

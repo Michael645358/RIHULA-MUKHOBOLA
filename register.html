@@ -1,164 +1,509 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Member Registration</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Member Registration | RIHULA</title>
+
+    <link rel="stylesheet" href="auth-pages.css">
 </head>
-<body>
 
-<div class="register-card">
-    <img src="images/logo.jpg" class="register-logo" alt="RIHULA Logo">
+<body class="auth-page">
 
-    <h1>Member Registration</h1>
+<div class="auth-wrapper">
 
-    <input type="text" id="firstName" placeholder="First Name">
-    <input type="text" id="lastName" placeholder="Last Name">
-    <input type="tel" id="phone" placeholder="Phone Number">
-    <input type="email" id="email" placeholder="Email Address" autocomplete="email">
-    <input type="password" id="password" placeholder="Create Password" autocomplete="new-password">
-    <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password">
+    <main class="auth-card">
 
-    <button onclick="registerMember()">Register</button>
+        <img
+            src="images/logo.jpg"
+            class="auth-logo"
+            alt="RIHULA Mukhobola Youths Association Logo"
+        >
 
-    <p style="margin-top:15px;">
-        Already registered?
-        <a href="login.html">Login</a>
-    </p>
+        <header class="auth-header">
+
+            <h1>Member Registration</h1>
+
+            <p>
+                Create your RIHULA member account and join
+                our community.
+            </p>
+
+        </header>
+
+        <form
+            class="auth-form"
+            id="registrationForm"
+            novalidate
+        >
+
+            <div class="form-row">
+
+                <div class="form-field">
+
+                    <label for="firstName">
+                        First Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="firstName"
+                        placeholder="Enter first name"
+                        autocomplete="given-name"
+                        required
+                    >
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="lastName">
+                        Last Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="lastName"
+                        placeholder="Enter last name"
+                        autocomplete="family-name"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="07XXXXXXXX"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    required
+                >
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="example@email.com"
+                    autocomplete="email"
+                    required
+                >
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="password">
+                    Create Password
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                        minlength="6"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="password"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+                <div
+                    id="passwordStrength"
+                    class="password-strength"
+                >
+                    Minimum 6 characters
+                </div>
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="confirmPassword">
+                    Confirm Password
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="Repeat your password"
+                        autocomplete="new-password"
+                        minlength="6"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-target="confirmPassword"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="auth-button"
+                id="registerButton"
+            >
+                Create Member Account
+            </button>
+
+        </form>
+
+        <div class="auth-footer">
+
+            Already registered?
+
+            <a href="login.html">
+                Login
+            </a>
+
+        </div>
+
+    </main>
+
 </div>
 
 <script src="popups.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="supabase.js"></script>
 
+<script src="v22.js"></script>
+
 <script>
-async function registerMember() {
-    const firstName = document.getElementById("firstName").value.trim();
-    const lastName = document.getElementById("lastName").value.trim();
-    const rawPhone = document.getElementById("phone").value.trim();
-    const phone = normalizeKenyanPhone(rawPhone);
-    const email = document.getElementById("email").value.trim().toLowerCase();
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
+(function () {
 
-    if (!firstName || !lastName) {
-        showPopup("Enter both first name and last name.", "warning");
-        return;
-    }
+    const form = document.getElementById("registrationForm");
+    const button = document.getElementById("registerButton");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const strength = document.getElementById("passwordStrength");
 
-    if (!phone) {
-        showPopup(
-            "Enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX).",
-            "warning"
-        );
-        return;
-    }
+    /* Password visibility */
 
-    if (!email || !email.includes("@")) {
-        showPopup("Enter a valid email address.", "warning");
-        return;
-    }
+    document.querySelectorAll(".password-toggle").forEach(toggle => {
 
-    if (password.length < 6) {
-        showPopup("Password must be at least 6 characters.", "warning");
-        return;
-    }
+        toggle.addEventListener("click", () => {
 
-    if (password !== confirmPassword) {
-        showPopup("Passwords do not match.", "warning");
-        return;
-    }
+            const targetId = toggle.dataset.target;
+            const input = document.getElementById(targetId);
 
-    try {
-        const { data: existingPhone } = await db
-            .from("members")
-            .select("id")
-            .eq("phone", phone)
-            .maybeSingle();
+            if (input.type === "password") {
+                input.type = "text";
+                toggle.textContent = "🙈";
+                toggle.setAttribute(
+                    "aria-label",
+                    "Hide password"
+                );
+            } else {
+                input.type = "password";
+                toggle.textContent = "👁";
+                toggle.setAttribute(
+                    "aria-label",
+                    "Show password"
+                );
+            }
 
-        if (existingPhone) {
+        });
+
+    });
+
+    /* Password strength */
+
+    password.addEventListener("input", () => {
+
+        const value = password.value;
+
+        if (!value) {
+            strength.textContent = "Minimum 6 characters";
+            strength.className = "password-strength";
+            return;
+        }
+
+        if (value.length < 6) {
+
+            strength.textContent =
+                "Weak password";
+
+            strength.className =
+                "password-strength weak";
+
+        } else if (value.length < 10) {
+
+            strength.textContent =
+                "Medium password";
+
+            strength.className =
+                "password-strength medium";
+
+        } else {
+
+            strength.textContent =
+                "Strong password";
+
+            strength.className =
+                "password-strength strong";
+
+        }
+
+    });
+
+    /* Registration */
+
+    form.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const firstName =
+            document.getElementById("firstName")
+                .value.trim();
+
+        const lastName =
+            document.getElementById("lastName")
+                .value.trim();
+
+        const rawPhone =
+            document.getElementById("phone")
+                .value.trim();
+
+        const email =
+            document.getElementById("email")
+                .value.trim()
+                .toLowerCase();
+
+        const passwordValue =
+            password.value;
+
+        const confirmValue =
+            confirmPassword.value;
+
+        if (!firstName || !lastName) {
             showPopup(
-                "That phone number is already registered. If you are an existing member, use Activate Existing Member Account.",
+                "Please enter your first and last name.",
                 "warning"
             );
             return;
         }
 
-        const { data: existingEmail } = await db
-            .from("members")
-            .select("id")
-            .eq("email", email)
-            .maybeSingle();
+        let phone;
 
-        if (existingEmail) {
-            showPopup("That email address is already registered.", "warning");
+        try {
+            phone = normalizeKenyanPhone(rawPhone);
+        } catch (error) {
+            phone = rawPhone.replace(/\s+/g, "");
+        }
+
+        if (!phone) {
+            showPopup(
+                "Please enter your phone number.",
+                "warning"
+            );
             return;
         }
 
-        const { data: authData, error: authError } =
-            await db.auth.signUp({
-                email,
-                password
+        if (!email || !email.includes("@")) {
+            showPopup(
+                "Please enter a valid email address.",
+                "warning"
+            );
+            return;
+        }
+
+        if (passwordValue.length < 6) {
+            showPopup(
+                "Password must contain at least 6 characters.",
+                "warning"
+            );
+            return;
+        }
+
+        if (passwordValue !== confirmValue) {
+            showPopup(
+                "Passwords do not match.",
+                "warning"
+            );
+            return;
+        }
+
+        button.disabled = true;
+        button.classList.add("button-loading");
+        button.textContent = "Creating Account";
+
+        try {
+
+            /* Check phone */
+
+            const {
+                data: existingPhone,
+                error: phoneCheckError
+            } = await db
+                .from("members")
+                .select("id")
+                .eq("phone", phone)
+                .maybeSingle();
+
+            if (phoneCheckError) {
+                throw phoneCheckError;
+            }
+
+            if (existingPhone) {
+
+                showPopup(
+                    "This phone number is already registered.",
+                    "warning"
+                );
+
+                return;
+            }
+
+            /* Check email */
+
+            const {
+                data: existingEmail,
+                error: emailCheckError
+            } = await db
+                .from("members")
+                .select("id")
+                .eq("email", email)
+                .maybeSingle();
+
+            if (emailCheckError) {
+                throw emailCheckError;
+            }
+
+            if (existingEmail) {
+
+                showPopup(
+                    "This email address is already registered.",
+                    "warning"
+                );
+
+                return;
+            }
+
+            /* Create Supabase Auth account */
+
+            const {
+                data: authData,
+                error: authError
+            } = await db.auth.signUp({
+                email: email,
+                password: passwordValue
             });
 
-        if (authError) {
+            if (authError) {
+                throw authError;
+            }
+
+            if (!authData || !authData.user) {
+                throw new Error(
+                    "The login account could not be created."
+                );
+            }
+
+            const fullName =
+                `${firstName} ${lastName}`;
+
+            /*
+             * IMPORTANT:
+             * Do NOT save the password in members.password.
+             * Supabase Auth securely manages the password.
+             */
+
+            const {
+                error: memberError
+            } = await db
+                .from("members")
+                .insert([{
+                    name: fullName,
+                    phone: phone,
+                    email: email,
+                    auth_id: authData.user.id,
+                    role: "member",
+                    status: "pending"
+                }]);
+
+            if (memberError) {
+                throw memberError;
+            }
+
+            await db.auth.signOut();
+
             showPopup(
-                "Could not create login account:\n\n" + authError.message,
+                "Registration successful!\n\n" +
+                "Your membership is now pending approval. " +
+                "You can log in after your account has been approved.",
+                "success"
+            );
+
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1800);
+
+        } catch (error) {
+
+            console.error(
+                "REGISTRATION ERROR:",
+                error
+            );
+
+            showPopup(
+                error.message ||
+                "Something went wrong during registration.",
                 "error"
             );
-            return;
+
+        } finally {
+
+            button.disabled = false;
+            button.classList.remove("button-loading");
+            button.textContent = "Create Member Account";
+
         }
 
-        if (!authData || !authData.user) {
-            showPopup("Could not create the login account.", "error");
-            return;
-        }
+    });
 
-        const name = firstName + " " + lastName;
-
-        const { error: memberError } = await db
-            .from("members")
-            .insert([{
-                name,
-                phone,
-                email,
-                auth_id: authData.user.id,
-                password: password,
-                role: "member",
-                status: "pending"
-            }]);
-
-        if (memberError) {
-            console.error("MEMBER INSERT ERROR:", memberError);
-            showPopup(
-                "Auth account was created, but the member record could not be saved:\n\n" +
-                memberError.message,
-                "error"
-            );
-            return;
-        }
-
-        await db.auth.signOut();
-
-        showPopup(
-            "Registration submitted successfully.\n\n" +
-            "If email confirmation is enabled, check your email first.\n\n" +
-            "Your account will remain pending until approved by the administrator.",
-            "success"
-        );
-
-        setTimeout(() => {
-            window.location.href = "login.html";
-        }, 1200);
-
-    } catch (error) {
-        console.error(error);
-        showPopup("Unexpected error:\n\n" + error.message, "error");
-    }
-}
+})();
 </script>
 
-<script src="v22.js"></script>
 </body>
 </html>

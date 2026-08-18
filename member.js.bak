@@ -680,66 +680,129 @@ async function loadContributionHistory(phone) {
     }
 }
 async function loadSavingsStats(phone) {
+
     try {
-        phone = String(phone || "").trim();
-        if (!phone) return;
 
         const { data: myData, error: myError } = await db
             .from("contributions")
             .select("amount, created_at")
-            .eq("member_phone", phone);
-        if (myError) throw myError;
+            .eq("member_phone", String(phone));
 
-        const { data: withdrawalData, error: withdrawalError } = await db
-            .from("withdrawals")
-            .select("amount, created_at")
-            .eq("member_phone", phone);
-        if (withdrawalError) throw withdrawalError;
+        if (myError) {
+            console.error("Savings error:", myError);
+            return;
+        }
 
-        const myTotal = (myData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const totalWithdrawn = (withdrawalData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const currentSavings = Math.max(myTotal - totalWithdrawn, 0);
+        let myTotal = 0;
 
-        const mySavingsEl = document.getElementById("mySavings");
-        if (mySavingsEl) mySavingsEl.innerText = "KSh " + currentSavings.toLocaleString();
+        (myData || []).forEach(item => {
+            myTotal += Number(item.amount || 0);
+        });
+        // Get member withdrawals
+const { data: withdrawalData, error: withdrawalError } = await db
+    .from("withdrawals")
+    .select("amount")
+    .eq("member_phone", String(phone));
 
-        // Group balance must also reflect withdrawals.
+if (withdrawalError) {
+    console.error("Withdrawal error:", withdrawalError);
+    return;
+}
+
+let totalWithdrawn = 0;
+
+(withdrawalData || []).forEach(item => {
+    totalWithdrawn += Number(item.amount || 0);
+});
+
+// Actual available savings
+const currentSavings =
+    Math.max(myTotal - totalWithdrawn, 0);
+
+        // My savings
+        const mySavingsEl =
+    document.getElementById("mySavings");
+
+if (mySavingsEl) {
+    mySavingsEl.innerText =
+        "KSh " + currentSavings.toLocaleString();
+}
+
+        // Group savings
         const { data: groupData, error: groupError } = await db
             .from("contributions")
             .select("amount");
-        if (groupError) console.error("Group savings error:", groupError);
 
-        const { data: allWithdrawals, error: allWithdrawalsError } = await db
-            .from("withdrawals")
-            .select("amount");
-        if (allWithdrawalsError) console.error("Group withdrawals error:", allWithdrawalsError);
+        if (groupError) {
+            console.error("Group savings error:", groupError);
+        }
 
-        const groupContributed = (groupData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const groupWithdrawn = (allWithdrawals || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const groupTotal = Math.max(groupContributed - groupWithdrawn, 0);
+        let groupTotal = 0;
 
-        const groupSavingsEl = document.getElementById("groupSavings");
-        if (groupSavingsEl) groupSavingsEl.innerText = "KSh " + groupTotal.toLocaleString();
+        (groupData || []).forEach(item => {
+            groupTotal += Number(item.amount || 0);
+        });
 
-        const user = JSON.parse(localStorage.getItem("loggedUser")) || {};
-        const goal = Number(user.goal || 5000);
-        const percent = goal > 0 ? Math.min(100, Math.round((currentSavings / goal) * 100)) : 0;
+        const groupSavingsEl =
+            document.getElementById("groupSavings");
 
-        const goalAmountEl = document.getElementById("goalAmount");
-        if (goalAmountEl) goalAmountEl.innerText = `KSh ${currentSavings.toLocaleString()} / KSh ${goal.toLocaleString()}`;
+        if (groupSavingsEl) {
+            groupSavingsEl.innerText =
+                "KSh " + groupTotal.toLocaleString();
+        }
 
-        const progressTextEl = document.getElementById("progressText");
-        if (progressTextEl) progressTextEl.innerText = percent + "%";
 
-        const progressFillEl = document.getElementById("progressFill");
-        if (progressFillEl) progressFillEl.style.width = percent + "%";
+        // Member goal
+        const user =
+            JSON.parse(localStorage.getItem("loggedUser")) || {};
+
+        const goal =
+            Number(user.goal || 5000);
+
+        const percent =
+            goal > 0
+                ? Math.min(100, Math.round((myTotal / goal) * 100))
+                : 0;
+
+
+        // Goal amount
+        const goalAmountEl =
+            document.getElementById("goalAmount");
+
+        if (goalAmountEl) {
+            goalAmountEl.innerText =
+                `KSh ${myTotal.toLocaleString()} / KSh ${goal.toLocaleString()}`;
+        }
+
+
+        // Percentage
+        const progressTextEl =
+            document.getElementById("progressText");
+
+        if (progressTextEl) {
+            progressTextEl.innerText =
+                percent + "%";
+        }
+
+
+        // Progress bar
+        const progressFillEl =
+            document.getElementById("progressFill");
+
+        if (progressFillEl) {
+            progressFillEl.style.width =
+                percent + "%";
+        }
+
     } catch (err) {
+
         console.error("Savings Error:", err);
-        const mySavingsEl = document.getElementById("mySavings");
-        if (mySavingsEl) mySavingsEl.innerText = "KSh 0";
+
+        // Don't show the popup repeatedly
+        // The error is now logged in the console instead.
+
     }
 }
-
 function toggleSinglePassword(inputId, button) {
 
     const input =

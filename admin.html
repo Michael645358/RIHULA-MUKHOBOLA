@@ -11,10 +11,15 @@
 
 <body class="admin-dashboard-page">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="admin-auth.js"></script>
 <script>
-if (sessionStorage.getItem("adminVerified") !== "true") {
-    window.location.href = "admin-login.html";
-}
+document.documentElement.style.visibility = "hidden";
+(async function () {
+    const admin = await RihulaAdmin.requireAdmin();
+    if (admin) document.documentElement.style.visibility = "visible";
+})();
 </script>
 
 <div class="admin-shell">
@@ -34,11 +39,6 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
             <a href="admin.html" class="admin-nav-item active">
                 <span>📊</span>
                 <span>Dashboard</span>
-            </a>
-
-            <a href="add-member.html" class="admin-nav-item">
-                <span>➕</span>
-                <span>Add Member</span>
             </a>
 
             <a href="all-members.html" class="admin-nav-item">
@@ -161,10 +161,6 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
                     </p>
                 </div>
 
-                <a href="add-member.html" class="admin-primary-btn">
-                    <span>＋</span> Add Member
-                </a>
-
             </section>
 
 
@@ -260,12 +256,7 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
 
                     <div class="admin-mini-actions">
 
-                        <a href="add-member.html">
-                            <span>➕</span>
-                            <strong>Add Member</strong>
-                            <small>Register a member</small>
-                        </a>
-
+                  
                         <a href="record-contribution.html">
                             <span>💰</span>
                             <strong>Add Savings</strong>
@@ -290,6 +281,69 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
 
             </section>
 
+
+            <!-- MEMBER WITHDRAWAL -->
+            <section class="admin-panel-card">
+
+                <div class="admin-card-heading">
+                    <div>
+                        <span class="admin-card-kicker">Savings Management</span>
+                        <h3>💸 Member Withdrawal</h3>
+                    </div>
+
+                    <span class="admin-card-icon">💸</span>
+                </div>
+
+                <p class="admin-muted">
+                    Record money withdrawn from a member's savings.
+                </p>
+
+                <div class="goal-form">
+
+                    <label for="withdrawalPhone">
+                        Member phone number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="withdrawalPhone"
+                        placeholder="Enter member phone number">
+
+                    <label for="withdrawalAmount">
+                        Amount withdrawn
+                    </label>
+
+                    <input
+                        type="number"
+                        id="withdrawalAmount"
+                        min="1"
+                        step="1"
+                        placeholder="Enter amount">
+
+                    <label for="withdrawalReason">
+                        Reason
+                    </label>
+
+                    <input
+                        type="text"
+                        id="withdrawalReason"
+                        placeholder="e.g. Cash withdrawal">
+
+                    <button
+                        type="button"
+                        class="admin-primary-btn"
+                        onclick="recordWithdrawal()">
+
+                        💸 Record Withdrawal
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-panel-card admin-tools-card">
 
             <section class="admin-panel-card admin-tools-card">
 
@@ -426,10 +480,8 @@ if (sessionStorage.getItem("adminVerified") !== "true") {
 <script src="admin.js"></script>
 
 <script>
-function adminLogout() {
-    sessionStorage.removeItem("adminVerified");
-    localStorage.removeItem("adminAccess");
-    window.location.href = "admin-login.html";
+async function adminLogout() {
+    await RihulaAdmin.adminLogout();
 }
 
 function toggleAdminSidebar() {
@@ -604,5 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script src="v22.js"></script>
 
+<script src="withdrawal-fix.js"></script>
+<script src="finance.js"></script>
 </body>
 </html>

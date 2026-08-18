@@ -641,10 +641,10 @@
                     </div>
 
                     <div>
-                        <h2>Admin PIN Login</h2>
+                        <h2>Admin Account Login</h2>
 
                         <p>
-                            Enter your 4-digit admin PIN to access the dashboard.
+                            Sign in with your authorized admin account.
                         </p>
                     </div>
 
@@ -655,12 +655,19 @@
 
                     <input
                         class="rihula-pin"
+                        type="email"
+                        id="adminEmail"
+                        autocomplete="username"
+                        placeholder="Admin email"
+                        required>
+
+                    <input
+                        class="rihula-pin"
                         type="password"
-                        id="adminPin"
-                        maxlength="4"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="Enter 4-digit PIN"
+                        id="adminPassword"
+                        autocomplete="current-password"
+                        placeholder="Admin password"
+                        required
                         onkeydown="if(event.key === 'Enter') adminLogin()"
                     >
 
@@ -752,114 +759,93 @@
 </div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="admin-auth.js"></script>
 <script>
 
 /* =====================================================
    ADMIN LOGIN
-   ADMIN PIN = 2580
+   Secure Supabase email + password authentication.
+   The old hard-coded PIN has intentionally been removed.
    ===================================================== */
 
-function adminLogin() {
+async function adminLogin() {
+    const email = document.getElementById("adminEmail")?.value.trim().toLowerCase();
+    const password = document.getElementById("adminPassword")?.value || "";
+    const message = document.getElementById("adminMessage");
+    const button = document.querySelector(".rihula-admin-button");
 
-    const pin =
-        document.getElementById("adminPin").value.trim();
+    if (!email || !password) {
+        message.style.display = "block";
+        message.textContent = "Enter your admin email and password.";
+        return;
+    }
 
-    const message =
-        document.getElementById("adminMessage");
+    if (!email.includes("@")) {
+        message.style.display = "block";
+        message.textContent = "Enter a valid admin email address.";
+        return;
+    }
 
+    button.disabled = true;
+    button.style.opacity = "0.7";
 
-    if (pin === "2580") {
+    try {
+        const { data, error } = await db.auth.signInWithPassword({
+            email,
+            password
+        });
 
-        localStorage.setItem(
-            "adminAccess",
-            "true"
-        );
+        if (error) throw error;
 
-        sessionStorage.setItem(
-            "adminVerified",
-            "true"
-        );
+        const admin = await RihulaAdmin.getAdminUser();
+
+        if (!admin) {
+            await db.auth.signOut();
+            throw new Error("This account is not authorized for administration.");
+        }
+
+        sessionStorage.setItem("adminVerified", "true");
+        sessionStorage.setItem("rihulaAdminUser", JSON.stringify(admin));
 
         message.style.display = "block";
+        message.textContent = "✓ Admin access verified. Opening dashboard...";
 
-        message.style.background = "#eaf8f1";
-
-        message.style.color = "#075b39";
-
-        message.innerHTML =
-            "✓ Admin access verified. Opening dashboard...";
-
-
-        setTimeout(function () {
-
-            window.location.href =
-                "admin.html";
-
+        setTimeout(() => {
+            window.location.replace("admin.html");
         }, 250);
 
-
-    } else {
-
+    } catch (error) {
+        console.error("ADMIN LOGIN:", error);
         message.style.display = "block";
-
-        message.style.background = "#fff0f0";
-
-        message.style.color = "#8b2020";
-
-        message.innerHTML =
-            "✕ Incorrect admin PIN.";
-
+        message.textContent =
+            error?.message?.includes("Invalid login credentials")
+                ? "Invalid admin email or password."
+                : (error?.message || "Admin login failed.");
+    } finally {
+        button.disabled = false;
+        button.style.opacity = "1";
     }
 }
-
-
-/* =====================================================
-   SHOW / HIDE PIN
-   ===================================================== */
 
 function togglePin() {
-
-    const input =
-        document.getElementById("adminPin");
-
-    const button =
-        document.getElementById("eyeButton");
-
+    const input = document.getElementById("adminPassword");
+    const button = document.getElementById("eyeButton");
+    if (!input) return;
 
     if (input.type === "password") {
-
         input.type = "text";
-
-        button.textContent = "🙈";
-
+        if (button) button.textContent = "🙈";
     } else {
-
         input.type = "password";
-
-        button.textContent = "👁️";
+        if (button) button.textContent = "👁️";
     }
 }
 
-
-/* =====================================================
-   MEMBER LOGIN
-   Email + Password are handled by login.html
-   ===================================================== */
-
 function memberLogin() {
-
-    sessionStorage.setItem(
-        "loginMode",
-        "member"
-    );
-
-    /*
-       Important:
-       We do NOT set adminAccess here.
-       Member login remains separate from admin login.
-    */
+    sessionStorage.setItem("loginMode", "member");
 }
-
 </script>
 
 

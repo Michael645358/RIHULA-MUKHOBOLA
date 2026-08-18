@@ -1,6 +1,6 @@
-// Server-authenticated admin guard (Supabase Auth + role).
-if (window.RihulaAdmin) {
-    RihulaAdmin.requireAdmin();
+// Admin dashboard session guard
+if (sessionStorage.getItem("adminVerified") !== "true") {
+    window.location.replace("admin-login.html");
 }
 
 
@@ -838,62 +838,117 @@ async function updateGroupGoal() {
     );
 }
 async function recordWithdrawal() {
-    const rawPhone = (document.getElementById("withdrawalPhone")?.value || "").trim();
-    const amount = Number(document.getElementById("withdrawalAmount")?.value || 0);
-    const reason = (document.getElementById("withdrawalReason")?.value || "").trim();
 
-    const normalizePhone = (value) => {
-        let p = String(value || "").replace(/[\s\-()]/g, "");
-        if (p.startsWith("+254")) p = "0" + p.slice(4);
-        else if (p.startsWith("254")) p = "0" + p.slice(3);
-        return p;
-    };
+    const phone =
+        document.getElementById("withdrawalPhone").value.trim();
 
-    const phone = normalizePhone(rawPhone);
-
-    if (!phone) return showPopup("Please enter the member phone number.", "error");
-    if (!Number.isFinite(amount) || amount <= 0) {
-        return showPopup("Please enter a valid withdrawal amount.", "error");
-    }
-    if (amount > 10000000) {
-        return showPopup("Withdrawal amount is above the allowed limit.", "error");
-    }
-
-    try {
-        const admin = await RihulaAdmin.getAdminUser();
-        if (!admin) return showPopup("Admin session expired. Please sign in again.", "error");
-
-        const { data: member, error: memberError } = await db
-            .from("members")
-            .select("id, name, phone")
-            .eq("phone", phone)
-            .maybeSingle();
-
-        if (memberError) throw memberError;
-        if (!member) return showPopup("Member with that phone number was not found.", "error");
-
-        const result = await window.processWithdrawal(phone, amount, reason || "Savings withdrawal");
-
-        const balanceAfter = Number(result.balanceAfter || 0);
-
-        showPopup(
-            `KSh ${amount.toLocaleString("en-KE")} withdrawn from ${member.name}'s savings.\n\nRemaining savings: KSh ${balanceAfter.toLocaleString("en-KE")}`,
-            "success"
+    const amount =
+        Number(
+            document.getElementById("withdrawalAmount").value
         );
 
-        ["withdrawalPhone", "withdrawalAmount", "withdrawalReason"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = "";
-        });
+    const reason =
+        document.getElementById("withdrawalReason").value.trim();
 
-        if (typeof refreshRihulaFinance === "function") await refreshRihulaFinance();
-        else {
-            if (typeof loadDashboardStats === "function") await loadDashboardStats();
-            if (typeof loadGroupSavings === "function") await loadGroupSavings();
-            if (typeof loadLeaderboard === "function") await loadLeaderboard();
+
+    // Check phone
+    if (!phone) {
+        showPopup("Please enter the member phone number.");
+        return;
+    }
+
+
+    // Check amount
+    if (!amount || amount <= 0) {
+        showPopup("Please enter a valid withdrawal amount.");
+        return;
+    }
+
+
+    try {
+
+        // Find member
+        const { data: member, error: memberError } =
+            await db
+                .from("members")
+                .select("name, phone")
+                .eq("phone", phone)
+                .single();
+
+
+        if (memberError || !member) {
+
+            showPopup(
+                "Member with that phone number was not found."
+            );
+
+            return;
         }
+
+
+        // Record withdrawal
+        const { error } =
+            await db
+                .from("withdrawals")
+                .insert({
+                    member_phone: phone,
+                    amount: amount,
+                    reason: reason || "Savings withdrawal"
+                });
+
+
+        if (error) {
+
+            console.error(
+                "Withdrawal error:",
+                error
+            );
+
+            showPopup(
+                "Could not record withdrawal: " +
+                error.message
+            );
+
+            return;
+        }
+
+
+        // Success
+        showPopup(
+            `KSh ${amount.toLocaleString()} withdrawn from ${member.name}'s savings.`
+        );
+
+
+        // Clear form
+        document.getElementById(
+            "withdrawalPhone"
+        ).value = "";
+
+        document.getElementById(
+            "withdrawalAmount"
+        ).value = "";
+
+        document.getElementById(
+            "withdrawalReason"
+        ).value = "";
+
+
+        // Refresh dashboard
+        if (typeof loadAdminOverview === "function") {
+            await loadAdminOverview();
+        }
+
+
     } catch (error) {
-        console.error("Withdrawal error:", error);
-        showPopup("Could not record withdrawal: " + (error?.message || error), "error");
+
+        console.error(
+            "Withdrawal error:",
+            error
+        );
+
+        showPopup(
+            "Something went wrong: " +
+            error.message
+        );
     }
 }
