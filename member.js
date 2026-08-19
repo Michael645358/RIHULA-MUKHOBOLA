@@ -1977,49 +1977,110 @@ function cancelHold() {
     clearTimeout(holdTimer);
 }
 async function loadMyRank() {
-
+    
     const user =
         JSON.parse(localStorage.getItem("loggedUser"));
-
+    
     if (!user) return;
-
-    const { data: members } = await db
+    
+    const { data: members, error: membersError } =
+    await db
         .from("members")
-        .select("*");
-
+        .select("phone");
+    
+    if (membersError) {
+        console.error("Rank members error:", membersError);
+        return;
+    }
+    
     const rankings = [];
-
+    
     for (const member of members || []) {
-
-        const { data: contributions } = await db
+        
+        // Get total contributions
+        const { data: contributions, error: contributionError } =
+        await db
             .from("contributions")
             .select("amount")
             .eq("member_phone", member.phone);
-
-        let total = 0;
-
+        
+        if (contributionError) {
+            console.error(
+                "Rank contribution error:",
+                contributionError
+            );
+            continue;
+        }
+        
+        // Get total withdrawals
+        const { data: withdrawals, error: withdrawalError } =
+        await db
+            .from("withdrawals")
+            .select("amount")
+            .eq("member_phone", member.phone);
+        
+        if (withdrawalError) {
+            console.error(
+                "Rank withdrawal error:",
+                withdrawalError
+            );
+            continue;
+        }
+        
+        let totalContributed = 0;
+        let totalWithdrawn = 0;
+        
         (contributions || []).forEach(item => {
-            total += Number(item.amount || 0);
+            totalContributed += Number(item.amount || 0);
         });
-
+        
+        (withdrawals || []).forEach(item => {
+            totalWithdrawn += Number(item.amount || 0);
+        });
+        
+        // CURRENT SAVINGS = CONTRIBUTIONS - WITHDRAWALS
+        const netSavings = Math.max(
+            totalContributed - totalWithdrawn,
+            0
+        );
+        
         rankings.push({
-            phone: member.phone,
-            total: total
+            phone: String(member.phone).trim(),
+            total: netSavings
         });
     }
-
-    rankings.sort((a, b) => b.total - a.total);
-
+    
+    // Highest current savings = Rank #1
+    rankings.sort((a, b) => {
+        
+        if (b.total !== a.total) {
+            return b.total - a.total;
+        }
+        
+        // Same savings = alphabetical/phone fallback
+        return a.phone.localeCompare(b.phone);
+    });
+    
+    const userPhone =
+        String(user.phone || "").trim();
+    
     const rank =
         rankings.findIndex(
-            item => item.phone == user.phone
+            item => item.phone === userPhone
         ) + 1;
-
-    document.getElementById("myRank").innerText =
-        rank > 0 ? "#" + rank : "Unranked";
-}
-
-async function showAnnouncements() {
+    
+    const rankElement =
+        document.getElementById("myRank");
+    
+    if (rankElement) {
+        rankElement.innerText =
+            rank > 0 ?
+            "#" + rank :
+            "Unranked";
+    }
+    
+    console.log("Updated member rankings:", rankings);
+}async function showAnnouncements() {
 
     document.getElementById("dashboardScreen").style.display = "none";
     document.getElementById("historyScreen").style.display = "none";

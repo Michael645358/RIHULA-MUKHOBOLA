@@ -1,48 +1,60 @@
 /* RIHULA Finance Engine
-   Single source of truth:
-   Net Savings = Contributions - Withdrawals
-*/
+ * Single source of truth:
+ * Net Savings = Contributions - Withdrawals
+ *
+ * Group totals/ranks use secure Supabase functions so members do not
+ * need direct SELECT access to every member's financial rows.
+ */
 (function () {
   "use strict";
 
   const money = v => Number.isFinite(Number(v)) ? Number(v) : 0;
-  const fmt = v => "KSh " + money(v).toLocaleString("en-KE", {maximumFractionDigits: 2});
+  const fmt = v => "KSh " + money(v).toLocaleString("en-KE", { maximumFractionDigits: 2 });
 
-  async function sumTable(table, phone) {
-    let q = db.from(table).select("amount");
-    if (phone !== undefined && phone !== null) q = q.eq("member_phone", String(phone));
-    const { data, error } = await q;
-    if (error) throw error;
-    return (data || []).reduce((s, r) => s + money(r.amount), 0);
+  function currentUser() {
+    try {
+      return JSON.parse(localStorage.getItem("loggedUser") || "null") || null;
+    } catch (_) {
+      return null;
+    }
   }
 
   async function netFor(phone) {
-    const contributions = await sumTable("contributions", phone);
-    const withdrawals = await sumTable("withdrawals", phone);
+    const requestedPhone = String(phone || "").trim();
+    if (!requestedPhone) throw new Error("Member phone number is required.");
+
+    const { data, error } = await db.rpc("get_member_finance", {
+      p_phone: requestedPhone
+    });
+    if (error) throw error;
+
+    const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
     return {
-      contributions,
-      withdrawals,
-      net: Math.max(contributions - withdrawals, 0)
+      contributions: money(row.contributions),
+      withdrawals: money(row.withdrawals),
+      net: money(row.net_savings)
     };
   }
 
   async function groupNet() {
-    const contributions = await sumTable("contributions");
-    const withdrawals = await sumTable("withdrawals");
+    const { data, error } = await db.rpc("get_group_finance");
+    if (error) throw error;
+
+    const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
     return {
-      contributions,
-      withdrawals,
-      net: Math.max(contributions - withdrawals, 0)
+      contributions: money(row.contributions),
+      withdrawals: money(row.withdrawals),
+      net: money(row.net_savings)
     };
   }
 
   window.rihulaFinance = { money, fmt, netFor, groupNet };
 
-  // Member dashboard
+  // Member dashboard: member net savings and group net savings.
   window.loadSavingsStats = async function (phone) {
     try {
       const result = await netFor(phone);
-      const user = JSON.parse(localStorage.getItem("loggedUser") || "null") || {};
+      const user = currentUser() || {};
       const goal = Number(user.goal || 5000);
       const percent = goal > 0 ? Math.min(100, Math.round(result.net / goal * 100)) : 0;
 
@@ -66,31 +78,30 @@
     }
   };
 
-  // Member's rank uses NET savings, not gross contributions.
+  // Member rank uses NET savings, including withdrawals.
   window.loadMyRank = async function () {
-    const user = JSON.parse(localStorage.getItem("loggedUser") || "null");
+    const user = currentUser();
     const el = document.getElementById("myRank");
     if (!user || !el) return;
 
     try {
-      const { data: members, error } = await db.from("members").select("phone");
+      const { data, error } = await db.rpc("get_member_rank", {
+        p_phone: String(user.phone || "")
+      });
       if (error) throw error;
-
-      const rankings = [];
-      for (const member of members || []) {
-        const result = await netFor(member.phone);
-        rankings.push({ phone: String(member.phone), total: result.net });
-      }
-
-      rankings.sort((a, b) => b.total - a.total);
-      const index = rankings.findIndex(x => x.phone === String(user.phone));
-      el.textContent = index >= 0 ? "#" + (index + 1) : "Unranked";
+      const rank = money(data);
+      el.textContent = rank > 0 ? "#" + rank : "Unranked";
+      try {
+        const finance = await netFor(user.phone);
+        window.renderAchievements?.(finance.net, rank);
+      } catch (_) {}
     } catch (e) {
       console.error("RIHULA finance: member rank failed", e);
+      el.textContent = "Unranked";
     }
   };
 
-  // Group goal uses NET savings.
+  // Group goal uses NET savings, so withdrawals reduce progress immediately.
   window.loadGroupGoal = async function () {
     try {
       const { data: settings, error: settingsError } = await db
@@ -158,7 +169,7 @@
   window.loadGroupSavings = async function () {
     try {
       const group = await groupNet();
-      ["adminGroupSavings", "totalSavings"].forEach(id => {
+      ["adminGroupSavings", "totalSavings", "groupSavings"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = fmt(group.net);
       });
@@ -167,24 +178,23 @@
     }
   };
 
-  // Admin/member leaderboard uses NET savings.
+  // Leaderboard uses net savings after withdrawals.
   window.loadLeaderboard = async function () {
     const container = document.getElementById("leaderboardContainer");
     if (!container) return;
 
     try {
-      const { data: members, error } = await db.from("members").select("name, phone");
+      const { data, error } = await db.rpc("get_finance_leaderboard");
       if (error) throw error;
 
-      const rankings = [];
-      for (const member of members || []) {
-        const result = await netFor(member.phone);
-        rankings.push({ name: member.name || "Member", total: result.net });
-      }
-      rankings.sort((a, b) => b.total - a.total);
+      const rankings = (data || []).map(row => ({
+        name: row.member_name || "Member",
+        total: money(row.net_savings),
+        rank: Number(row.member_rank || 0)
+      }));
 
-      container.innerHTML = rankings.length ? rankings.map((m, i) => {
-        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "#" + (i + 1);
+      container.innerHTML = rankings.length ? rankings.map(m => {
+        const medal = m.rank === 1 ? "🥇" : m.rank === 2 ? "🥈" : m.rank === 3 ? "🥉" : "#" + m.rank;
         return `<div class="leaderboard-card">
           <h3>${medal} ${escapeHtml(m.name)}</h3>
           <p>${fmt(m.total)}</p>
@@ -202,9 +212,30 @@
     }[c]));
   }
 
+  window.getAchievements = function (net, rank) {
+    const n = money(net);
+    const r = Number(rank || 0);
+    const list = [];
+    if (n >= 1000) list.push({icon:"🌱", title:"First KSh 1,000", text:"You have saved at least KSh 1,000."});
+    if (n >= 5000) list.push({icon:"⭐", title:"KSh 5,000 Saver", text:"You reached KSh 5,000 in net savings."});
+    if (n >= 10000) list.push({icon:"💎", title:"KSh 10,000 Champion", text:"You reached KSh 10,000 in net savings."});
+    if (n >= 25000) list.push({icon:"🏅", title:"KSh 25,000 Builder", text:"You reached KSh 25,000 in net savings."});
+    if (r === 1) list.push({icon:"🥇", title:"#1 Leader", text:"You are currently the top net saver."});
+    else if (r === 2) list.push({icon:"🥈", title:"#2 Leader", text:"You are currently second on the leaderboard."});
+    else if (r === 3) list.push({icon:"🥉", title:"#3 Leader", text:"You are currently third on the leaderboard."});
+    return list;
+  };
+
+  window.renderAchievements = function (net, rank, containerId) {
+    const el = document.getElementById(containerId || "achievementsContainer");
+    if (!el) return;
+    const list = window.getAchievements(net, rank);
+    el.innerHTML = list.length ? list.map(a => `<div class="achievement-item"><span class="achievement-icon">${a.icon}</span><div><strong>${escapeHtml(a.title)}</strong><p>${escapeHtml(a.text)}</p></div></div>`).join("") : `<div class="achievement-empty">Keep saving to unlock your first achievement. 🚀</div>`;
+  };
+
   // Refresh all finance-related UI after a withdrawal/contribution.
   window.refreshRihulaFinance = async function () {
-    const user = JSON.parse(localStorage.getItem("loggedUser") || "null");
+    const user = currentUser();
     await Promise.allSettled([
       window.loadDashboardStats?.(),
       window.loadGroupSavings?.(),
@@ -215,7 +246,6 @@
     ]);
   };
 
-  // Re-run after all existing legacy scripts have initialized.
   window.addEventListener("load", () => {
     setTimeout(() => window.refreshRihulaFinance(), 50);
   });

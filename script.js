@@ -80,6 +80,7 @@ async function recordContribution() {
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
 
+        await window.refreshRihulaFinance?.();
         loadLeaderboard();
         loadStats();
         loadDashboardStats();
@@ -145,15 +146,29 @@ async function loadGroupSavings() {
 window.onload = function () {
 
     loadStats();
-    loadOnlineCount();
+
+    if (typeof loadOnlineCount === "function") {
+        loadOnlineCount();
+    }
+
     loadGroupSavings();
     loadPendingMembers();
+if (typeof loadAnnouncements === "function") {
     loadAnnouncements();
-    loadAnnouncementsList();
-    loadLeadership();
-    loadLeaderboard(); 
+}
 
-    
+if (typeof loadAnnouncementsList === "function") {
+    loadAnnouncementsList();
+}
+
+if (typeof loadLeadership === "function") {
+    loadLeadership();
+}
+
+if (typeof loadLeaderboard === "function") {
+    loadLeaderboard();
+}
+
     if (document.getElementById("membersBody")) {
         loadMembers();
     }
