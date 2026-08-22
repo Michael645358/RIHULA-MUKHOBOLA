@@ -569,6 +569,7 @@
         }
     </style>
 <link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
 </head>
 
 <body>
@@ -793,7 +794,12 @@ async function adminLogin() {
     button.style.opacity = "0.7";
 
     try {
-        const { data, error } = await db.auth.signInWithPassword({
+        const supabaseDb = window.db;
+        if (!supabaseDb) {
+            throw new Error("Supabase is not initialized. Please check supabase.js loading.");
+        }
+
+        const { data, error } = await supabaseDb.auth.signInWithPassword({
             email,
             password
         });
@@ -803,7 +809,7 @@ async function adminLogin() {
         const admin = await RihulaAdmin.getAdminUser();
 
         if (!admin) {
-            await db.auth.signOut();
+            await window.db.auth.signOut();
             throw new Error("This account is not authorized for administration.");
         }
 
@@ -856,5 +862,6 @@ function memberLogin() {
 
 <script src="v22.js"></script>
 
+<script src="rihula-v3-ui.js"></script>
 </body>
 </html>

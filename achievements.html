@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="rihula-modern-design.css">
 <link rel="stylesheet" href="achievements.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
 </head>
 <body class="achievements-page">
 <header class="achievements-hero">
@@ -20,6 +21,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="finance.js"></script>
+<script src="achievements.js"></script>
 <script>
 (async function(){
  const user=JSON.parse(localStorage.getItem('loggedUser')||'null');
@@ -30,9 +32,9 @@
    const rank=Number(data||0);
    document.getElementById('achievementNet').textContent=window.rihulaFinance.fmt(finance.net);
    document.getElementById('achievementRank').textContent=rank?'#'+rank:'—';
-   window.renderAchievements(finance.net,rank,'achievementsContainer');
  }catch(e){document.getElementById('achievementsContainer').innerHTML='<div class="achievement-empty">Unable to load achievements.</div>'; console.error(e);}
 })();
 </script>
+<script src="rihula-v3-ui.js"></script>
 </body>
 </html>

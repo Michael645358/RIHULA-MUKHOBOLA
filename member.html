@@ -20,6 +20,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 </script>
 
 <link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
 </head>
 <body>
 
@@ -93,7 +94,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
         <button class="rihula-action" onclick="showHistory()">
             <span class="action-icon">⇩</span>
-            <span>My Savings</span>
+            <span>My Savings history</span>
         </button>
 
         <button class="rihula-action" onclick="showGroupGoal()">
@@ -128,6 +129,27 @@ OneSignalDeferred.push(async function(OneSignal) {
     </section>
 
     <!-- Personal savings summary -->
+    <section class="r3-member-spotlight">
+        <div class="r3-spotlight-copy">
+            <span class="r3-spotlight-kicker">YOUR RIHULA SPACE</span>
+            <h2>Save. Grow. Belong.</h2>
+            <p>Everything you need for your membership, savings and community life in one place.</p>
+        </div>
+        <div class="r3-spotlight-orb">✦</div>
+    </section>
+
+    <section class="r3-quick-panel">
+        <div class="featured-heading">
+            <div><h2>Quick tools</h2><p>Useful actions without leaving your dashboard.</p></div>
+        </div>
+        <div class="r3-quick-grid">
+            <button type="button" onclick="showHistory()"><span>📜</span><strong>Statement</strong><small>View my history</small></button>
+            <button type="button" onclick="showGroupGoal()"><span>🎯</span><strong>Group Goal</strong><small>Track progress</small></button>
+            <button type="button" onclick="location.href='achievements.html'"><span>🏆</span><strong>Badges</strong><small>See achievements</small></button>
+            <button type="button" onclick="showAnnouncements()"><span>🔔</span><strong>Updates</strong><small>Latest news</small></button>
+        </div>
+    </section>
+
     <section class="personal-summary-card">
         <div class="summary-head">
             <div>
@@ -732,6 +754,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
+<script src="custom-auth.js"></script>
 <script src="ai.js"></script>
 <script src="member.js"></script>
 
@@ -753,5 +776,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 <script src="v22.js"></script>
 <script src="finance.js"></script>
+<script src="achievements.js"></script>
+<script src="rihula-v3-ui.js"></script>
 </body>
 </html>

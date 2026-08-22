@@ -21,10 +21,10 @@
   async function getAdminUser() {
     if (!window.db) throw new Error("Supabase is not initialized.");
 
-    const { data: authData, error: authError } = await db.auth.getUser();
+    const { data: authData, error: authError } = await window.db.auth.getUser();
     if (authError || !authData?.user) return null;
 
-    const { data: member, error } = await db
+    const { data: member, error } = await window.db
       .from("members")
       .select("id, auth_id, name, email, phone, role, status")
       .eq("auth_id", authData.user.id)
@@ -72,7 +72,7 @@
 
   async function adminLogout() {
     try {
-      await db.auth.signOut();
+      await window.db.auth.signOut();
     } catch (error) {
       console.warn("Admin sign out:", error);
     }

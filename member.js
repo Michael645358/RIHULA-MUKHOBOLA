@@ -73,7 +73,7 @@ document.getElementById("welcomeName").innerHTML = `
     await loadNotifications();
     await loadSavingsStats(user.phone);
     await loadCollectionPeriods();
-    await loadMyRank();
+    if (typeof window.loadMyRank === "function") await window.loadMyRank();
    await loadGroupGoal(); 
    await loadContributionDayTotals();
 }
@@ -100,6 +100,7 @@ async function logout() {
     }
 
     localStorage.removeItem("loggedUser");
+    localStorage.removeItem("rihulaMemberSession");
 
     window.location.href = "login.html";
 }
@@ -107,7 +108,7 @@ async function logout() {
 loadMemberData();
 updateUnreadCount();
 updateOnlineStatus(true);
-loadMyRank();
+if (typeof window.loadMyRank === "function") window.loadMyRank();
 showDashboard();
 updateLastSeen();
 loadOnlineMembers();
@@ -762,95 +763,154 @@ function toggleSinglePassword(inputId, button) {
     }
 }
 async function loadCollectionPeriods() {
+
+    console.log("RIHULA: Loading group collection...");
+
     try {
-        // Get the currently logged-in member
-        const user = JSON.parse(
-            localStorage.getItem("currentUser") ||
-            sessionStorage.getItem("currentUser") ||
-            "null"
+
+        if (!window.db) {
+            console.error(
+                "RIHULA ERROR: db is not available."
+            );
+
+            updateCollectionDisplay(0, 0, 0);
+            return;
+        }
+
+
+        const { data, error } = await db
+            .from("contributions")
+            .select("amount, created_at");
+
+
+        if (error) {
+
+            console.error(
+                "RIHULA CONTRIBUTION ERROR:",
+                error
+            );
+
+            updateCollectionDisplay(0, 0, 0);
+            return;
+        }
+
+
+        console.log(
+            "RIHULA CONTRIBUTIONS:",
+            data
         );
 
-        // Default values
+
         let todayTotal = 0;
         let weekTotal = 0;
         let monthTotal = 0;
 
-        // No member logged in
-        if (!user) {
-            updateCollectionDisplay(0, 0, 0);
-            return;
-        }
-
-        // Use the member's phone as their unique identifier
-        const memberPhone =
-            user.phone ||
-            user.phone_number ||
-            user.member_phone;
-
-        if (!memberPhone) {
-            updateCollectionDisplay(0, 0, 0);
-            return;
-        }
-
-        // Get ONLY this member's contributions
-        const { data: contributions, error } = await supabase
-            .from("contributions")
-            .select("amount, created_at")
-            .eq("member_phone", memberPhone);
-
-        if (error) {
-            console.error("Contribution loading error:", error);
-            updateCollectionDisplay(0, 0, 0);
-            return;
-        }
 
         const now = new Date();
 
-        // Start of today
-        const startOfToday = new Date(now);
-        startOfToday.setHours(0, 0, 0, 0);
 
-        // Start of this week
-        const startOfWeek = new Date(now);
-        const day = startOfWeek.getDay();
-        const difference = day === 0 ? 6 : day - 1;
+        /* ==========================
+           TODAY
+           ========================== */
 
-        startOfWeek.setDate(
-            startOfWeek.getDate() - difference
+        const startOfToday = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
         );
 
-        startOfWeek.setHours(0, 0, 0, 0);
 
-        // Start of this month
+        /* ==========================
+           MONDAY / START OF WEEK
+           ========================== */
+
+        const day = now.getDay();
+
+        const daysFromMonday =
+            day === 0 ? 6 : day - 1;
+
+
+        const startOfWeek = new Date(now);
+
+        startOfWeek.setDate(
+            now.getDate() - daysFromMonday
+        );
+
+        startOfWeek.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        /* ==========================
+           START OF MONTH
+           ========================== */
+
         const startOfMonth = new Date(
             now.getFullYear(),
             now.getMonth(),
             1
         );
 
-        (contributions || []).forEach(contribution => {
+
+        /* ==========================
+           CALCULATE
+           ========================== */
+
+        (data || []).forEach(row => {
 
             const amount =
-                Number(contribution.amount) || 0;
+                Number(row.amount) || 0;
+
+
+            if (!row.created_at) {
+                return;
+            }
+
 
             const date =
-                new Date(contribution.created_at);
+                new Date(row.created_at);
 
-            // Today
+
+            if (Number.isNaN(date.getTime())) {
+                return;
+            }
+
+
+            // TODAY
+
             if (date >= startOfToday) {
                 todayTotal += amount;
             }
 
-            // This week
+
+            // THIS WEEK
+
             if (date >= startOfWeek) {
                 weekTotal += amount;
             }
 
-            // This month
+
+            // THIS MONTH
+
             if (date >= startOfMonth) {
                 monthTotal += amount;
             }
+
         });
+
+
+        console.log(
+            "RIHULA FINAL TOTALS:",
+            {
+                today: todayTotal,
+                week: weekTotal,
+                month: monthTotal
+            }
+        );
+
 
         updateCollectionDisplay(
             todayTotal,
@@ -858,110 +918,143 @@ async function loadCollectionPeriods() {
             monthTotal
         );
 
+
     } catch (error) {
 
         console.error(
-            "Unable to load personal contribution totals:",
+            "RIHULA COLLECTION CRASH:",
             error
         );
 
-        updateCollectionDisplay(0, 0, 0);
+        updateCollectionDisplay(
+            0,
+            0,
+            0
+        );
     }
 }
-function updateCollectionDisplay(
-    today,
-    week,
-    month
-) {
+function updateCollectionDisplay(today, week, month) {
+
     const todayElement =
-        document.getElementById("todayTotal");
+        document.getElementById("collectedToday");
 
     const weekElement =
-        document.getElementById("weekTotal");
+        document.getElementById("collectedWeek");
 
     const monthElement =
-        document.getElementById("monthTotal");
+        document.getElementById("collectedMonth");
+
 
     if (todayElement) {
         todayElement.textContent =
-            `KSh ${today.toLocaleString()}`;
+            "KSh " + Number(today || 0).toLocaleString();
     }
 
     if (weekElement) {
         weekElement.textContent =
-            `KSh ${week.toLocaleString()}`;
+            "KSh " + Number(week || 0).toLocaleString();
     }
 
     if (monthElement) {
         monthElement.textContent =
-            `KSh ${month.toLocaleString()}`;
+            "KSh " + Number(month || 0).toLocaleString();
     }
+
+
+    console.log("RIHULA DISPLAY:", {
+        today: today,
+        week: week,
+        month: month
+    });
+}
+
+/* =========================================
+   RIHULA COLLECTION COUNTER
+   ========================================= */
+
+function animateCollectionValue(element, target) {
+
+    if (!element) {
+        console.warn(
+            "RIHULA: Collection element not found."
+        );
+        return;
+    }
+
+    target = Number(target) || 0;
+
+    const duration = 900;
+
+    const startTime = performance.now();
+
+    function animate(currentTime) {
+
+        const elapsed =
+            currentTime - startTime;
+
+        const progress =
+            Math.min(elapsed / duration, 1);
+
+        /*
+         * Smooth easing
+         */
+        const eased =
+            1 - Math.pow(1 - progress, 3);
+
+        const currentValue =
+            Math.round(target * eased);
+
+        element.innerText =
+            "KSh " +
+            currentValue.toLocaleString();
+
+        if (progress < 1) {
+
+            requestAnimationFrame(animate);
+
+        } else {
+
+            element.innerText =
+                "KSh " +
+                target.toLocaleString();
+        }
+    }
+
+    requestAnimationFrame(animate);
 }
 async function changePassword() {
-
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-
+    const user = JSON.parse(localStorage.getItem("loggedUser") || "null");
     const currentPassword = document.getElementById("currentPassword").value.trim();
     const newPassword = document.getElementById("newPassword").value.trim();
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
+    if (!user || !user.id) {
+        showPopup("Your login session has expired. Please log in again.", "error");
+        return;
+    }
     if (!currentPassword || !newPassword || !confirmPassword) {
         showPopup("Please fill all fields.");
         return;
     }
-
     if (newPassword !== confirmPassword) {
         showPopup("New passwords do not match.");
         return;
     }
-
-    if (newPassword.length < 6) {
-        showPopup("Password must be at least 6 characters long.");
+    if (newPassword.length < 8) {
+        showPopup("Password must be at least 8 characters long.");
         return;
     }
 
-    const { data, error } = await db
-        .from("members")
-        .select("id,password")
-        .eq("phone", user.phone)
-        .single();
-
-    if (error || !data) {
-        showPopup("Member not found.");
-        return;
+    try {
+        await RihulaCustomAuth.changeMemberPassword(user.id, currentPassword, newPassword);
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+        showPopup("Password changed successfully.");
+    } catch (error) {
+        console.error("CHANGE PASSWORD ERROR:", error);
+        showPopup(error.message || "Could not change password.", "error");
     }
-
-    if (currentPassword !== data.password) {
-        showPopup("Current password is incorrect.");
-        return;
-    }
-
-    if (newPassword === data.password) {
-        showPopup("Your new password cannot be the same as your current password.");
-        return;
-    }
-
-    const { error: updateError } = await db
-        .from("members")
-        .update({
-            password: newPassword
-        })
-        .eq("id", data.id);
-
-    if (updateError) {
-        if (button) button.disabled = false;
-        showPopup(updateError.message, "error");
-        return;
-    }
-
-    user.password = newPassword;
-    localStorage.setItem("loggedUser", JSON.stringify(user));
-
-    document.getElementById("currentPassword").value = "";
-    document.getElementById("newPassword").value = "";
-    document.getElementById("confirmPassword").value = "";
-
-    showPopup("Password changed successfully.");
 }
 function togglePasswordVisibility() {
 
@@ -1097,22 +1190,16 @@ async function uploadProfilePhoto() {
     try {
 
         // =========================
-        // GET SUPABASE AUTH USER
+        // GET CUSTOM MEMBER SESSION
         // =========================
 
-        const {
-            data: { user: authUser },
-            error: authError
-        } = await db.auth.getUser();
+        const authUser = JSON.parse(localStorage.getItem("loggedUser") || "null");
 
-
-        if (authError || !authUser) {
-
+        if (!authUser || !authUser.id) {
             showPopup(
                 "Your login session has expired. Please log in again.",
                 "error"
             );
-
             return;
         }
 
@@ -1133,7 +1220,7 @@ async function uploadProfilePhoto() {
         // =========================
 
         const fileName =
-            `${authUser.id}/${Date.now()}.${extension}`;
+            `members/${authUser.id}/${Date.now()}.${extension}`;
 
 
         console.log(
@@ -1214,7 +1301,7 @@ async function uploadProfilePhoto() {
                 photo_url: photoUrl
             })
             .eq(
-                "auth_id",
+                "id",
                 authUser.id
             );
 
@@ -1976,111 +2063,8 @@ function cancelHold() {
 
     clearTimeout(holdTimer);
 }
-async function loadMyRank() {
-    
-    const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
-    
-    if (!user) return;
-    
-    const { data: members, error: membersError } =
-    await db
-        .from("members")
-        .select("phone");
-    
-    if (membersError) {
-        console.error("Rank members error:", membersError);
-        return;
-    }
-    
-    const rankings = [];
-    
-    for (const member of members || []) {
-        
-        // Get total contributions
-        const { data: contributions, error: contributionError } =
-        await db
-            .from("contributions")
-            .select("amount")
-            .eq("member_phone", member.phone);
-        
-        if (contributionError) {
-            console.error(
-                "Rank contribution error:",
-                contributionError
-            );
-            continue;
-        }
-        
-        // Get total withdrawals
-        const { data: withdrawals, error: withdrawalError } =
-        await db
-            .from("withdrawals")
-            .select("amount")
-            .eq("member_phone", member.phone);
-        
-        if (withdrawalError) {
-            console.error(
-                "Rank withdrawal error:",
-                withdrawalError
-            );
-            continue;
-        }
-        
-        let totalContributed = 0;
-        let totalWithdrawn = 0;
-        
-        (contributions || []).forEach(item => {
-            totalContributed += Number(item.amount || 0);
-        });
-        
-        (withdrawals || []).forEach(item => {
-            totalWithdrawn += Number(item.amount || 0);
-        });
-        
-        // CURRENT SAVINGS = CONTRIBUTIONS - WITHDRAWALS
-        const netSavings = Math.max(
-            totalContributed - totalWithdrawn,
-            0
-        );
-        
-        rankings.push({
-            phone: String(member.phone).trim(),
-            total: netSavings
-        });
-    }
-    
-    // Highest current savings = Rank #1
-    rankings.sort((a, b) => {
-        
-        if (b.total !== a.total) {
-            return b.total - a.total;
-        }
-        
-        // Same savings = alphabetical/phone fallback
-        return a.phone.localeCompare(b.phone);
-    });
-    
-    const userPhone =
-        String(user.phone || "").trim();
-    
-    const rank =
-        rankings.findIndex(
-            item => item.phone === userPhone
-        ) + 1;
-    
-    const rankElement =
-        document.getElementById("myRank");
-    
-    if (rankElement) {
-        rankElement.innerText =
-            rank > 0 ?
-            "#" + rank :
-            "Unranked";
-    }
-    
-    console.log("Updated member rankings:", rankings);
-}async function showAnnouncements() {
+
+async function showAnnouncements() {
 
     document.getElementById("dashboardScreen").style.display = "none";
     document.getElementById("historyScreen").style.display = "none";

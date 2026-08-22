@@ -1,5 +1,8 @@
-const SUPABASE_URL = "https://ubyuscrigxgvchfofeyx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_IycRP3NNSBkcILuhOQ_46g_YpES9c7I";
+const SUPABASE_URL =
+    "https://qezbkcixzhdtntflljgy.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_lzTilJjSPerjRGlbuUpT-Q_WzonQy-d";
 
 const client = window.supabase.createClient(
     SUPABASE_URL,
@@ -8,6 +11,8 @@ const client = window.supabase.createClient(
 
 window.db = client;
 window.supabaseClient = client;
+
+
 // OneSignal
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
