@@ -1,100 +1,36 @@
-/* RIHULA TEMPORARY CUSTOM MEMBER AUTH
- * Uses database RPCs instead of Supabase Auth.
- * This is a bridge while the project is later migrated back to Supabase Auth.
- */
+/* RIHULA Supabase Auth compatibility helpers */
 (function () {
   "use strict";
-
   const SESSION_KEY = "rihulaMemberSession";
-
   function normalizeKenyanPhone(phone) {
     let value = String(phone || "").trim().replace(/[\s\-()]/g, "");
     if (value.startsWith("+254")) value = "0" + value.slice(4);
     else if (value.startsWith("254")) value = "0" + value.slice(3);
     return value;
   }
-
   function saveSession(member) {
-    const session = {
-      token: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
-      member_id: member.id,
-      created_at: new Date().toISOString()
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ member_id: member.id, auth_id: member.auth_id, created_at: new Date().toISOString() }));
     localStorage.setItem("loggedUser", JSON.stringify(member));
   }
-
-  function clearSession() {
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem("loggedUser");
+  async function clearSession() {
+    localStorage.removeItem(SESSION_KEY); localStorage.removeItem("loggedUser");
+    try { await db.auth.signOut(); } catch (_) {}
   }
-
-  function getSessionMember() {
-    try {
-      return JSON.parse(localStorage.getItem("loggedUser") || "null");
-    } catch (_) {
-      return null;
-    }
-  }
-
-  async function registerMember({ name, phone, email, password }) {
-    if (!window.db || typeof window.db.rpc !== "function") {
-      throw new Error("Supabase is not initialized. Please refresh the page and try again.");
-    }
-
-    try {
-      const { data, error } = await window.db.rpc("rihula_custom_register", {
-        p_name: name,
-        p_phone: normalizeKenyanPhone(phone),
-        p_email: String(email || "").trim().toLowerCase(),
-        p_password: password
-      });
-
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || "Registration failed.");
-      return data;
-    } catch (error) {
-      const message = String(error?.message || error || "");
-      if (message === "Failed to fetch" || /failed to fetch|networkerror|network request failed/i.test(message)) {
-        throw new Error("Unable to reach the RIHULA server. Please check your internet connection, refresh the page, and try again.");
-      }
-      throw error;
-    }
-  }
-
-  async function loginMember(loginId, password) {
-    let identifier = String(loginId || "").trim();
-    if (!identifier.includes("@")) identifier = normalizeKenyanPhone(identifier);
-    else identifier = identifier.toLowerCase();
-
-    const { data, error } = await db.rpc("rihula_custom_login", {
-      p_login: identifier,
-      p_password: password
-    });
+  function getSessionMember() { try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); } catch (_) { return null; } }
+  async function registerMember({name, phone, email, password}) {
+    const { data, error } = await db.auth.signUp({ email: String(email).trim().toLowerCase(), password, options: { data: { name: String(name).trim(), phone: normalizeKenyanPhone(phone) } } });
     if (error) throw error;
-    if (!data?.success || !data?.member) throw new Error(data?.message || "Invalid email/phone or password.");
-    saveSession(data.member);
-    return data.member;
+    return { success: true, user: data.user, session: data.session };
   }
-
-  async function changeMemberPassword(memberId, currentPassword, newPassword) {
-    const { data, error } = await db.rpc("rihula_custom_change_password", {
-      p_member_id: memberId,
-      p_current_password: currentPassword,
-      p_new_password: newPassword
-    });
+  async function loginMember(email, password) {
+    const { data, error } = await db.auth.signInWithPassword({ email: String(email).trim().toLowerCase(), password });
     if (error) throw error;
-    if (!data?.success) throw new Error(data?.message || "Could not change password.");
-    return data;
+    const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
+    if (memberError || !member) throw new Error("Your member profile could not be found.");
+    saveSession(member); return member;
   }
-
-  window.RihulaCustomAuth = {
-    normalizeKenyanPhone,
-    registerMember,
-    loginMember,
-    changeMemberPassword,
-    saveSession,
-    clearSession,
-    getSessionMember
-  };
+  async function changeMemberPassword(_memberId, _currentPassword, newPassword) {
+    const { error } = await db.auth.updateUser({ password: newPassword }); if (error) throw error; return { success:true };
+  }
+  window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };
 })();

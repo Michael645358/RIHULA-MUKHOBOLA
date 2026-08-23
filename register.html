@@ -309,8 +309,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="supabase.js?v=20260822"></script>
-<script src="custom-auth.js?v=20260822"></script>
+<script src="supabase.js"></script>
+
+<script src="custom-auth.js"></script>
 
 
 
@@ -755,8 +756,7 @@ if (value.length < 8) {
     
     
     /* ==================================
-       CREATE RIHULA CUSTOM MEMBER ACCOUNT
-       (Temporary bridge - no Supabase Auth)
+       CREATE RIHULA SUPABASE AUTH ACCOUNT
        ================================== */
 
     const result = await RihulaCustomAuth.registerMember({
@@ -770,7 +770,7 @@ if (value.length < 8) {
         throw new Error(result?.message || "The member account could not be created.");
     }
 
-    /* Do not create or sign in a Supabase Auth user here. */
+
 
     /* ==================================
        SUCCESS

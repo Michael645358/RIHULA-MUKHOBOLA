@@ -33,7 +33,8 @@
       <input
     type="text"
     id="loginId"
-    placeholder="📧 Email or 📱 Phone number"
+    type="email"
+    placeholder="📧 Email address"
     autocomplete="username">
     </div>
 
@@ -78,7 +79,7 @@ async function login() {
     const password = document.getElementById("password").value;
 
     if (!loginId || !password) {
-        showPopup("Enter your email/phone and password.", "warning");
+        showPopup("Enter your email and password.", "warning");
         return;
     }
 
@@ -102,7 +103,7 @@ async function login() {
         await redirectMember(member);
     } catch (error) {
         console.error("CUSTOM LOGIN ERROR:", error);
-        showPopup(error.message || "Invalid email/phone or password.", "error");
+        showPopup(error.message || "Invalid email or password.", "error");
     } finally {
         if (button) { button.disabled = false; button.textContent = "Login"; }
     }

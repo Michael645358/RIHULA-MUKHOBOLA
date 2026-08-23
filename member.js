@@ -1,17 +1,17 @@
 async function loadMemberData() {
 
-    let user =
-        JSON.parse(localStorage.getItem("loggedUser"));
-
-    if (!user) {
-        window.location.href = "login.html";
+    const { data: authData, error: authError } = await db.auth.getUser();
+    if (authError || !authData || !authData.user) {
+        localStorage.removeItem("loggedUser");
+        window.location.replace("login.html");
         return;
     }
 
+    let user = null;
     const { data, error } = await db
         .from("members")
         .select("*")
-        .eq("phone", user.phone)
+        .eq("auth_id", authData.user.id)
         .single();
 
     if (!error && data) {
@@ -99,10 +99,10 @@ async function logout() {
         }
     }
 
+    try { await db.auth.signOut(); } catch (e) { console.warn("Supabase sign-out failed", e); }
     localStorage.removeItem("loggedUser");
     localStorage.removeItem("rihulaMemberSession");
-
-    window.location.href = "login.html";
+    window.location.replace("login.html");
 }
 
 loadMemberData();
