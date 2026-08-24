@@ -14,6 +14,13 @@ async function loadMemberData() {
         .eq("auth_id", authData.user.id)
         .single();
 
+    if (error || !data || data.is_member !== true) {
+        localStorage.removeItem("loggedUser");
+        await db.auth.signOut();
+        window.location.replace("login.html");
+        return;
+    }
+
     if (!error && data) {
 
         user = data;
@@ -112,6 +119,29 @@ if (typeof window.loadMyRank === "function") window.loadMyRank();
 showDashboard();
 updateLastSeen();
 loadOnlineMembers();
+
+// Keep the personal savings card current after an admin records a contribution
+// or withdrawal while the member remains on the dashboard.
+setInterval(() => {
+    const currentUser = JSON.parse(localStorage.getItem("loggedUser") || "null");
+    if (currentUser && currentUser.phone) {
+        loadSavingsStats(currentUser.phone);
+    }
+}, 15000);
+
+window.addEventListener("pageshow", () => {
+    const currentUser = JSON.parse(localStorage.getItem("loggedUser") || "null");
+    if (currentUser && currentUser.phone) {
+        loadSavingsStats(currentUser.phone);
+    }
+});
+
+window.addEventListener("focus", () => {
+    const currentUser = JSON.parse(localStorage.getItem("loggedUser") || "null");
+    if (currentUser && currentUser.phone) {
+        loadSavingsStats(currentUser.phone);
+    }
+});
 
 setInterval(() => {
     updateLastSeen();
@@ -681,63 +711,106 @@ async function loadContributionHistory(phone) {
     }
 }
 async function loadSavingsStats(phone) {
+
     try {
-        phone = String(phone || "").trim();
-        if (!phone) return;
+        const requestedPhone = String(phone || "").trim();
 
-        const { data: myData, error: myError } = await db
-            .from("contributions")
-            .select("amount, created_at")
-            .eq("member_phone", phone);
-        if (myError) throw myError;
+        if (!requestedPhone) return;
 
-        const { data: withdrawalData, error: withdrawalError } = await db
-            .from("withdrawals")
-            .select("amount, created_at")
-            .eq("member_phone", phone);
-        if (withdrawalError) throw withdrawalError;
+        let contributions = 0;
+        let withdrawals = 0;
+        let usedRpc = false;
 
-        const myTotal = (myData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const totalWithdrawn = (withdrawalData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const currentSavings = Math.max(myTotal - totalWithdrawn, 0);
+        // Primary source: secure member finance function.
+        const { data, error } = await db.rpc(
+            "get_member_finance",
+            { p_phone: requestedPhone }
+        );
 
-        const mySavingsEl = document.getElementById("mySavings");
-        if (mySavingsEl) mySavingsEl.innerText = "KSh " + currentSavings.toLocaleString();
+        if (!error) {
+            const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
+            contributions = Number(row.contributions || 0);
+            withdrawals = Number(row.withdrawals || 0);
+            usedRpc = true;
+        } else {
+            console.warn("get_member_finance failed; using personal row fallback:", error.message);
 
-        // Group balance must also reflect withdrawals.
-        const { data: groupData, error: groupError } = await db
-            .from("contributions")
-            .select("amount");
-        if (groupError) console.error("Group savings error:", groupError);
+            // Fallback for projects where the RPC has not yet been deployed.
+            const [cResult, wResult] = await Promise.all([
+                db.from("contributions")
+                    .select("member_phone, amount")
+                    .eq("member_phone", requestedPhone),
+                db.from("withdrawals")
+                    .select("member_phone, amount")
+                    .eq("member_phone", requestedPhone)
+            ]);
 
-        const { data: allWithdrawals, error: allWithdrawalsError } = await db
-            .from("withdrawals")
-            .select("amount");
-        if (allWithdrawalsError) console.error("Group withdrawals error:", allWithdrawalsError);
+            if (cResult.error) throw cResult.error;
+            if (wResult.error) throw wResult.error;
 
-        const groupContributed = (groupData || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const groupWithdrawn = (allWithdrawals || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-        const groupTotal = Math.max(groupContributed - groupWithdrawn, 0);
+            contributions = (cResult.data || []).reduce(
+                (sum, row) => sum + Number(row.amount || 0),
+                0
+            );
 
-        const groupSavingsEl = document.getElementById("groupSavings");
-        if (groupSavingsEl) groupSavingsEl.innerText = "KSh " + groupTotal.toLocaleString();
+            withdrawals = (wResult.data || []).reduce(
+                (sum, row) => sum + Number(row.amount || 0),
+                0
+            );
+        }
 
-        const user = JSON.parse(localStorage.getItem("loggedUser")) || {};
+        const currentSavings = Math.max(
+            contributions - withdrawals,
+            0
+        );
+
+        const mySavings = document.getElementById("mySavings");
+
+        if (mySavings) {
+            mySavings.textContent =
+                "KSh " + currentSavings.toLocaleString("en-KE");
+        }
+
+        const user =
+            JSON.parse(localStorage.getItem("loggedUser") || "{}");
+
         const goal = Number(user.goal || 5000);
-        const percent = goal > 0 ? Math.min(100, Math.round((currentSavings / goal) * 100)) : 0;
 
-        const goalAmountEl = document.getElementById("goalAmount");
-        if (goalAmountEl) goalAmountEl.innerText = `KSh ${currentSavings.toLocaleString()} / KSh ${goal.toLocaleString()}`;
+        const percent = goal > 0
+            ? Math.min(
+                100,
+                Math.round((currentSavings / goal) * 100)
+            )
+            : 0;
 
-        const progressTextEl = document.getElementById("progressText");
-        if (progressTextEl) progressTextEl.innerText = percent + "%";
+        const goalAmount = document.getElementById("goalAmount");
+        if (goalAmount) {
+            goalAmount.textContent =
+                "KSh " + currentSavings.toLocaleString("en-KE") +
+                " / KSh " + goal.toLocaleString("en-KE");
+        }
 
-        const progressFillEl = document.getElementById("progressFill");
-        if (progressFillEl) progressFillEl.style.width = percent + "%";
-    } catch (err) {
-        console.error("Savings Error:", err);
-        const mySavingsEl = document.getElementById("mySavings");
-        if (mySavingsEl) mySavingsEl.innerText = "KSh 0";
+        const progressText = document.getElementById("progressText");
+        if (progressText) {
+            progressText.textContent = percent + "%";
+        }
+
+        const progressFill = document.getElementById("progressFill");
+        if (progressFill) {
+            progressFill.style.width = percent + "%";
+        }
+
+        console.log("RIHULA PERSONAL SAVINGS", {
+            phone: requestedPhone,
+            contributions,
+            withdrawals,
+            savings: currentSavings,
+            source: usedRpc ? "get_member_finance" : "fallback"
+        });
+
+    } catch (error) {
+        console.error("Personal savings update error:", error);
+        // Keep the last valid value on screen instead of replacing it with 0.
     }
 }
 
@@ -763,90 +836,77 @@ function toggleSinglePassword(inputId, button) {
     }
 }
 async function loadCollectionPeriods() {
-
-    console.log("RIHULA: Loading group collection...");
-
     try {
+        const user = JSON.parse(
+            localStorage.getItem("loggedUser") || "null"
+        );
 
-        if (!window.db) {
-            console.error(
-                "RIHULA ERROR: db is not available."
-            );
+        const todayEl =
+            document.getElementById("memberCollectedToday");
 
-            updateCollectionDisplay(0, 0, 0);
+        const weekEl =
+            document.getElementById("memberCollectedWeek");
+
+        const monthEl =
+            document.getElementById("memberCollectedMonth");
+
+        // This card is PERSONAL only.
+        // Never use group totals here.
+        if (!user || !user.phone) {
+            if (todayEl) todayEl.textContent = "KSh 0";
+            if (weekEl) weekEl.textContent = "KSh 0";
+            if (monthEl) monthEl.textContent = "KSh 0";
             return;
         }
 
+        const normalizePhone = phone => {
+            let p = String(phone || "").replace(/\D/g, "");
 
+            if (p.startsWith("254")) {
+                p = "0" + p.substring(3);
+            }
+
+            return p;
+        };
+
+        const myPhone = normalizePhone(user.phone);
+
+        // Load contribution rows and keep ONLY this member's rows.
         const { data, error } = await db
             .from("contributions")
-            .select("amount, created_at");
-
+            .select("member_phone, amount, created_at");
 
         if (error) {
-
             console.error(
-                "RIHULA CONTRIBUTION ERROR:",
+                "Personal contribution periods error:",
                 error
             );
 
-            updateCollectionDisplay(0, 0, 0);
+            if (todayEl) todayEl.textContent = "KSh 0";
+            if (weekEl) weekEl.textContent = "KSh 0";
+            if (monthEl) monthEl.textContent = "KSh 0";
             return;
         }
 
-
-        console.log(
-            "RIHULA CONTRIBUTIONS:",
-            data
+        const mine = (data || []).filter(row =>
+            normalizePhone(row.member_phone) === myPhone
         );
-
-
-        let todayTotal = 0;
-        let weekTotal = 0;
-        let monthTotal = 0;
-
 
         const now = new Date();
 
-
-        /* ==========================
-           TODAY
-           ========================== */
-
-        const startOfToday = new Date(
+        const startOfDay = new Date(
             now.getFullYear(),
             now.getMonth(),
             now.getDate()
         );
 
-
-        /* ==========================
-           MONDAY / START OF WEEK
-           ========================== */
-
-        const day = now.getDay();
-
+        const startOfWeek = new Date(startOfDay);
         const daysFromMonday =
-            day === 0 ? 6 : day - 1;
-
-
-        const startOfWeek = new Date(now);
+            (startOfDay.getDay() + 6) % 7;
 
         startOfWeek.setDate(
-            now.getDate() - daysFromMonday
+            startOfWeek.getDate() - daysFromMonday
         );
-
-        startOfWeek.setHours(
-            0,
-            0,
-            0,
-            0
-        );
-
-
-        /* ==========================
-           START OF MONTH
-           ========================== */
 
         const startOfMonth = new Date(
             now.getFullYear(),
@@ -854,174 +914,44 @@ async function loadCollectionPeriods() {
             1
         );
 
+        let today = 0;
+        let week = 0;
+        let month = 0;
 
-        /* ==========================
-           CALCULATE
-           ========================== */
+        mine.forEach(row => {
+            const date = new Date(row.created_at);
+            const amount = Number(row.amount || 0);
 
-        (data || []).forEach(row => {
+            if (Number.isNaN(date.getTime())) return;
 
-            const amount =
-                Number(row.amount) || 0;
-
-
-            if (!row.created_at) {
-                return;
-            }
-
-
-            const date =
-                new Date(row.created_at);
-
-
-            if (Number.isNaN(date.getTime())) {
-                return;
-            }
-
-
-            // TODAY
-
-            if (date >= startOfToday) {
-                todayTotal += amount;
-            }
-
-
-            // THIS WEEK
-
-            if (date >= startOfWeek) {
-                weekTotal += amount;
-            }
-
-
-            // THIS MONTH
-
-            if (date >= startOfMonth) {
-                monthTotal += amount;
-            }
-
+            if (date >= startOfDay) today += amount;
+            if (date >= startOfWeek) week += amount;
+            if (date >= startOfMonth) month += amount;
         });
 
+        const format = value =>
+            "KSh " + Number(value || 0).toLocaleString("en-KE");
 
-        console.log(
-            "RIHULA FINAL TOTALS:",
-            {
-                today: todayTotal,
-                week: weekTotal,
-                month: monthTotal
-            }
-        );
+        if (todayEl) todayEl.textContent = format(today);
+        if (weekEl) weekEl.textContent = format(week);
+        if (monthEl) monthEl.textContent = format(month);
 
-
-        updateCollectionDisplay(
-            todayTotal,
-            weekTotal,
-            monthTotal
-        );
-
+        console.log("RIHULA PERSONAL CONTRIBUTIONS", {
+            memberPhone: user.phone,
+            today,
+            week,
+            month,
+            records: mine.length
+        });
 
     } catch (error) {
-
         console.error(
-            "RIHULA COLLECTION CRASH:",
+            "Personal contribution periods failed:",
             error
         );
-
-        updateCollectionDisplay(
-            0,
-            0,
-            0
-        );
     }
 }
-function updateCollectionDisplay(today, week, month) {
 
-    const todayElement =
-        document.getElementById("collectedToday");
-
-    const weekElement =
-        document.getElementById("collectedWeek");
-
-    const monthElement =
-        document.getElementById("collectedMonth");
-
-
-    if (todayElement) {
-        todayElement.textContent =
-            "KSh " + Number(today || 0).toLocaleString();
-    }
-
-    if (weekElement) {
-        weekElement.textContent =
-            "KSh " + Number(week || 0).toLocaleString();
-    }
-
-    if (monthElement) {
-        monthElement.textContent =
-            "KSh " + Number(month || 0).toLocaleString();
-    }
-
-
-    console.log("RIHULA DISPLAY:", {
-        today: today,
-        week: week,
-        month: month
-    });
-}
-
-/* =========================================
-   RIHULA COLLECTION COUNTER
-   ========================================= */
-
-function animateCollectionValue(element, target) {
-
-    if (!element) {
-        console.warn(
-            "RIHULA: Collection element not found."
-        );
-        return;
-    }
-
-    target = Number(target) || 0;
-
-    const duration = 900;
-
-    const startTime = performance.now();
-
-    function animate(currentTime) {
-
-        const elapsed =
-            currentTime - startTime;
-
-        const progress =
-            Math.min(elapsed / duration, 1);
-
-        /*
-         * Smooth easing
-         */
-        const eased =
-            1 - Math.pow(1 - progress, 3);
-
-        const currentValue =
-            Math.round(target * eased);
-
-        element.innerText =
-            "KSh " +
-            currentValue.toLocaleString();
-
-        if (progress < 1) {
-
-            requestAnimationFrame(animate);
-
-        } else {
-
-            element.innerText =
-                "KSh " +
-                target.toLocaleString();
-        }
-    }
-
-    requestAnimationFrame(animate);
-}
 async function changePassword() {
     const user = JSON.parse(localStorage.getItem("loggedUser") || "null");
     const currentPassword = document.getElementById("currentPassword").value.trim();

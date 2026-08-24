@@ -18,8 +18,23 @@
   }
   function getSessionMember() { try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); } catch (_) { return null; } }
   async function registerMember({name, phone, email, password}) {
-    const { data, error } = await db.auth.signUp({ email: String(email).trim().toLowerCase(), password, options: { data: { name: String(name).trim(), phone: normalizeKenyanPhone(phone) } } });
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const cleanName = String(name || "").trim();
+    const cleanPhone = normalizeKenyanPhone(phone);
+    const redirect = new URL("auth-callback.html", window.location.href).href;
+
+    const { data, error } = await db.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        emailRedirectTo: redirect,
+        data: { name: cleanName, phone: cleanPhone }
+      }
+    });
+
     if (error) throw error;
+    if (!data || !data.user) throw new Error("The account could not be created.");
+
     return { success: true, user: data.user, session: data.session };
   }
   async function loginMember(email, password) {
@@ -27,10 +42,28 @@
     if (error) throw error;
     const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
     if (memberError || !member) throw new Error("Your member profile could not be found.");
+    if (member.is_member !== true) throw new Error("This account does not have member access.");
     saveSession(member); return member;
   }
-  async function changeMemberPassword(_memberId, _currentPassword, newPassword) {
-    const { error } = await db.auth.updateUser({ password: newPassword }); if (error) throw error; return { success:true };
+  async function changeMemberPassword(_memberId, currentPassword, newPassword) {
+    if (String(newPassword || "").length < 8) {
+      throw new Error("New password must contain at least 8 characters.");
+    }
+
+    const { data: authData, error: authError } = await db.auth.getUser();
+    if (authError || !authData?.user?.email) {
+      throw new Error("Your secure login session has expired. Please log in again.");
+    }
+
+    const { error: verifyError } = await db.auth.signInWithPassword({
+      email: authData.user.email,
+      password: String(currentPassword || "")
+    });
+    if (verifyError) throw new Error("Current password is incorrect.");
+
+    const { error } = await db.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    return { success: true };
   }
   window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };
 })();

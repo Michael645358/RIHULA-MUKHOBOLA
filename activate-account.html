@@ -57,8 +57,9 @@
 </div>
 
 <script src="popups.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 
 <script>
 async function activateAccount() {
@@ -130,7 +131,8 @@ async function activateAccount() {
         password: newPassword,
         options: {
             emailRedirectTo:
-                new URL("auth-callback.html", window.location.href).href
+                new URL("auth-callback.html", window.location.href).href,
+            data: { phone: phone }
         }
     });
 

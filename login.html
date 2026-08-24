@@ -18,7 +18,7 @@
     <h2>Member Login</h2>
 
     <p style="margin-bottom:15px;">
-        <a href="admin-login.html">Admin Login</a>
+        <a href="admin-login.html">Admin Login</a><br><small>If you have both permissions, you can use the same email and password for Admin and Member access.</small>
     </p>
 
     <div class="security-notice">
@@ -31,9 +31,8 @@
 
     <div class="input-group">
       <input
-    type="text"
-    id="loginId"
     type="email"
+    id="loginId"
     placeholder="📧 Email address"
     autocomplete="username">
     </div>
@@ -52,13 +51,13 @@
         <a href="forgot-password.html">Forgot Password?</a>
         <br><br>
         <br><br>
-        <a href="register.html">Register Here</a>
     </div>
 </div>
 
 <script src="popups.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 <script src="custom-auth.js"></script>
 <script>
 async function redirectMember(member) {
@@ -89,8 +88,9 @@ async function login() {
     try {
         const member = await RihulaCustomAuth.loginMember(loginId, password);
 
-        if (member.status === "pending") {
-            window.location.href = "pending-members.html";
+        if (String(member.status || "").toLowerCase() === "pending") {
+            RihulaCustomAuth.clearSession();
+            showPopup("Your member account is not active yet. Please contact the RIHULA administrator.", "warning");
             return;
         }
 

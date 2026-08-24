@@ -51,19 +51,19 @@ OneSignalDeferred.push(async function(OneSignal) {
     </div>
 
     <div class="collection-card">
-        <div class="collection-title">Total collected</div>
+        <div class="collection-title">My contributions</div>
         <div class="collection-periods">
             <div>
                 <span>Today</span>
-                <strong id="collectedToday">KSh 0</strong>
+                <strong id="memberCollectedToday">KSh 0</strong>
             </div>
             <div>
                 <span>This week</span>
-                <strong id="collectedWeek">KSh 0</strong>
+                <strong id="memberCollectedWeek">KSh 0</strong>
             </div>
             <div>
                 <span>This month</span>
-                <strong id="collectedMonth">KSh 0</strong>
+                <strong id="memberCollectedMonth">KSh 0</strong>
             </div>
         </div>
         <button class="insights-btn" onclick="showGroupGoal()">View Group Insights</button>
@@ -187,23 +187,49 @@ OneSignalDeferred.push(async function(OneSignal) {
             </div>
         </div>
     </section>
+<!-- My Achievements -->
+<section class="member-achievements-preview">
 
-    <!-- Achievements -->
-    <section class="achievements-section">
-        <div class="featured-heading">
-            <h2>🏆 Achievements</h2>
-            <button onclick="location.href='achievements.html'">View all</button>
+    <button
+        type="button"
+        class="member-achievements-card"
+        onclick="window.location.href='achievements.html'"
+        aria-label="Open My Achievements">
+
+        <div class="member-achievements-icon">
+            🏆
         </div>
-        <div id="achievementsContainer" class="achievements-list">
-            <div class="achievement-empty">Loading achievements...</div>
+
+        <div class="member-achievements-info">
+
+            <div class="member-achievements-heading">
+                <div>
+                    <h2>My Achievements</h2>
+                    <p id="dashboardAchievementProgress">
+                        Loading achievements...
+                    </p>
+                </div>
+
+                <span class="member-achievements-arrow">›</span>
+            </div>
+
+            <div
+                id="dashboardLatestAchievement"
+                class="member-achievements-latest">
+                Keep saving to unlock achievements.
+            </div>
+
         </div>
-    </section>
+
+    </button>
+
+</section>
 
     <!-- Rank -->
     <section class="rankings dashboard-rank">
         <div class="rank-card">
             <span class="summary-label">Contribution ranking</span>
-            <h3 id="myRank">#0</h3>
+            <h3 id="myRank">Loading...</h3>
             <p>Your current position among all members</p>
         </div>
     </section>
@@ -752,11 +778,14 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 <script src="custom-auth.js"></script>
 <script src="ai.js"></script>
-<script src="member.js"></script>
+<script src="finance.js?v=20260824"></script>
+<script src="member.js?v=20260823"></script>
+<script src="v22.js"></script>
 
 <div id="memberStatusPopup" class="member-status-popup">
 
@@ -774,8 +803,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 </div>
 
-<script src="v22.js"></script>
-<script src="finance.js"></script>
+
 <script src="achievements.js"></script>
 <script src="rihula-v3-ui.js"></script>
 </body>

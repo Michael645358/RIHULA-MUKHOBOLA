@@ -80,26 +80,74 @@
 
   // Member rank uses NET savings, including withdrawals.
   window.loadMyRank = async function () {
+
     const user = currentUser();
-    const el = document.getElementById("myRank");
-    if (!user || !el) return;
+
+    const el =
+        document.getElementById("myRank");
+
+    if (!user || !user.phone || !el) {
+        return;
+    }
 
     try {
-      const { data, error } = await db.rpc("get_member_rank", {
-        p_phone: String(user.phone || "")
-      });
-      if (error) throw error;
-      const rank = money(data);
-      el.textContent = rank > 0 ? "#" + rank : "Unranked";
-      try {
-        const finance = await netFor(user.phone);
-        window.renderAchievements?.(finance.net, rank);
-      } catch (_) {}
-    } catch (e) {
-      console.error("RIHULA finance: member rank failed", e);
-      el.textContent = "Unranked";
+
+        const { data, error } =
+            await db.rpc(
+                "get_member_rank",
+                {
+                  p_phone: String(user.phone)
+                }
+            );
+
+        if (error) {
+            throw error;
+        }
+
+        let rank = Number(data || 0);
+
+if (!Number.isFinite(rank) || rank < 1) {
+    rank = 0;
+}
+        el.textContent =
+            rank > 0
+                ? "#" + rank
+                : "Unranked";
+
+        // Load achievements using the same
+        // personal net savings value.
+        try {
+
+            const finance =
+                await window.rihulaFinance.netFor(
+                    user.phone
+                );
+
+            window.renderAchievements?.(
+                finance.net,
+                rank
+            );
+
+        } catch (achievementError) {
+
+            console.warn(
+                "Achievement refresh failed:",
+                achievementError
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "RIHULA rank error:",
+            error
+        );
+
+        el.textContent =
+            "Unranked";
     }
-  };
+};
 
   // Group goal uses NET savings, so withdrawals reduce progress immediately.
   window.loadGroupGoal = async function () {

@@ -93,8 +93,9 @@ onclick="location.href='admin.html'">
 
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 <script src="admin-auth.js"></script>
 <script>
 document.documentElement.style.visibility = "hidden";
@@ -135,23 +136,10 @@ async function sendNotification() {
         return;
     }
 
-    // Send OneSignal Push
-    const res = await fetch(
-        "https://qkjymwjhtzidbwpeusoh.supabase.co/functions/v1/smart-function",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title,
-                message
-            })
-        }
-    );
-
-    const result = await res.json();
-    console.log(result);
+    // The announcement itself is already stored in Supabase.
+    // Push delivery must be handled by a server-side notification function;
+    // do not call an old Supabase project from the browser.
+    showPopup("Announcement saved successfully. Members will see it in the app.", "success");
 
     document.getElementById("notificationTitle").value = "";
     document.getElementById("notificationMessage").value = "";

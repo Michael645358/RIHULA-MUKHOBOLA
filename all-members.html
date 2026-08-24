@@ -11,8 +11,9 @@
 </head>
 
 <body class="admin-dashboard-page members-page">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 <script src="admin-auth.js"></script>
 
 <div class="admin-shell">
@@ -24,7 +25,6 @@
   <nav class="admin-nav">
     <a href="admin.html" class="admin-nav-item"><span>📊</span><span>Dashboard</span></a>
     <a href="all-members.html" class="admin-nav-item active"><span>👥</span><span>All Members</span></a>
-    <a href="pending-members.html" class="admin-nav-item"><span>⏳</span><span>Pending Members</span></a>
     <a href="online-members.html" class="admin-nav-item"><span>🟢</span><span>Online Members</span></a>
     <a href="record-contribution.html" class="admin-nav-item"><span>💰</span><span>Contributions</span></a>
     <a href="leaderboard.html" class="admin-nav-item"><span>🏆</span><span>Leaderboard</span></a>
@@ -57,7 +57,6 @@
     <h2>All Members</h2>
     <p>Manage registered members of RIHULA MUKHOBOLA ASSOCIATION.</p>
   </div>
-  <a href="add-member.html" class="admin-primary-btn">＋ Add Member</a>
 </section>
 
 <section class="member-stats">

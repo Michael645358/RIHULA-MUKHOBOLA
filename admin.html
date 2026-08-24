@@ -13,8 +13,9 @@
 
 <body class="admin-dashboard-page">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
 <script src="admin-auth.js"></script>
 <script>
 document.documentElement.style.visibility = "hidden";
@@ -46,11 +47,6 @@ document.documentElement.style.visibility = "hidden";
             <a href="all-members.html" class="admin-nav-item">
                 <span>👥</span>
                 <span>All Members</span>
-            </a>
-
-            <a href="pending-members.html" class="admin-nav-item">
-                <span>⏳</span>
-                <span>Pending Members</span>
             </a>
 
             <a href="online-members.html" class="admin-nav-item">
@@ -265,12 +261,6 @@ document.documentElement.style.visibility = "hidden";
                             <small>Record contribution</small>
                         </a>
 
-                        <a href="pending-members.html">
-                            <span>⏳</span>
-                            <strong>Approvals</strong>
-                            <small>Review pending members</small>
-                        </a>
-
                         <a href="announcements.html">
                             <span>📢</span>
                             <strong>Announcement</strong>
@@ -363,12 +353,6 @@ document.documentElement.style.visibility = "hidden";
                         <span>👥</span>
                         <strong>All Members</strong>
                         <small>View and manage members</small>
-                    </a>
-
-                    <a href="pending-members.html" class="admin-tool">
-                        <span>⏳</span>
-                        <strong>Pending Members</strong>
-                        <small>Approve new registrations</small>
                     </a>
 
                     <a href="online-members.html" class="admin-tool">

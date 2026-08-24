@@ -5,12 +5,7 @@
 (function () {
   "use strict";
 
-  const ADMIN_ROLES = ["admin", "administrator", "chairperson", "secretary", "treasurer"];
-  const SESSION_KEY = "rihulaAdminUser";
-
-  function normalizeRole(role) {
-    return String(role || "").trim().toLowerCase();
-  }
+    const SESSION_KEY = "rihulaAdminUser";
 
   function clearAdminSession() {
     sessionStorage.removeItem("adminVerified");
@@ -26,7 +21,7 @@
 
     const { data: member, error } = await window.db
       .from("members")
-      .select("id, auth_id, name, email, phone, role, status")
+      .select("id, auth_id, name, email, phone, role, status, is_admin, is_member")
       .eq("auth_id", authData.user.id)
       .maybeSingle();
 
@@ -35,11 +30,12 @@
       throw error;
     }
 
-    if (!member || !ADMIN_ROLES.includes(normalizeRole(member.role))) {
+    if (!member || member.is_admin !== true) {
       return null;
     }
 
-    if (member.status && ["blocked", "suspended", "inactive"].includes(normalizeRole(member.status))) {
+    const normalizedStatus = String(member.status || "").trim().toLowerCase();
+    if (member.status && ["blocked", "suspended", "inactive"].includes(normalizedStatus)) {
       return null;
     }
 
