@@ -1184,8 +1184,19 @@ async function uploadProfilePhoto() {
                 uploadError
             );
 
+            const storageMessage =
+                uploadError?.message ||
+                uploadError?.error_description ||
+                uploadError?.details ||
+                "Unknown Storage error";
+
+            console.error(
+                "PROFILE PHOTO STORAGE DETAILS:",
+                storageMessage
+            );
+
             showPopup(
-                "Photo could not be uploaded. Check Storage permissions.",
+                "Photo upload failed. Please check Supabase Storage setup.",
                 "error"
             );
 
