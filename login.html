@@ -7,6 +7,24 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="rihula-modern-design.css">
 <link rel="stylesheet" href="rihula-v3-ui.css">
+<style>
+.register-link {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: #0b8f6a;
+    color: #fff !important;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.register-link:hover,
+.register-link:focus {
+    opacity: .9;
+    transform: translateY(-1px);
+}
+</style>
 </head>
 <body>
 
@@ -50,7 +68,9 @@
     <div class="links">
         <a href="forgot-password.html">Forgot Password?</a>
         <br><br>
-        <br><br>
+        <a href="register.html" class="register-link" aria-label="Register as a new RIHULA member">
+            New Member? Register Here
+        </a>
     </div>
 </div>
 
