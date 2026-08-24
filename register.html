@@ -849,6 +849,20 @@ if (value.length < 8) {
 
                 if (
                     lowerMessage.includes(
+                        "database error saving new user"
+                    )
+                ) {
+
+                    message =
+                        "The registration database setup is not complete. " +
+                        "Run RIHULA-REGISTRATION-DATABASE-ERROR-FIX.sql in Supabase SQL Editor, then try again.";
+
+                }
+
+
+
+                if (
+                    lowerMessage.includes(
                         "password"
                     ) &&
                     lowerMessage.includes(

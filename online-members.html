@@ -48,6 +48,55 @@ document.addEventListener("DOMContentLoaded", async () => { const admin = await 
 <script src="script.js"></script>
 
 <script>
+async function loadOnlineCount() {
+    const onlineMembersList = document.getElementById("onlineMembersList");
+
+    if (!onlineMembersList) return;
+
+    onlineMembersList.innerHTML = `
+        <p style="text-align:center;">Loading online members...</p>
+    `;
+
+    try {
+        const { data, error } = await db
+    .from("members")
+            .select("id, name, phone, photo_url, last_seen")
+            .eq("online", true)
+            .order("name", { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            onlineMembersList.innerHTML = `
+                <p style="text-align:center;">
+                    No members are currently online.
+                </p>
+            `;
+            return;
+        }
+
+        onlineMembersList.innerHTML = data.map(member => `
+            <div class="member-card">
+                <div class="member-info">
+                    <strong>${member.name || "Unnamed Member"}</strong>
+                    <p>${member.phone || ""}</p>
+                </div>
+
+                <span class="online-status">🟢 Online</span>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        console.error("Online members error:", error);
+
+        onlineMembersList.innerHTML = `
+            <p style="text-align:center; color:red;">
+                Unable to load online members.
+            </p>
+        `;
+    }
+}
+
 loadOnlineCount();
 </script>
 

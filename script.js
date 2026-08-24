@@ -321,6 +321,35 @@ loadDashboardStats();
 loadLeaderboard();
     }
 }
+async function rejectMember(phone) {
+
+    const confirmed = confirm(
+        "Are you sure you want to reject this member?"
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await db
+        .from("members")
+        .update({
+            status: "rejected"
+        })
+        .eq("phone", phone);
+
+    if (error) {
+        showPopup(error.message);
+    } else {
+        showPopup("Member Rejected");
+
+        await addActivity(
+            "Rejected member: " + phone
+        );
+
+        loadMembers();
+        loadPendingMembers();
+        loadDashboardStats();
+    }
+}
 async function loadPendingMembers() {
 
     const body = document.getElementById("pendingMembersBody");
@@ -366,10 +395,15 @@ async function loadPendingMembers() {
             <p><strong>Phone:</strong> ${member.phone}</p>
             <p><strong>Status:</strong> ${member.status}</p>
 
-            <button class="btn"
-                onclick="approveMember('${member.phone}')">
-                Approve
-            </button>
+           <button class="btn"
+    onclick="approveMember('${member.phone}')">
+    ✅ Approve
+</button>
+
+<button class="btn"
+    onclick="rejectMember('${member.phone}')">
+    ❌ Reject
+</button>
         </div>
         `;
 
@@ -439,33 +473,33 @@ function logout() {
 
     container.innerHTML = "";
 
-    data.forEach(item => {
+    data.forEach(member => {
 
-        container.innerHTML += `
+    body.innerHTML += `
+    <div class="member-card">
+        <h3>${member.name}</h3>
 
-        <div class="card">
+        <p><strong>Phone:</strong> ${member.phone}</p>
 
-            <h3>${item.member_name}</h3>
+        <p><strong>Status:</strong> ${member.status}</p>
 
-            <p><strong>Phone:</strong> ${item.phone}</p>
-
-            <p><strong>Amount:</strong> KSh ${item.amount}</p>
+        <div class="member-actions">
 
             <button class="btn"
-                onclick="approveContribution(${item.id})">
+                onclick="approveMember('${member.phone}')">
                 ✅ Approve
             </button>
 
             <button class="btn"
-                onclick="rejectContribution(${item.id})">
+                onclick="rejectMember('${member.phone}')">
                 ❌ Reject
             </button>
 
         </div>
+    </div>
+    `;
 
-        `;
-    });
-
+});
 }
 
 document.addEventListener("DOMContentLoaded", () => {
