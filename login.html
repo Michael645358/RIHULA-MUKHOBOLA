@@ -8,6 +8,32 @@
 <link rel="stylesheet" href="rihula-modern-design.css">
 <link rel="stylesheet" href="rihula-v3-ui.css">
 <style>
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 52px;
+    box-sizing: border-box;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 40px;
+    height: 40px;
+
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    font-size: 19px;
+}
+
 .register-link {
     display: inline-block;
     margin-top: 2px;
@@ -55,13 +81,21 @@
     autocomplete="username">
     </div>
 
-    <div class="input-group">
-        <input
-            type="password"
-            id="password"
-            placeholder="🔒 Password"
-            autocomplete="current-password">
-    </div>
+    <div class="input-group password-wrapper">
+    <input
+        type="password"
+        id="password"
+        placeholder="🔒 Password"
+        autocomplete="current-password">
+
+    <button
+        type="button"
+        class="password-toggle"
+        onclick="togglePassword('password', this)"
+        aria-label="Show password">
+        👁️
+    </button>
+</div>
 
     <button onclick="login()" class="login-btn">Login</button>
 
@@ -92,7 +126,21 @@ async function redirectMember(member) {
     }
     window.location.href = "member.html";
 }
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
 
+    if (!input) return;
+
+    if (input.type === "password") {
+        input.type = "text";
+        button.textContent = "🙈";
+        button.setAttribute("aria-label", "Hide password");
+    } else {
+        input.type = "password";
+        button.textContent = "👁️";
+        button.setAttribute("aria-label", "Show password");
+    }
+}
 async function login() {
     const loginId = document.getElementById("loginId").value.trim();
     const password = document.getElementById("password").value;

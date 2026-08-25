@@ -1049,7 +1049,7 @@ document.getElementById("announcementsOnlyContainer");
 async function uploadProfilePhoto() {
 
     const user =
-        JSON.parse(localStorage.getItem("loggedUser"));
+        JSON.parse(localStorage.getItem("loggedUser") || "null");
 
     const input =
         document.getElementById("photoUpload");
@@ -1057,6 +1057,10 @@ async function uploadProfilePhoto() {
     const button =
         document.getElementById("uploadPhotoButton");
 
+
+    // =========================
+    // CHECK USER + FILE
+    // =========================
 
     if (
         !user ||
@@ -1076,7 +1080,7 @@ async function uploadProfilePhoto() {
 
 
     // =========================
-    // CHECK FILE TYPE
+    // CHECK IMAGE TYPE
     // =========================
 
     if (!file.type.startsWith("image/")) {
@@ -1092,8 +1096,7 @@ async function uploadProfilePhoto() {
 
 
     // =========================
-    // CHECK FILE SIZE
-    // Maximum 5MB
+    // MAXIMUM 5MB
     // =========================
 
     if (file.size > 5 * 1024 * 1024) {
@@ -1108,6 +1111,10 @@ async function uploadProfilePhoto() {
     }
 
 
+    // =========================
+    // BUTTON
+    // =========================
+
     if (button) {
 
         button.disabled = true;
@@ -1119,51 +1126,140 @@ async function uploadProfilePhoto() {
 
     try {
 
-        // =========================
-        // GET CUSTOM MEMBER SESSION
-        // =========================
+        // =================================
+        // GET REAL SUPABASE AUTH USER
+        // =================================
 
-        const authUser = JSON.parse(localStorage.getItem("loggedUser") || "null");
+        const {
+            data: {
+                user: authUser
+            },
+            error: authError
+        } = await db.auth.getUser();
 
-        if (!authUser || !authUser.id) {
+
+        if (authError || !authUser) {
+
+            console.error(
+                "SUPABASE AUTH ERROR:",
+                authError
+            );
+
             showPopup(
                 "Your login session has expired. Please log in again.",
                 "error"
             );
+
             return;
         }
 
 
-        // =========================
-        // FILE EXTENSION
-        // =========================
+        // =================================
+        // GET RIHULA MEMBER ID
+        // =================================
 
-        const extension =
-            file.name
-                .split(".")
-                .pop()
-                .toLowerCase();
+        const memberId =
+            user.id ||
+            user.member_id ||
+            user.memberId;
 
 
-        // =========================
-        // UNIQUE FILE NAME
-        // =========================
+        if (!memberId) {
+
+            console.error(
+                "RIHULA MEMBER DATA:",
+                user
+            );
+
+            showPopup(
+                "Your member account could not be identified.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        // =================================
+        // SAFE FILE EXTENSION
+        // =================================
+
+        let extension = "jpg";
+
+        if (file.type === "image/png") {
+
+            extension = "png";
+
+        } else if (file.type === "image/webp") {
+
+            extension = "webp";
+
+        } else if (
+            file.type === "image/jpeg" ||
+            file.type === "image/jpg"
+        ) {
+
+            extension = "jpg";
+        }
+
+
+        // =================================
+        // UNIQUE STORAGE PATH
+        // =================================
 
         const fileName =
-            `members/${authUser.id}/${Date.now()}.${extension}`;
+            `members/${memberId}/${Date.now()}.${extension}`;
 
 
         console.log(
-            "Uploading profile photo:",
+            "================================="
+        );
+
+        console.log(
+            "RIHULA PROFILE PHOTO UPLOAD"
+        );
+
+        console.log(
+            "Supabase Auth ID:",
+            authUser.id
+        );
+
+        console.log(
+            "RIHULA Member ID:",
+            memberId
+        );
+
+        console.log(
+            "File:",
+            file.name
+        );
+
+        console.log(
+            "Type:",
+            file.type
+        );
+
+        console.log(
+            "Size:",
+            file.size
+        );
+
+        console.log(
+            "Storage path:",
             fileName
         );
 
+        console.log(
+            "================================="
+        );
 
-        // =========================
-        // UPLOAD
-        // =========================
+
+        // =================================
+        // UPLOAD TO SUPABASE STORAGE
+        // =================================
 
         const {
+            data: uploadData,
             error: uploadError
         } = await db.storage
             .from("profile-pictures")
@@ -1172,7 +1268,10 @@ async function uploadProfilePhoto() {
                 file,
                 {
                     cacheControl: "3600",
-                    upsert: false
+
+                    contentType: file.type,
+
+                    upsert: true
                 }
             );
 
@@ -1180,23 +1279,41 @@ async function uploadProfilePhoto() {
         if (uploadError) {
 
             console.error(
-                "PROFILE PHOTO UPLOAD ERROR:",
+                "================================="
+            );
+
+            console.error(
+                "PROFILE PHOTO STORAGE ERROR"
+            );
+
+            console.error(
+                "Message:",
+                uploadError.message
+            );
+
+            console.error(
+                "Error:",
+                uploadError.error
+            );
+
+            console.error(
+                "Status:",
+                uploadError.statusCode
+            );
+
+            console.error(
+                "Full error:",
                 uploadError
             );
 
-            const storageMessage =
-                uploadError?.message ||
-                uploadError?.error_description ||
-                uploadError?.details ||
-                "Unknown Storage error";
-
             console.error(
-                "PROFILE PHOTO STORAGE DETAILS:",
-                storageMessage
+                "================================="
             );
 
+
             showPopup(
-                "Photo upload failed. Please check Supabase Storage setup.",
+                uploadError.message ||
+                "Photo upload failed. Please check Supabase Storage permissions.",
                 "error"
             );
 
@@ -1204,9 +1321,15 @@ async function uploadProfilePhoto() {
         }
 
 
-        // =========================
+        console.log(
+            "PHOTO UPLOAD SUCCESS:",
+            uploadData
+        );
+
+
+        // =================================
         // GET PUBLIC URL
-        // =========================
+        // =================================
 
         const {
             data: publicData
@@ -1221,6 +1344,10 @@ async function uploadProfilePhoto() {
 
         if (!photoUrl) {
 
+            console.error(
+                "Could not create public URL."
+            );
+
             showPopup(
                 "Photo uploaded but URL could not be created.",
                 "error"
@@ -1230,9 +1357,15 @@ async function uploadProfilePhoto() {
         }
 
 
-        // =========================
-        // SAVE URL TO MEMBER
-        // =========================
+        console.log(
+            "PROFILE PHOTO URL:",
+            photoUrl
+        );
+
+
+        // =================================
+        // SAVE URL IN MEMBERS TABLE
+        // =================================
 
         const {
             error: updateError
@@ -1243,7 +1376,7 @@ async function uploadProfilePhoto() {
             })
             .eq(
                 "id",
-                authUser.id
+                memberId
             );
 
 
@@ -1263,11 +1396,12 @@ async function uploadProfilePhoto() {
         }
 
 
-        // =========================
+        // =================================
         // UPDATE LOCAL USER
-        // =========================
+        // =================================
 
-        user.photo_url = photoUrl;
+        user.photo_url =
+            photoUrl;
 
         localStorage.setItem(
             "loggedUser",
@@ -1275,9 +1409,9 @@ async function uploadProfilePhoto() {
         );
 
 
-        // =========================
+        // =================================
         // UPDATE PROFILE IMAGE
-        // =========================
+        // =================================
 
         const profileImage =
             document.getElementById(
@@ -1290,19 +1424,39 @@ async function uploadProfilePhoto() {
             );
 
 
+        // Cache-busting so the new photo
+        // appears immediately
+
+        const displayUrl =
+            photoUrl +
+            "?t=" +
+            Date.now();
+
+
         if (profileImage) {
-            profileImage.src = photoUrl;
+
+            profileImage.src =
+                displayUrl;
         }
 
 
         if (profileScreenImage) {
-            profileScreenImage.src = photoUrl;
+
+            profileScreenImage.src =
+                displayUrl;
         }
 
 
-        // Clear file input
+        // =================================
+        // CLEAR INPUT
+        // =================================
+
         input.value = "";
 
+
+        // =================================
+        // SUCCESS
+        // =================================
 
         showPopup(
             "Profile photo updated successfully!",
@@ -1313,11 +1467,26 @@ async function uploadProfilePhoto() {
     } catch (error) {
 
         console.error(
+            "================================="
+        );
+
+        console.error(
             "PROFILE PHOTO ERROR:",
             error
         );
 
+        console.error(
+            "Message:",
+            error?.message
+        );
+
+        console.error(
+            "================================="
+        );
+
+
         showPopup(
+            error?.message ||
             "Something went wrong while uploading the photo.",
             "error"
         );
