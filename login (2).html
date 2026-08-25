@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Login</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
+<style>
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 52px;
+    box-sizing: border-box;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 40px;
+    height: 40px;
+
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    font-size: 19px;
+}
+
+.register-link {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: #0b8f6a;
+    color: #fff !important;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.register-link:hover,
+.register-link:focus {
+    opacity: .9;
+    transform: translateY(-1px);
+}
+</style>
+</head>
+<body>
+
+<div class="login-box">
+    <div>
+        <img src="images/logo.jpg" alt="Logo" width="100">
+    </div>
+
+    <h2>Member Login</h2>
+
+    <p style="margin-bottom:15px;">
+        <a href="admin-login.html">Admin Login</a><br><small>If you have both permissions, you can use the same email and password for Admin and Member access.</small>
+    </p>
+
+    <div class="security-notice">
+        <h3>Secure Member Login</h3>
+        <p>
+            This login page is only for registered members of
+            RIHULA MUKHOBOLA ASSOCIATION.
+        </p>
+    </div>
+
+    <div class="input-group">
+      <input
+    type="email"
+    id="loginId"
+    placeholder="📧 Email address"
+    autocomplete="username">
+    </div>
+
+    <div class="input-group password-wrapper">
+    <input
+        type="password"
+        id="password"
+        placeholder="🔒 Password"
+        autocomplete="current-password">
+
+    <button
+        type="button"
+        class="password-toggle"
+        onclick="togglePassword('password', this)"
+        aria-label="Show password">
+        👁️
+    </button>
+</div>
+
+    <button onclick="login()" class="login-btn">Login</button>
+
+    <div class="links">
+        <a href="forgot-password.html">Forgot Password?</a>
+        <br><br>
+        <a href="register.html" class="register-link" aria-label="Register as a new RIHULA member">
+            New Member? Register Here
+        </a>
+    </div>
+</div>
+
+<script src="popups.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
+<script src="supabase.js"></script>
+<script src="rihula-db-guard.js"></script>
+<script src="custom-auth.js"></script>
+<script>
+async function redirectMember(member) {
+    localStorage.setItem("loggedUser", JSON.stringify(member));
+    try {
+        await db.from("members").update({
+            last_seen: new Date().toISOString(),
+            online: true
+        }).eq("id", member.id);
+    } catch (e) {
+        console.warn("Could not update member presence:", e);
+    }
+    window.location.href = "member.html";
+}
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+
+    if (!input) return;
+
+    if (input.type === "password") {
+        input.type = "text";
+        button.textContent = "🙈";
+        button.setAttribute("aria-label", "Hide password");
+    } else {
+        input.type = "password";
+        button.textContent = "👁️";
+        button.setAttribute("aria-label", "Show password");
+    }
+}
+async function login() {
+    const loginId = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!loginId || !password) {
+        showPopup("Enter your email and password.", "warning");
+        return;
+    }
+
+    const button = document.querySelector(".login-btn");
+    if (button) { button.disabled = true; button.textContent = "Logging in..."; }
+
+    try {
+        const member = await RihulaCustomAuth.loginMember(loginId, password);
+
+        if (String(member.status || "").toLowerCase() === "pending") {
+            RihulaCustomAuth.clearSession();
+            showPopup("Your member account is not active yet. Please contact the RIHULA administrator.", "warning");
+            return;
+        }
+
+        if (["blocked", "suspended", "inactive"].includes(String(member.status || "").toLowerCase())) {
+            RihulaCustomAuth.clearSession();
+            showPopup("Your RIHULA account is currently inactive. Please contact an administrator.", "warning");
+            return;
+        }
+
+        await redirectMember(member);
+    } catch (error) {
+        console.error("CUSTOM LOGIN ERROR:", error);
+        showPopup(error.message || "Invalid email or password.", "error");
+    } finally {
+        if (button) { button.disabled = false; button.textContent = "Login"; }
+    }
+}
+</script>
+<script src="rihula-v3-ui.js"></script>
+</body>
+</html>
