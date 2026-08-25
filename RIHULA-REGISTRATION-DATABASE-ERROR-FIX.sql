@@ -1,10 +1,21 @@
 -- RIHULA REGISTRATION DATABASE ERROR FIX
--- Run this file in the SAME Supabase project used by supabase.js.
--- It fixes "Database error saving new user" caused by the auth.users trigger.
+-- Run this in the SAME Supabase project used by supabase.js.
+-- This fixes "Database error saving new user" caused by conflicting
+-- auth.users -> public.members triggers.
+
+begin;
 
 alter table public.members add column if not exists auth_id uuid;
 alter table public.members add column if not exists is_admin boolean not null default false;
 alter table public.members add column if not exists is_member boolean not null default true;
+
+-- IMPORTANT:
+-- The project previously had two triggers on auth.users. The old trigger
+-- calls handle_new_auth_user() and inserts into columns that do not exist
+-- in the current members table (for example full_name). That causes signup
+-- to fail with "Database error saving new user".
+drop trigger if exists on_auth_user_created on auth.users;
+drop trigger if exists on_auth_user_created_rihula on auth.users;
 
 create or replace function public.rihula_handle_new_auth_user()
 returns trigger
@@ -18,14 +29,14 @@ declare
   v_email text := lower(trim(coalesce(new.email,'')));
   v_member_id bigint;
 begin
-  -- If the profile was already created for this Auth user, keep it linked.
+  -- If this Auth user is already linked, do nothing.
   select m.id
     into v_member_id
   from public.members m
   where m.auth_id = new.id
   limit 1;
 
-  -- Prefer an existing unlinked member with the same email or phone.
+  -- Otherwise link an existing unlinked member with the same email or phone.
   if v_member_id is null then
     select m.id
       into v_member_id
@@ -50,6 +61,9 @@ begin
         email = case when v_email <> '' then v_email else email end,
         name = coalesce(nullif(v_name,''), name),
         phone = coalesce(nullif(v_phone,''), phone),
+        role = coalesce(nullif(role,''), 'member'),
+        status = coalesce(nullif(status,''), 'pending'),
+        online = coalesce(online, false),
         is_member = true
     where id = v_member_id;
   else
@@ -61,48 +75,16 @@ begin
   end if;
 
   return new;
-
-exception
-  when unique_violation then
-    -- A duplicate email/phone should not make Supabase Auth fail with the
-    -- generic "Database error saving new user" message.
-    select m.id
-      into v_member_id
-    from public.members m
-    where m.auth_id is null
-      and (
-        (v_email <> '' and lower(coalesce(m.email,'')) = v_email)
-        or
-        (
-          v_phone <> ''
-          and regexp_replace(coalesce(m.phone::text,''),'[^0-9]','','g')
-              = regexp_replace(v_phone,'[^0-9]','','g')
-        )
-      )
-    order by m.id
-    limit 1;
-
-    if v_member_id is not null then
-      update public.members
-      set auth_id = new.id,
-          email = case when v_email <> '' then v_email else email end,
-          name = coalesce(nullif(v_name,''), name),
-          phone = coalesce(nullif(v_phone,''), phone),
-          is_member = true
-      where id = v_member_id;
-      return new;
-    end if;
-
-    raise;
 end;
 $$;
 
-drop trigger if exists on_auth_user_created_rihula on auth.users;
+-- Install exactly ONE registration trigger.
 create trigger on_auth_user_created_rihula
 after insert on auth.users
-for each row execute function public.rihula_handle_new_auth_user();
+for each row
+execute function public.rihula_handle_new_auth_user();
 
--- Keep the existing member/admin access helper.
+-- Admin helper supports users who are both admin and member.
 create or replace function public.is_rihula_admin()
 returns boolean
 language sql
@@ -126,3 +108,5 @@ $$;
 
 revoke all on function public.is_rihula_admin() from public;
 grant execute on function public.is_rihula_admin() to authenticated;
+
+commit;

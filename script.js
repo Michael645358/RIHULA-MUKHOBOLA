@@ -466,40 +466,18 @@ function logout() {
         return;
     }
 
-    if (!data.length) {
+    if (!data || !data.length) {
         container.innerHTML = "<p>No pending contributions.</p>";
         return;
     }
 
-    container.innerHTML = "";
-
-    data.forEach(member => {
-
-    body.innerHTML += `
-    <div class="member-card">
-        <h3>${member.name}</h3>
-
-        <p><strong>Phone:</strong> ${member.phone}</p>
-
-        <p><strong>Status:</strong> ${member.status}</p>
-
-        <div class="member-actions">
-
-            <button class="btn"
-                onclick="approveMember('${member.phone}')">
-                ✅ Approve
-            </button>
-
-            <button class="btn"
-                onclick="rejectMember('${member.phone}')">
-                ❌ Reject
-            </button>
-
+    container.innerHTML = data.map(item => `
+        <div class="member-card">
+            <h3>${item.name || "Pending Contribution"}</h3>
+            <p><strong>Phone:</strong> ${item.phone || ""}</p>
+            <p><strong>Status:</strong> ${item.status || "Pending"}</p>
         </div>
-    </div>
-    `;
-
-});
+    `).join("");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

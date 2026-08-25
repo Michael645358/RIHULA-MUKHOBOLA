@@ -60,6 +60,7 @@ $$;
 
 -- 4. Install the Auth -> members trigger. It also links an existing legacy
 -- member during activation instead of creating a duplicate profile.
+drop trigger if exists on_auth_user_created on auth.users;
 drop trigger if exists on_auth_user_created_rihula on auth.users;
 create trigger on_auth_user_created_rihula
 after insert on auth.users

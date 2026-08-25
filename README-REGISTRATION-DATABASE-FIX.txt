@@ -1,16 +1,23 @@
 RIHULA REGISTRATION FIX
 
-The screenshot error:
-"Database error saving new user"
+The error "Database error saving new user" was caused by conflicting
+auth.users -> public.members triggers.
 
-This is caused by the Supabase auth.users -> public.members database trigger failing.
+Run ONLY:
+RIHULA-REGISTRATION-DATABASE-ERROR-FIX.sql
 
-1. Open Supabase Dashboard.
-2. Open SQL Editor in the SAME project configured in supabase.js.
-3. Run RIHULA-REGISTRATION-DATABASE-ERROR-FIX.sql.
-4. Confirm the SQL completes successfully.
-5. Retry registration with a new email.
+in the Supabase SQL Editor for the SAME project configured in supabase.js.
 
-The frontend now also shows a clearer message if the database trigger is still not installed.
+The fixed SQL removes the old trigger named:
+on_auth_user_created
+
+and installs one correct trigger:
+on_auth_user_created_rihula
+
+After SQL succeeds:
+1. Refresh the RIHULA website.
+2. Register a NEW member with a new email.
+3. The member should be created with status: pending.
+4. Open Pending Members as admin to Approve or Reject the member.
 
 Do not use the service_role key in frontend code.

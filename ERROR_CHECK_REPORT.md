@@ -1,16 +1,17 @@
-# RIHULA Error Check & Fix Report — 24 August 2026
+# RIHULA Error Check and Fix Report
 
 ## Fixed
-- Corrected Supabase RPC argument names in `finance.js`.
-- Corrected Supabase RPC argument names in `member.js`.
-- Corrected Supabase RPC argument names in `withdrawal-fix.js`.
-- The affected database functions use `p_phone`; the frontend was incorrectly sending `p_member_phone`.
-- This mismatch could cause member balance, rank, achievement, and withdrawal operations to fail with an RPC parameter error.
+- New member registration: conflicting auth.users triggers were the main cause of
+  "Database error saving new user".
+- Registration SQL now removes the old `on_auth_user_created` trigger and installs
+  only `on_auth_user_created_rihula`.
+- The old trigger could reference a non-existent `full_name` column.
+- Pending Members navigation is present in the admin dashboard.
+- Pending Members page has Approve and Reject actions.
+- `script.js` had a broken `loadPendingContributions()` block that wrote to an
+  undefined `body`; this was corrected.
+- `admin.html` had a duplicated Administration Tools opening section; this was corrected.
 
-## Validation
-- All JavaScript files pass `node --check`.
-- All inline JavaScript blocks inside the HTML files pass syntax validation.
-- Local HTML/CSS/JS references were checked; no missing local file references were found (telephone links were treated as external URI schemes).
-
-## Important
-The Supabase SQL/RLS setup still needs to be applied in the Supabase project if it has not already been run. Client-side code cannot create or modify database functions/RLS policies by itself.
+## Important Supabase step
+Run `RIHULA-REGISTRATION-DATABASE-ERROR-FIX.sql` once in the SQL Editor of the
+Supabase project configured in `supabase.js`, then test registration with a new email.

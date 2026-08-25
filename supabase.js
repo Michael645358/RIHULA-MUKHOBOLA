@@ -1,46 +1,10 @@
 /*
- * RIHULA Supabase client bootstrap
- * Fix: protects the app when the Supabase CDN is unavailable in a
- * local/mobile preview browser. A pinned fallback SDK is loaded before
- * createClient() is called.
+ * RIHULA Supabase Client Bootstrap
+ * Reliable initialization for local/mobile browser previews.
  */
+
 (function () {
     "use strict";
-
-    if (!window.supabase || typeof window.supabase.createClient !== "function") {
-        /*
-         * The CDN <script> tag is normally loaded by the HTML pages.
-         * If it failed, synchronously load a known-compatible fallback
-         * while the document is still being parsed.
-         */
-        var fallbackUrl =
-            "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
-
-        try {
-            document.write(
-                '<script src="' +
-                fallbackUrl.replace(/"/g, "&quot;") +
-                '"><\\/script>'
-            );
-        } catch (e) {
-            console.error("RIHULA: Could not load the Supabase fallback SDK.", e);
-        }
-    }
-
-    if (!window.supabase || typeof window.supabase.createClient !== "function") {
-        console.error(
-            "RIHULA: Supabase SDK is not available. " +
-            "Check the internet connection/CDN access in the browser preview."
-        );
-
-        // Keep a predictable global so dependent files can report the real
-        // problem instead of producing dozens of unrelated `db is not defined`
-        // errors.
-        window.db = null;
-        window.supabaseClient = null;
-        window.RIHULA_SUPABASE_READY = false;
-        return;
-    }
 
     const SUPABASE_URL =
         "https://qezbkcixzhdtntflljgy.supabase.co";
@@ -48,44 +12,162 @@
     const SUPABASE_KEY =
         "sb_publishable_lzTilJjSPerjRGlbuUpT-Q_WzonQy-d";
 
-    const client = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY,
-        {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        }
-    );
-
-    // Both names are retained because different RIHULA pages use them.
-    window.db = client;
-    window.supabaseClient = client;
-    window.RIHULA_SUPABASE_READY = true;
-
-    console.info("RIHULA: Supabase client initialized successfully.");
-
-    // OneSignal
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     /*
-     * Do not let OneSignal initialization prevent the rest of RIHULA from
-     * working in browsers/previews that do not support OneSignal.
+     * Create the Supabase client.
      */
-    if (window.OneSignalDeferred && typeof window.OneSignalDeferred.push === "function") {
-        OneSignalDeferred.push(async function (OneSignal) {
-            try {
-                await OneSignal.init({
-                    appId: "9785cd9a-e4e0-432b-b63c-8115c8a3b833",
-                    notifyButton: {
-                        enable: true
+    function initializeSupabase() {
+
+        if (
+            !window.supabase ||
+            typeof window.supabase.createClient !== "function"
+        ) {
+            return false;
+        }
+
+        try {
+
+            const client = window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY,
+                {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
                     }
-                });
-            } catch (error) {
-                console.warn("RIHULA: OneSignal unavailable in this browser.", error);
-            }
-        });
+                }
+            );
+
+            // Make both names available to all RIHULA pages.
+            window.db = client;
+            window.supabaseClient = client;
+
+            window.RIHULA_SUPABASE_READY = true;
+
+            console.info(
+                "RIHULA: Supabase client initialized successfully."
+            );
+
+            return true;
+
+        } catch (error) {
+
+            console.error(
+                "RIHULA: Supabase client creation failed:",
+                error
+            );
+
+            return false;
+        }
     }
+
+
+    /*
+     * If the CDN SDK is already available,
+     * initialize immediately.
+     */
+    if (initializeSupabase()) {
+        initializeOneSignal();
+        return;
+    }
+
+
+    /*
+     * Load fallback SDK asynchronously.
+     */
+    const fallbackUrl =
+        "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+
+    const fallbackScript =
+        document.createElement("script");
+
+    fallbackScript.src = fallbackUrl;
+    fallbackScript.async = false;
+
+
+    fallbackScript.onload = function () {
+
+        console.info(
+            "RIHULA: Supabase fallback SDK loaded."
+        );
+
+        if (!initializeSupabase()) {
+
+            console.error(
+                "RIHULA: Supabase SDK loaded, " +
+                "but the client could not be initialized."
+            );
+
+            window.db = null;
+            window.supabaseClient = null;
+            window.RIHULA_SUPABASE_READY = false;
+
+            return;
+        }
+
+        initializeOneSignal();
+    };
+
+
+    fallbackScript.onerror = function () {
+
+        console.error(
+            "RIHULA: Supabase SDK could not be loaded. " +
+            "Check internet/CDN access."
+        );
+
+        window.db = null;
+        window.supabaseClient = null;
+        window.RIHULA_SUPABASE_READY = false;
+    };
+
+
+    document.head.appendChild(fallbackScript);
+
+
+    /*
+     * OneSignal
+     */
+    function initializeOneSignal() {
+
+        window.OneSignalDeferred =
+            window.OneSignalDeferred || [];
+
+
+        if (
+            window.OneSignalDeferred &&
+            typeof window.OneSignalDeferred.push === "function"
+        ) {
+
+            window.OneSignalDeferred.push(
+                async function (OneSignal) {
+
+                    try {
+
+                        await OneSignal.init({
+                            appId:
+                                "9785cd9a-e4e0-432b-b63c-8115c8a3b833",
+
+                            notifyButton: {
+                                enable: true
+                            }
+                        });
+
+                        console.info(
+                            "RIHULA: OneSignal initialized."
+                        );
+
+                    } catch (error) {
+
+                        console.warn(
+                            "RIHULA: OneSignal unavailable in this browser.",
+                            error
+                        );
+                    }
+                }
+            );
+        }
+    }
+
 })();

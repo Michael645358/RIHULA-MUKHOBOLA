@@ -21,7 +21,8 @@
     const cleanEmail = String(email || "").trim().toLowerCase();
     const cleanName = String(name || "").trim();
     const cleanPhone = normalizeKenyanPhone(phone);
-    const redirect = new URL("auth-callback.html", window.location.href).href;
+    const redirect =
+    "https://michael645358.github.io/RIHULA-MUKHOBOLA/auth-callback.html";
 
     const { data, error } = await db.auth.signUp({
       email: cleanEmail,
