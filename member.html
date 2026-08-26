@@ -249,6 +249,10 @@ OneSignalDeferred.push(async function(OneSignal) {
         ← Back
     </button>
 
+    <button onclick="downloadStatement()" class="btn">
+        📥 Download Statement
+    </button>
+
     <h2>My Contribution History</h2>
 
     <div id="historyOnlyContainer"></div>
@@ -782,9 +786,12 @@ OneSignalDeferred.push(async function(OneSignal) {
 <script src="supabase.js"></script>
 <script src="rihula-db-guard.js"></script>
 <script src="custom-auth.js"></script>
-<script src="ai.js"></script>
 <script src="finance.js?v=20260824"></script>
-<script src="member.js?v=20260823"></script>
+<script src="ai.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="member.js"></script >
 <script src="v22.js"></script>
 
 <div id="memberStatusPopup" class="member-status-popup">

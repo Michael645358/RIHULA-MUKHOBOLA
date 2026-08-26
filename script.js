@@ -311,14 +311,14 @@ async function approveMember(phone) {
     } else {
         showPopup("Member Approved");
 
-await addActivity(
-    "Approved member: " + phone
-);
+if (typeof addActivity === "function") {
+    await addActivity("Approved member: " + phone);
+}
 
-loadMembers();
-loadPendingMembers();
-loadDashboardStats();
-loadLeaderboard();
+if (typeof loadMembers === "function") loadMembers();
+if (typeof loadPendingMembers === "function") loadPendingMembers();
+if (typeof loadDashboardStats === "function") loadDashboardStats();
+if (typeof loadLeaderboard === "function") loadLeaderboard();
     }
 }
 async function rejectMember(phone) {
@@ -341,13 +341,13 @@ async function rejectMember(phone) {
     } else {
         showPopup("Member Rejected");
 
-        await addActivity(
-            "Rejected member: " + phone
-        );
+        if (typeof addActivity === "function") {
+            await addActivity("Rejected member: " + phone);
+        }
 
-        loadMembers();
-        loadPendingMembers();
-        loadDashboardStats();
+        if (typeof loadMembers === "function") loadMembers();
+        if (typeof loadPendingMembers === "function") loadPendingMembers();
+        if (typeof loadDashboardStats === "function") loadDashboardStats();
     }
 }
 async function loadPendingMembers() {

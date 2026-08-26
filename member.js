@@ -2547,3 +2547,511 @@ async function loadContributionDayTotals() {
     });
 
 })();
+async function downloadStatement() {
+
+    try {
+
+        const user = JSON.parse(
+            localStorage.getItem("loggedUser")
+        );
+
+        if (!user || !user.phone) {
+            showPopup("Unable to identify member");
+            return;
+        }
+
+        const button = document.querySelector(
+            '[onclick="downloadStatement()"]'
+        );
+
+        if (button) {
+            button.disabled = true;
+            button.innerText = "⏳ Preparing...";
+        }
+
+        // ==============================
+        // GET CONTRIBUTIONS
+        // ==============================
+
+        const {
+            data: contributions,
+            error: contributionError
+        } = await db
+            .from("contributions")
+            .select("amount, created_at")
+            .eq("member_phone", String(user.phone))
+            .order("created_at", {
+                ascending: true
+            });
+
+        if (contributionError) {
+            throw contributionError;
+        }
+
+
+        // ==============================
+        // GET WITHDRAWALS
+        // ==============================
+
+        const {
+            data: withdrawals,
+            error: withdrawalError
+        } = await db
+            .from("withdrawals")
+            .select("amount, reason, created_at")
+            .eq("member_phone", String(user.phone))
+            .order("created_at", {
+                ascending: true
+            });
+
+        if (withdrawalError) {
+            throw withdrawalError;
+        }
+
+
+        // ==============================
+        // COMBINE TRANSACTIONS
+        // ==============================
+
+        const transactions = [];
+
+
+        (contributions || []).forEach(item => {
+
+            transactions.push({
+                type: "Contribution",
+                amount: Number(item.amount || 0),
+                date: item.created_at,
+                reason: "Savings contribution"
+            });
+
+        });
+
+
+        (withdrawals || []).forEach(item => {
+
+            transactions.push({
+                type: "Withdrawal",
+                amount: Number(item.amount || 0),
+                date: item.created_at,
+                reason:
+                    item.reason ||
+                    "Savings withdrawal"
+            });
+
+        });
+
+
+        // ==============================
+        // SORT BY DATE
+        // ==============================
+
+        transactions.sort(
+            (a, b) =>
+                new Date(a.date) -
+                new Date(b.date)
+        );
+
+
+        // ==============================
+        // CALCULATE TOTALS
+        // ==============================
+
+        let totalContributions = 0;
+        let totalWithdrawals = 0;
+
+
+        transactions.forEach(item => {
+
+            if (item.type === "Contribution") {
+
+                totalContributions += item.amount;
+
+            } else {
+
+                totalWithdrawals += item.amount;
+
+            }
+
+        });
+
+
+        const balance =
+            totalContributions -
+            totalWithdrawals;
+
+
+        // ==============================
+        // CREATE PDF
+        // ==============================
+
+        if (
+            !window.jspdf ||
+            !window.jspdf.jsPDF
+        ) {
+
+            throw new Error(
+                "jsPDF library is not loaded"
+            );
+
+        }
+
+
+        const {
+            jsPDF
+        } = window.jspdf;
+
+
+        const pdf = new jsPDF();
+
+
+        let y = 20;
+
+
+        // ==============================
+        // HEADER
+        // ==============================
+
+        pdf.setFontSize(18);
+
+        pdf.text(
+            "RIHULA MUKHOBOLA ASSOCIATION",
+            105,
+            y,
+            {
+                align: "center"
+            }
+        );
+
+
+        y += 10;
+
+
+        pdf.setFontSize(14);
+
+        pdf.text(
+            "MEMBER SAVINGS STATEMENT",
+            105,
+            y,
+            {
+                align: "center"
+            }
+        );
+
+
+        y += 20;
+
+
+        // ==============================
+        // MEMBER DETAILS
+        // ==============================
+
+        pdf.setFontSize(11);
+
+        pdf.text(
+            "Member: " +
+            (user.name || "Member"),
+            15,
+            y
+        );
+
+
+        y += 8;
+
+
+        pdf.text(
+            "Phone: " +
+            user.phone,
+            15,
+            y
+        );
+
+
+        y += 8;
+
+
+        pdf.text(
+            "Generated: " +
+            new Date().toLocaleDateString(),
+            15,
+            y
+        );
+
+
+        y += 15;
+
+
+        // ==============================
+        // TRANSACTION HISTORY
+        // ==============================
+
+        pdf.setFontSize(12);
+
+        pdf.text(
+            "TRANSACTION HISTORY",
+            15,
+            y
+        );
+
+
+        y += 10;
+
+
+        pdf.setFontSize(10);
+
+
+        if (transactions.length === 0) {
+
+            pdf.text(
+                "No transactions found.",
+                15,
+                y
+            );
+
+            y += 10;
+
+        }
+
+
+        transactions.forEach(item => {
+
+            // Create a new page when necessary
+            if (y > 275) {
+
+                pdf.addPage();
+
+                y = 20;
+
+            }
+
+
+            const date =
+                item.date
+                    ? new Date(
+                        item.date
+                    ).toLocaleDateString()
+                    : "";
+
+
+            const sign =
+                item.type === "Contribution"
+                    ? "+"
+                    : "-";
+
+
+            const amount =
+                Number(
+                    item.amount || 0
+                ).toLocaleString();
+
+
+            const line =
+                `${date} | ${item.type} | ${sign}KSh ${amount}`;
+
+
+            pdf.text(
+                line,
+                15,
+                y
+            );
+
+
+            y += 8;
+
+        });
+
+
+        // ==============================
+        // SUMMARY
+        // ==============================
+
+        if (y > 240) {
+
+            pdf.addPage();
+
+            y = 20;
+
+        }
+
+
+        y += 10;
+
+
+        pdf.setFontSize(12);
+
+
+        pdf.text(
+            "Total Contributions: KSh " +
+            totalContributions.toLocaleString(),
+            15,
+            y
+        );
+
+
+        y += 8;
+
+
+        pdf.text(
+            "Total Withdrawals: KSh " +
+            totalWithdrawals.toLocaleString(),
+            15,
+            y
+        );
+
+
+        y += 10;
+
+
+        pdf.setFontSize(14);
+
+
+        pdf.text(
+            "NET SAVINGS: KSh " +
+            balance.toLocaleString(),
+            15,
+            y
+        );
+
+
+        // ==============================
+        // ANDROID / SPCK PREVIEW SAVE
+        // ==============================
+
+        const safeName =
+            (user.name || "member")
+                .replace(
+                    /[^a-z0-9]/gi,
+                    "_"
+                )
+                .replace(
+                    /_+/g,
+                    "_"
+                )
+                .replace(
+                    /^_|_$/g,
+                    ""
+                )
+                .toLowerCase();
+
+
+        const fileName =
+            `RIHULA_Statement_${safeName || "member"}.pdf`;
+
+
+        // Convert PDF to Blob
+        const pdfBlob =
+            pdf.output("blob");
+
+
+        // Create temporary URL
+        const pdfUrl =
+            URL.createObjectURL(
+                pdfBlob
+            );
+
+
+        // ==============================
+        // ANDROID DOWNLOAD LINK
+        // ==============================
+
+        const downloadLink =
+            document.createElement("a");
+
+
+        downloadLink.href =
+            pdfUrl;
+
+
+        downloadLink.download =
+            fileName;
+
+
+        downloadLink.target =
+            "_blank";
+
+
+        downloadLink.rel =
+            "noopener";
+
+
+        downloadLink.style.display =
+            "none";
+
+
+        document.body.appendChild(
+            downloadLink
+        );
+
+
+        // Trigger Android download
+        downloadLink.click();
+
+
+        // ==============================
+        // CLEAN UP
+        // ==============================
+
+        setTimeout(() => {
+
+            if (
+                downloadLink.parentNode
+            ) {
+
+                downloadLink.parentNode
+                    .removeChild(
+                        downloadLink
+                    );
+
+            }
+
+
+            URL.revokeObjectURL(
+                pdfUrl
+            );
+
+        }, 5000);
+
+
+        // ==============================
+        // SUCCESS MESSAGE
+        // ==============================
+
+        showPopup(
+            "✅ Statement downloaded. Check My Files → Downloads."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Statement download error:",
+            error
+        );
+
+
+        showPopup(
+            "❌ Unable to download statement. Please try again."
+        );
+
+
+    } finally {
+
+        const button =
+            document.querySelector(
+                '[onclick="downloadStatement()"]'
+            );
+
+
+        if (button) {
+
+            button.disabled = false;
+
+
+            button.innerText =
+                "📥 Download Statement";
+
+        }
+
+    }
+
+}

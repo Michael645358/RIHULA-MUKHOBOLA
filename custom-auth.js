@@ -21,8 +21,8 @@
     const cleanEmail = String(email || "").trim().toLowerCase();
     const cleanName = String(name || "").trim();
     const cleanPhone = normalizeKenyanPhone(phone);
-    const redirect =
-    "https://michael645358.github.io/RIHULA-MUKHOBOLA/auth-callback.html";
+    // Use the current deployed site instead of a hard-coded GitHub account.
+    const redirect = new URL("auth-callback.html", window.location.href).href;
 
     const { data, error } = await db.auth.signUp({
       email: cleanEmail,

@@ -248,16 +248,48 @@ async function approveMember(phone) {
     } else {
         showPopup("Member approved successfully.", "success");
 
-await addActivity(
-    "Approved member: " + phone
-);
+if (typeof addActivity === "function") {
+    await addActivity("Approved member: " + phone);
+}
 
-loadMembers();
-loadPendingMembers();
-loadDashboardStats();
-loadLeaderboard();
+if (typeof loadMembers === "function") loadMembers();
+if (typeof loadPendingMembers === "function") loadPendingMembers();
+if (typeof loadDashboardStats === "function") loadDashboardStats();
+if (typeof loadLeaderboard === "function") loadLeaderboard();
     }
-}async function loadPendingMembers() {
+}
+
+async function rejectMember(phone) {
+
+    const confirmed = await showConfirm(
+        "Are you sure you want to reject this member?",
+        { title: "Reject member", confirmText: "Reject", danger: true }
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await db
+        .from("members")
+        .update({ status: "rejected" })
+        .eq("phone", phone);
+
+    if (error) {
+        showPopup(error.message, "error");
+        return;
+    }
+
+    showPopup("Member rejected.", "success");
+
+    if (typeof addActivity === "function") {
+        await addActivity("Rejected member: " + phone);
+    }
+
+    if (typeof loadMembers === "function") loadMembers();
+    if (typeof loadPendingMembers === "function") loadPendingMembers();
+    if (typeof loadDashboardStats === "function") loadDashboardStats();
+}
+
+async function loadPendingMembers() {
 
     const { data, error } = await db
         .from("members")
@@ -297,6 +329,11 @@ data.forEach(member => {
         <button onclick="approveMember('${member.phone}')"
                 class="btn">
             Approve
+        </button>
+
+        <button onclick="rejectMember('${member.phone}')"
+                class="btn">
+            Reject
         </button>
     </div>
     `;
