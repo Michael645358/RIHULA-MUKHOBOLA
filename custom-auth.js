@@ -17,6 +17,54 @@
     try { await db.auth.signOut(); } catch (_) {}
   }
   function getSessionMember() { try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); } catch (_) { return null; } }
+
+  function passkeysSupported() {
+    return !!(
+      window.PublicKeyCredential &&
+      navigator.credentials &&
+      typeof navigator.credentials.get === "function" &&
+      typeof navigator.credentials.create === "function"
+    );
+  }
+
+  async function registerPasskey() {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
+    if (!passkeysSupported()) {
+      throw new Error("This phone or browser does not support fingerprint/passkey login.");
+    }
+    if (!db?.auth?.registerPasskey) {
+      throw new Error("RIHULA passkey authentication is not enabled yet.");
+    }
+    const { data, error } = await db.auth.registerPasskey();
+    if (error) throw error;
+    return data;
+  }
+
+  async function loginWithPasskey() {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
+    if (!passkeysSupported()) {
+      throw new Error("This phone or browser does not support fingerprint/passkey login.");
+    }
+    if (!db?.auth?.signInWithPasskey) {
+      throw new Error("RIHULA passkey authentication is not enabled yet.");
+    }
+
+    const { data, error } = await db.auth.signInWithPasskey();
+    if (error) throw error;
+    if (!data?.user?.id) throw new Error("Fingerprint login could not identify your account.");
+
+    const { data: member, error: memberError } = await db
+      .from("members")
+      .select("*")
+      .eq("auth_id", data.user.id)
+      .single();
+
+    if (memberError || !member) throw new Error("Your member profile could not be found.");
+    if (member.is_member !== true) throw new Error("This account does not have member access.");
+
+    saveSession(member);
+    return member;
+  }
   async function registerMember({name, phone, email, password}) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     const cleanEmail = String(email || "").trim().toLowerCase();
@@ -69,5 +117,5 @@
     if (error) throw error;
     return { success: true };
   }
-  window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };
+  window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, loginWithPasskey, registerPasskey, passkeysSupported, changeMemberPassword, saveSession, clearSession, getSessionMember };
 })();

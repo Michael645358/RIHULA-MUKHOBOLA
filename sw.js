@@ -1,10 +1,15 @@
-const CACHE='rihula-v8-2026-08-26';
+const CACHE='rihula-v10-passkey-2026-08-27';
 const CORE=['./','./index.html','./offline.html','./style.css','./rihula-modern-design.css','./rihula-v3-ui.css','./rihula-v3-ui.js','./manifest.json','./images/logo.jpg','./images/icon-192.png','./images/icon-512.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
   const req=event.request;
   if(req.method!=='GET'||!req.url.startsWith(self.location.origin)) return;
+  // Authentication code must update immediately after deployment.
+  if(/\/(custom-auth|supabase|rihula-db-guard)\.js(?:\?|$)/.test(new URL(req.url).pathname)){
+    event.respondWith(fetch(req).then(res=>{if(res.ok){const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy))}return res}).catch(()=>caches.match(req)));
+    return;
+  }
   if(req.mode==='navigate'){
     event.respondWith(fetch(req).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy));return res}).catch(()=>caches.match(req).then(r=>r||caches.match('./offline.html'))));
     return;
