@@ -18,6 +18,7 @@
   }
   function getSessionMember() { try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); } catch (_) { return null; } }
   async function registerMember({name, phone, email, password}) {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     const cleanEmail = String(email || "").trim().toLowerCase();
     const cleanName = String(name || "").trim();
     const cleanPhone = normalizeKenyanPhone(phone);
@@ -39,6 +40,7 @@
     return { success: true, user: data.user, session: data.session };
   }
   async function loginMember(email, password) {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     const { data, error } = await db.auth.signInWithPassword({ email: String(email).trim().toLowerCase(), password });
     if (error) throw error;
     const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
@@ -47,6 +49,7 @@
     saveSession(member); return member;
   }
   async function changeMemberPassword(_memberId, currentPassword, newPassword) {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     if (String(newPassword || "").length < 8) {
       throw new Error("New password must contain at least 8 characters.");
     }

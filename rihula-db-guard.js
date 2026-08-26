@@ -1,81 +1,55 @@
 /*
  * RIHULA Supabase Database Guard
  *
- * Waits for Supabase instead of reporting a false error.
+ * Front-end readiness helper only.
+ * This file does NOT change the Supabase URL, key, Auth, tables or SQL.
  */
-
 (function () {
-
     "use strict";
 
-
     function databaseIsReady() {
-
-        return (
+        return !!(
             window.db &&
             window.RIHULA_SUPABASE_READY === true
         );
-
     }
 
+    window.waitForRihulaDb = function (timeoutMs) {
+        const timeout = Number(timeoutMs) > 0 ? Number(timeoutMs) : 15000;
 
-    /*
-     * If already ready, do nothing.
-     */
+        if (databaseIsReady()) {
+            return Promise.resolve(window.db);
+        }
+
+        return new Promise(function (resolve, reject) {
+            const started = Date.now();
+
+            const timer = setInterval(function () {
+                if (databaseIsReady()) {
+                    clearInterval(timer);
+                    resolve(window.db);
+                    return;
+                }
+
+                if (Date.now() - started >= timeout) {
+                    clearInterval(timer);
+                    reject(new Error(
+                        "RIHULA database is unavailable. Supabase could not be initialized."
+                    ));
+                }
+            }, 100);
+        });
+    };
+
     if (databaseIsReady()) {
-
-        console.info(
-            "RIHULA: Database ready."
-        );
-
+        console.info("RIHULA: Database ready.");
         return;
     }
 
-
-    /*
-     * Supabase may still be loading.
-     */
-    let attempts = 0;
-
-    const maxAttempts = 20;
-
-
-    const timer = setInterval(function () {
-
-        attempts++;
-
-
-        /*
-         * Supabase is now ready.
-         */
-        if (databaseIsReady()) {
-
-            clearInterval(timer);
-
-            console.info(
-                "RIHULA: Database ready."
-            );
-
-            return;
-        }
-
-
-        /*
-         * Do NOT show a red console.error.
-         *
-         * The first few attempts are normal because
-         * the Supabase CDN can take time to load.
-         */
-        if (attempts >= maxAttempts) {
-
-            clearInterval(timer);
-
-            console.warn(
-                "RIHULA: Supabase did not become ready."
-            );
-
-        }
-
-    }, 500);
-
+    // Do not emit a red error while the CDN SDK is still loading.
+    window.waitForRihulaDb(15000).then(function () {
+        console.info("RIHULA: Database ready.");
+    }).catch(function () {
+        console.warn("RIHULA: Supabase did not become ready.");
+    });
 })();

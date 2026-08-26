@@ -1,5 +1,3 @@
-
-console.log("DB:", db);
 async function addMember() {
 
     const name =
@@ -448,6 +446,13 @@ function logout() {
 
     window.location.href = "login.html";
 }async function loadPendingContributions() {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Pending contributions wait failed.", error.message);
+        return;
+    }
+
 
     const container = document.getElementById("pendingContributions");
 

@@ -14,6 +14,9 @@
   }
 
   async function getAdminUser() {
+    if (typeof window.waitForRihulaDb === "function") {
+      await window.waitForRihulaDb();
+    }
     if (!window.db) throw new Error("Supabase is not initialized.");
 
     const { data: authData, error: authError } = await window.db.auth.getUser();

@@ -2,10 +2,6 @@
 if (window.RihulaAdmin) {
     RihulaAdmin.requireAdmin();
 }
-
-
-console.log("DB:", db);
-
 async function recordContribution() {
 
     const phone =

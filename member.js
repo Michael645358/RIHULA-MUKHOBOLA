@@ -1,4 +1,11 @@
 async function loadMemberData() {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Database not ready yet.", error.message);
+        return;
+    }
+
 
     const { data: authData, error: authError } = await db.auth.getUser();
     if (authError || !authData || !authData.user) {
@@ -546,168 +553,137 @@ function showGroupGoal() {
     document.getElementById("groupGoalScreen").style.display = "block";
 }
 
+function getContributionCollectionDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const day = date.getDay(); // Sun=0 ... Sat=6
+    let daysBack;
+
+    // Saturday collection covers Saturday, Sunday, Monday and Tuesday.
+    if (day === 6 || day === 0 || day === 1 || day === 2) {
+        daysBack = day === 6 ? 0 : day + 1;
+    } else {
+        // Wednesday collection covers Wednesday, Thursday and Friday.
+        daysBack = day - 3;
+    }
+
+    const collectionDate = new Date(date);
+    collectionDate.setDate(collectionDate.getDate() - daysBack);
+    collectionDate.setHours(0, 0, 0, 0);
+    return collectionDate;
+}
+
+function formatContributionCollectionDate(value) {
+    const date = getContributionCollectionDate(value);
+    return date
+        ? date.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        })
+        : "";
+}
+
 async function loadContributionHistory(phone) {
 
     try {
 
-        // Get contributions
         const { data: contributions, error: contributionError } =
             await db
                 .from("contributions")
                 .select("amount, created_at")
                 .eq("member_phone", String(phone));
 
-
         if (contributionError) {
-            console.error(
-                "Contribution history error:",
-                contributionError
-            );
+            console.error("Contribution history error:", contributionError);
             return;
         }
 
-
-        // Get withdrawals
         const { data: withdrawals, error: withdrawalError } =
             await db
                 .from("withdrawals")
                 .select("amount, reason, created_at")
                 .eq("member_phone", String(phone));
 
-
         if (withdrawalError) {
-            console.error(
-                "Withdrawal history error:",
-                withdrawalError
-            );
+            console.error("Withdrawal history error:", withdrawalError);
             return;
         }
 
-
         const history = [];
 
-
-        // Add contributions
+        // Keep every contribution amount, but display it under its official
+        // collection day (Sat for Sat-Tue, Wed for Wed-Fri).
         (contributions || []).forEach(item => {
-
             history.push({
                 type: "contribution",
                 amount: Number(item.amount || 0),
                 reason: "Contribution",
-                created_at: item.created_at
+                created_at: item.created_at,
+                collection_date: getContributionCollectionDate(item.created_at)
             });
-
         });
 
-
-        // Add withdrawals
         (withdrawals || []).forEach(item => {
-
             history.push({
                 type: "withdrawal",
                 amount: Number(item.amount || 0),
                 reason: item.reason || "Savings withdrawal",
-                created_at: item.created_at
+                created_at: item.created_at,
+                collection_date: null
             });
-
         });
 
+        history.sort((a, b) => {
+            const aDate = a.collection_date || new Date(a.created_at);
+            const bDate = b.collection_date || new Date(b.created_at);
+            return bDate - aDate;
+        });
 
-        // Newest first
-        history.sort(
-            (a, b) =>
-                new Date(b.created_at) -
-                new Date(a.created_at)
-        );
-
-
-        const container =
-            document.getElementById(
-                "historyOnlyContainer"
-            );
-
-
+        const container = document.getElementById("historyOnlyContainer");
         if (!container) return;
 
-
         if (history.length === 0) {
-
-            container.innerHTML =
-                "<p>No savings activity yet.</p>";
-
+            container.innerHTML = "<p>No savings activity yet.</p>";
             return;
         }
 
-
         container.innerHTML = "";
 
-
         history.forEach(item => {
-
-            const date =
-                item.created_at
-                    ? new Date(
-                        item.created_at
-                    ).toLocaleDateString()
-                    : "";
-
+            const date = item.type === "contribution"
+                ? formatContributionCollectionDate(item.created_at)
+                : (item.created_at
+                    ? new Date(item.created_at).toLocaleDateString("en-GB")
+                    : "");
 
             if (item.type === "withdrawal") {
-
                 container.innerHTML += `
-
                     <div class="card">
-
                         <h3 style="color:#c0392b;">
                             💸 -KSh ${item.amount.toLocaleString()}
                         </h3>
-
-                        <p>
-                            ${item.reason}
-                        </p>
-
-                        <small>
-                            ${date}
-                        </small>
-
+                        <p>${item.reason}</p>
+                        <small>${date}</small>
                     </div>
-
                 `;
-
             } else {
-
                 container.innerHTML += `
-
                     <div class="card">
-
                         <h3 style="color:#087f4f;">
                             💰 +KSh ${item.amount.toLocaleString()}
                         </h3>
-
-                        <p>
-                            Contribution
-                        </p>
-
-                        <small>
-                            ${date}
-                        </small>
-
+                        <p>Contribution • Collection day</p>
+                        <small>${date}</small>
                     </div>
-
                 `;
-
             }
-
         });
 
-
     } catch (error) {
-
-        console.error(
-            "Savings history error:",
-            error
-        );
-
+        console.error("Savings history error:", error);
     }
 }
 async function loadSavingsStats(phone) {
@@ -1888,6 +1864,13 @@ async function saveRecoveryInfo() {
     showPopup("Recovery information saved successfully");
 }
 async function updateUnreadCount() {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Database not ready yet.", error.message);
+        return;
+    }
+
 
     const user =
         JSON.parse(localStorage.getItem("loggedUser"));
@@ -1912,6 +1895,13 @@ async function updateUnreadCount() {
         count > 0 ? "flex" : "none";
 }
 async function updateOnlineStatus(isOnline) {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Database not ready yet.", error.message);
+        return;
+    }
+
 
     const user =
         JSON.parse(localStorage.getItem("loggedUser"));
@@ -1927,6 +1917,13 @@ async function updateOnlineStatus(isOnline) {
         .eq("phone", user.phone);
 }
 async function loadOnlineMembers() {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Database not ready yet.", error.message);
+        return;
+    }
+
 
     const fiveMinutesAgo =
 new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -2037,6 +2034,13 @@ async function deleteMessage(id) {
     loadMessages();
 }
 async function updateLastSeen() {
+    try {
+        await window.waitForRihulaDb();
+    } catch (error) {
+        console.warn("RIHULA: Database not ready yet.", error.message);
+        return;
+    }
+
 
     const user = JSON.parse(localStorage.getItem("loggedUser"));
 
@@ -2319,150 +2323,64 @@ function copyMpesaNumber() {
 
     temp.remove();
 }
+function getMostRecentWeekdayDate(value, targetDay) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const diff = (date.getDay() - targetDay + 7) % 7;
+    date.setDate(date.getDate() - diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}
+
 async function loadContributionDayTotals() {
-
     try {
-
         const { data, error } = await db
             .from("contributions")
             .select("amount, created_at");
 
         if (error) {
-            console.error(
-                "Contribution day error:",
-                error
-            );
+            console.error("Contribution day error:", error);
             return;
         }
 
         const contributions = data || [];
         const now = new Date();
 
-        /*
-         * Find the most recent completed Wednesday
-         */
-
-        const wednesday = new Date(now);
-        const currentDay = wednesday.getDay();
-
-        let daysSinceWednesday =
-            (currentDay - 3 + 7) % 7;
-
-        // If today is Wednesday, use today
-        wednesday.setDate(
-            wednesday.getDate() - daysSinceWednesday
-        );
-
-        wednesday.setHours(0, 0, 0, 0);
-
-        /*
-         * Find the most recent completed Saturday
-         */
-
-        const saturday = new Date(now);
-
-        let daysSinceSaturday =
-            (currentDay - 6 + 7) % 7;
-
-        saturday.setDate(
-            saturday.getDate() - daysSinceSaturday
-        );
-
-        saturday.setHours(0, 0, 0, 0);
-
-
-        /*
-         * End of each contribution day
-         */
-
-        const nextWednesday =
-            new Date(wednesday);
-
-        nextWednesday.setDate(
-            nextWednesday.getDate() + 1
-        );
-
-        const nextSaturday =
-            new Date(saturday);
-
-        nextSaturday.setDate(
-            nextSaturday.getDate() + 1
-        );
-
+        const currentSaturday = getMostRecentWeekdayDate(now, 6);
+        const currentWednesday = getMostRecentWeekdayDate(now, 3);
 
         let wednesdayTotal = 0;
         let saturdayTotal = 0;
 
-
         contributions.forEach(item => {
+            const collectionDate = getContributionCollectionDate(item.created_at);
+            if (!collectionDate) return;
 
-            if (!item.created_at) return;
+            const amount = Number(item.amount || 0);
 
-            const date =
-                new Date(item.created_at);
-
-            if (Number.isNaN(date.getTime())) {
-                return;
-            }
-
-            const amount =
-                Number(item.amount || 0);
-
-
-            // Wednesday
-            if (
-                date >= wednesday &&
-                date < nextWednesday
-            ) {
-                wednesdayTotal += amount;
-            }
-
-
-            // Saturday
-            if (
-                date >= saturday &&
-                date < nextSaturday
-            ) {
+            if (collectionDate.getTime() === currentSaturday.getTime()) {
                 saturdayTotal += amount;
             }
 
+            if (collectionDate.getTime() === currentWednesday.getTime()) {
+                wednesdayTotal += amount;
+            }
         });
 
-
-        const wednesdayEl =
-            document.getElementById(
-                "wednesdayAmount"
-            );
-
-        const saturdayEl =
-            document.getElementById(
-                "saturdayAmount"
-            );
-
+        const wednesdayEl = document.getElementById("wednesdayAmount");
+        const saturdayEl = document.getElementById("saturdayAmount");
 
         if (wednesdayEl) {
-            wednesdayEl.innerText =
-                "KSh " +
-                wednesdayTotal.toLocaleString() +
-                " collected";
+            wednesdayEl.innerText = "KSh " + wednesdayTotal.toLocaleString() + " collected";
         }
-
 
         if (saturdayEl) {
-            saturdayEl.innerText =
-                "KSh " +
-                saturdayTotal.toLocaleString() +
-                " collected";
+            saturdayEl.innerText = "KSh " + saturdayTotal.toLocaleString() + " collected";
         }
 
-
     } catch (error) {
-
-        console.error(
-            "Contribution day error:",
-            error
-        );
-
+        console.error("Contribution day error:", error);
     }
 }
 /* =========================================================
@@ -2547,511 +2465,231 @@ async function loadContributionDayTotals() {
     });
 
 })();
+function createSimplePdf(lines, title) {
+    const pageWidth = 595;
+    const pageHeight = 842;
+    const margin = 40;
+    const lineHeight = 16;
+    const maxLines = 46;
+
+    const pages = [];
+    let page = [];
+    lines.forEach(line => {
+        if (page.length >= maxLines) {
+            pages.push(page);
+            page = [];
+        }
+        page.push(String(line));
+    });
+    if (page.length || !pages.length) pages.push(page);
+
+    const objects = [];
+    const addObject = body => {
+        objects.push(body);
+        return objects.length;
+    };
+
+    const catalogId = addObject("");
+    const pagesId = addObject("");
+    const fontId = addObject("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+    const pageIds = [];
+
+    pages.forEach(pageLines => {
+        const commands = ["BT", "/F1 10 Tf", `${margin} ${pageHeight - 55} Td`];
+        pageLines.forEach((line, index) => {
+            const safe = line
+                .replace(/[^\x20-\x7E]/g, "?")
+                .replace(/\\/g, "\\\\")
+                .replace(/\(/g, "\\(")
+                .replace(/\)/g, "\\)");
+            if (index > 0) commands.push(`0 -${lineHeight} Td`);
+            commands.push(`(${safe}) Tj`);
+        });
+        commands.push("ET");
+        const stream = commands.join("\n");
+        const contentId = addObject(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+        const pageId = addObject(
+            `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`
+        );
+        pageIds.push(pageId);
+    });
+
+    objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+    objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
+
+    let pdf = "%PDF-1.4\n%RIHULA\n";
+    const offsets = [0];
+    objects.forEach((obj, i) => {
+        offsets.push(pdf.length);
+        pdf += `${i + 1} 0 obj\n${obj}\nendobj\n`;
+    });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 1; i < offsets.length; i++) {
+        pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+
+    return new Blob([pdf], { type: "application/pdf" });
+}
+
+function saveStatementPdf(blob, fileName, pwaWindow) {
+    const pdfUrl = URL.createObjectURL(blob);
+    const isPwa = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+
+    if (isPwa) {
+        if (pwaWindow && !pwaWindow.closed) {
+            pwaWindow.location.href = pdfUrl;
+        } else {
+            // Popup blockers can still stop a blank window. Navigate the PWA
+            // directly to the generated PDF as the final fallback.
+            window.location.href = pdfUrl;
+        }
+    } else {
+        const link = document.createElement("a");
+        link.href = pdfUrl;
+        link.download = fileName;
+        link.rel = "noopener";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+}
+
 async function downloadStatement() {
+    const button = document.querySelector('[onclick="downloadStatement()"]');
+    const isPwa = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    let pwaWindow = null;
+
+    // Open a blank tab immediately while the click is still user-initiated.
+    // After the async Supabase reads finish, the generated PDF is loaded into it.
+    if (isPwa) {
+        pwaWindow = window.open("about:blank", "_blank");
+    }
 
     try {
-
-        const user = JSON.parse(
-            localStorage.getItem("loggedUser")
-        );
-
+        const user = JSON.parse(localStorage.getItem("loggedUser"));
         if (!user || !user.phone) {
-            showPopup("Unable to identify member");
+            showPopup("Unable to identify member", "error");
             return;
         }
-
-        const button = document.querySelector(
-            '[onclick="downloadStatement()"]'
-        );
 
         if (button) {
             button.disabled = true;
             button.innerText = "⏳ Preparing...";
         }
 
-        // ==============================
-        // GET CONTRIBUTIONS
-        // ==============================
-
-        const {
-            data: contributions,
-            error: contributionError
-        } = await db
+        const { data: contributions, error: contributionError } = await db
             .from("contributions")
             .select("amount, created_at")
             .eq("member_phone", String(user.phone))
-            .order("created_at", {
-                ascending: true
-            });
+            .order("created_at", { ascending: true });
 
-        if (contributionError) {
-            throw contributionError;
-        }
+        if (contributionError) throw contributionError;
 
-
-        // ==============================
-        // GET WITHDRAWALS
-        // ==============================
-
-        const {
-            data: withdrawals,
-            error: withdrawalError
-        } = await db
+        const { data: withdrawals, error: withdrawalError } = await db
             .from("withdrawals")
             .select("amount, reason, created_at")
             .eq("member_phone", String(user.phone))
-            .order("created_at", {
-                ascending: true
-            });
+            .order("created_at", { ascending: true });
 
-        if (withdrawalError) {
-            throw withdrawalError;
-        }
+        if (withdrawalError) throw withdrawalError;
 
-
-        // ==============================
-        // COMBINE TRANSACTIONS
-        // ==============================
-
-        const transactions = [];
-
-
+        // Group contributions by the official collection day:
+        // Sat/Sun/Mon/Tue -> Saturday; Wed/Thu/Fri -> Wednesday.
+        const contributionGroups = new Map();
         (contributions || []).forEach(item => {
-
-            transactions.push({
+            const collectionDate = getContributionCollectionDate(item.created_at);
+            if (!collectionDate) return;
+            const key = [collectionDate.getFullYear(), collectionDate.getMonth() + 1, collectionDate.getDate()].join("-");
+            const existing = contributionGroups.get(key) || {
                 type: "Contribution",
-                amount: Number(item.amount || 0),
-                date: item.created_at,
+                amount: 0,
+                date: collectionDate,
                 reason: "Savings contribution"
-            });
-
+            };
+            existing.amount += Number(item.amount || 0);
+            contributionGroups.set(key, existing);
         });
 
-
-        (withdrawals || []).forEach(item => {
-
-            transactions.push({
+        const transactions = [
+            ...Array.from(contributionGroups.values()),
+            ...(withdrawals || []).map(item => ({
                 type: "Withdrawal",
                 amount: Number(item.amount || 0),
                 date: item.created_at,
-                reason:
-                    item.reason ||
-                    "Savings withdrawal"
-            });
-
-        });
-
-
-        // ==============================
-        // SORT BY DATE
-        // ==============================
-
-        transactions.sort(
-            (a, b) =>
-                new Date(a.date) -
-                new Date(b.date)
-        );
-
-
-        // ==============================
-        // CALCULATE TOTALS
-        // ==============================
+                reason: item.reason || "Savings withdrawal"
+            }))
+        ].sort((a, b) => new Date(a.date) - new Date(b.date));
 
         let totalContributions = 0;
         let totalWithdrawals = 0;
-
-
         transactions.forEach(item => {
-
-            if (item.type === "Contribution") {
-
-                totalContributions += item.amount;
-
-            } else {
-
-                totalWithdrawals += item.amount;
-
-            }
-
+            if (item.type === "Contribution") totalContributions += item.amount;
+            else totalWithdrawals += item.amount;
         });
 
+        const balance = totalContributions - totalWithdrawals;
 
-        const balance =
-            totalContributions -
-            totalWithdrawals;
-
-
-        // ==============================
-        // CREATE PDF
-        // ==============================
-
-        if (
-            !window.jspdf ||
-            !window.jspdf.jsPDF
-        ) {
-
-            throw new Error(
-                "jsPDF library is not loaded"
-            );
-
-        }
-
-
-        const {
-            jsPDF
-        } = window.jspdf;
-
-
-        const pdf = new jsPDF();
-
-
-        let y = 20;
-
-
-        // ==============================
-        // HEADER
-        // ==============================
-
-        pdf.setFontSize(18);
-
-        pdf.text(
+        const lines = [
             "RIHULA MUKHOBOLA ASSOCIATION",
-            105,
-            y,
-            {
-                align: "center"
-            }
-        );
-
-
-        y += 10;
-
-
-        pdf.setFontSize(14);
-
-        pdf.text(
             "MEMBER SAVINGS STATEMENT",
-            105,
-            y,
-            {
-                align: "center"
-            }
-        );
-
-
-        y += 20;
-
-
-        // ==============================
-        // MEMBER DETAILS
-        // ==============================
-
-        pdf.setFontSize(11);
-
-        pdf.text(
-            "Member: " +
-            (user.name || "Member"),
-            15,
-            y
-        );
-
-
-        y += 8;
-
-
-        pdf.text(
-            "Phone: " +
-            user.phone,
-            15,
-            y
-        );
-
-
-        y += 8;
-
-
-        pdf.text(
-            "Generated: " +
-            new Date().toLocaleDateString(),
-            15,
-            y
-        );
-
-
-        y += 15;
-
-
-        // ==============================
-        // TRANSACTION HISTORY
-        // ==============================
-
-        pdf.setFontSize(12);
-
-        pdf.text(
+            "",
+            `Member: ${user.name || "Member"}`,
+            `Phone: ${user.phone}`,
+            `Generated: ${new Date().toLocaleDateString("en-GB")}`,
+            "",
             "TRANSACTION HISTORY",
-            15,
-            y
-        );
+            ""
+        ];
 
-
-        y += 10;
-
-
-        pdf.setFontSize(10);
-
-
-        if (transactions.length === 0) {
-
-            pdf.text(
-                "No transactions found.",
-                15,
-                y
-            );
-
-            y += 10;
-
+        if (!transactions.length) {
+            lines.push("No transactions found.");
+        } else {
+            transactions.forEach(item => {
+                const date = item.type === "Contribution"
+                    ? formatContributionCollectionDate(item.date)
+                    : new Date(item.date).toLocaleDateString("en-GB");
+                const sign = item.type === "Contribution" ? "+" : "-";
+                lines.push(`${date} | ${item.type} | ${sign}KSh ${item.amount.toLocaleString()}`);
+            });
         }
 
-
-        transactions.forEach(item => {
-
-            // Create a new page when necessary
-            if (y > 275) {
-
-                pdf.addPage();
-
-                y = 20;
-
-            }
-
-
-            const date =
-                item.date
-                    ? new Date(
-                        item.date
-                    ).toLocaleDateString()
-                    : "";
-
-
-            const sign =
-                item.type === "Contribution"
-                    ? "+"
-                    : "-";
-
-
-            const amount =
-                Number(
-                    item.amount || 0
-                ).toLocaleString();
-
-
-            const line =
-                `${date} | ${item.type} | ${sign}KSh ${amount}`;
-
-
-            pdf.text(
-                line,
-                15,
-                y
-            );
-
-
-            y += 8;
-
-        });
-
-
-        // ==============================
-        // SUMMARY
-        // ==============================
-
-        if (y > 240) {
-
-            pdf.addPage();
-
-            y = 20;
-
-        }
-
-
-        y += 10;
-
-
-        pdf.setFontSize(12);
-
-
-        pdf.text(
-            "Total Contributions: KSh " +
-            totalContributions.toLocaleString(),
-            15,
-            y
+        lines.push(
+            "",
+            "SUMMARY",
+            `Total Contributions: KSh ${totalContributions.toLocaleString()}`,
+            `Total Withdrawals: KSh ${totalWithdrawals.toLocaleString()}`,
+            `NET SAVINGS: KSh ${balance.toLocaleString()}`
         );
 
+        const safeName = (user.name || "member")
+            .replace(/[^a-z0-9]/gi, "_")
+            .replace(/_+/g, "_")
+            .replace(/^_|_$/g, "")
+            .toLowerCase();
+        const fileName = `RIHULA_Statement_${safeName || "member"}.pdf`;
 
-        y += 8;
-
-
-        pdf.text(
-            "Total Withdrawals: KSh " +
-            totalWithdrawals.toLocaleString(),
-            15,
-            y
-        );
-
-
-        y += 10;
-
-
-        pdf.setFontSize(14);
-
-
-        pdf.text(
-            "NET SAVINGS: KSh " +
-            balance.toLocaleString(),
-            15,
-            y
-        );
-
-
-        // ==============================
-        // ANDROID / SPCK PREVIEW SAVE
-        // ==============================
-
-        const safeName =
-            (user.name || "member")
-                .replace(
-                    /[^a-z0-9]/gi,
-                    "_"
-                )
-                .replace(
-                    /_+/g,
-                    "_"
-                )
-                .replace(
-                    /^_|_$/g,
-                    ""
-                )
-                .toLowerCase();
-
-
-        const fileName =
-            `RIHULA_Statement_${safeName || "member"}.pdf`;
-
-
-        // Convert PDF to Blob
-        const pdfBlob =
-            pdf.output("blob");
-
-
-        // Create temporary URL
-        const pdfUrl =
-            URL.createObjectURL(
-                pdfBlob
-            );
-
-
-        // ==============================
-        // ANDROID DOWNLOAD LINK
-        // ==============================
-
-        const downloadLink =
-            document.createElement("a");
-
-
-        downloadLink.href =
-            pdfUrl;
-
-
-        downloadLink.download =
-            fileName;
-
-
-        downloadLink.target =
-            "_blank";
-
-
-        downloadLink.rel =
-            "noopener";
-
-
-        downloadLink.style.display =
-            "none";
-
-
-        document.body.appendChild(
-            downloadLink
-        );
-
-
-        // Trigger Android download
-        downloadLink.click();
-
-
-        // ==============================
-        // CLEAN UP
-        // ==============================
-
-        setTimeout(() => {
-
-            if (
-                downloadLink.parentNode
-            ) {
-
-                downloadLink.parentNode
-                    .removeChild(
-                        downloadLink
-                    );
-
-            }
-
-
-            URL.revokeObjectURL(
-                pdfUrl
-            );
-
-        }, 5000);
-
-
-        // ==============================
-        // SUCCESS MESSAGE
-        // ==============================
+        const pdfBlob = createSimplePdf(lines, "MEMBER SAVINGS STATEMENT");
+        saveStatementPdf(pdfBlob, fileName, pwaWindow);
 
         showPopup(
-            "✅ Statement downloaded. Check My Files → Downloads."
+            window.matchMedia && window.matchMedia("(display-mode: standalone)").matches
+                ? "✅ Statement opened. Use the PDF viewer's Download button to save it."
+                : "✅ Statement download started.",
+            "success"
         );
-
 
     } catch (error) {
-
-        console.error(
-            "Statement download error:",
-            error
-        );
-
-
-        showPopup(
-            "❌ Unable to download statement. Please try again."
-        );
-
-
+        console.error("Statement download error:", error);
+        showPopup("❌ Unable to create statement. Please try again.", "error");
     } finally {
-
-        const button =
-            document.querySelector(
-                '[onclick="downloadStatement()"]'
-            );
-
-
         if (button) {
-
             button.disabled = false;
-
-
-            button.innerText =
-                "📥 Download Statement";
-
+            button.innerText = "📥 Download Statement";
         }
-
     }
-
 }
+

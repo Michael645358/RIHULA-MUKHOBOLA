@@ -18,6 +18,7 @@
   }
 
   window.processWithdrawal = async function (phone, amount, reason) {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     if (!window.db) throw new Error("Supabase is not initialized.");
     phone = cleanPhone(phone);
     amount = money(amount);
@@ -46,6 +47,7 @@
   };
 
   window.getWithdrawalBalance = async function (phone) {
+    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     if (!window.db) throw new Error("Supabase is not initialized.");
     const { data, error } = await window.db.rpc("get_member_finance", {
       p_phone: cleanPhone(phone)

@@ -74,6 +74,13 @@
   }
 
   async function loadMemberAchievements() {
+    try {
+      await window.waitForRihulaDb();
+    } catch (error) {
+      console.warn("RIHULA: Achievements database not ready.", error.message);
+      return;
+    }
+
     const user = (() => {
       try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); }
       catch (_) { return null; }
