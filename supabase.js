@@ -34,7 +34,10 @@
                     auth: {
                         persistSession: true,
                         autoRefreshToken: true,
-                        detectSessionInUrl: true
+                        detectSessionInUrl: true,
+                        // Supabase Passkeys / WebAuthn (experimental)
+                        // is required for fingerprint / Face Unlock login.
+                        experimental: { passkey: true }
                     }
                 }
             );
@@ -77,7 +80,7 @@
      * Load fallback SDK asynchronously.
      */
     const fallbackUrl =
-        "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+        "https://unpkg.com/@supabase/supabase-js@2.105.0/dist/umd/supabase.js";
 
     const fallbackScript =
         document.createElement("script");
