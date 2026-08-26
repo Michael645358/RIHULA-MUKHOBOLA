@@ -27,33 +27,71 @@
     );
   }
 
+  async function ensurePasskeyClient() {
+    if (typeof window.waitForRihulaDb === "function") {
+      try { await window.waitForRihulaDb(); } catch (_) {}
+    }
+
+    // A previously cached client may have been created without the
+    // experimental passkey flag. Recreate it explicitly so old cached
+    // RIHULA pages cannot disable passkeys.
+    if (window.db?.auth?.registerPasskey && window.db?.auth?.signInWithPasskey) {
+      return window.db;
+    }
+
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("RIHULA authentication library is unavailable. Please refresh the page.");
+    }
+
+    const url = "https://qezbkcixzhdtntflljgy.supabase.co";
+    const key = "sb_publishable_lzTilJjSPerjRGlbuUpT-Q_WzonQy-d";
+
+    try {
+      const client = window.supabase.createClient(url, key, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          experimental: { passkey: true }
+        }
+      });
+      window.db = client;
+      window.supabaseClient = client;
+      window.RIHULA_SUPABASE_READY = true;
+      return client;
+    } catch (error) {
+      console.error("RIHULA: passkey client initialization failed:", error);
+      throw new Error("RIHULA could not enable fingerprint/passkey login. Please refresh and try again.");
+    }
+  }
+
   async function registerPasskey() {
-    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
+    const client = await ensurePasskeyClient();
     if (!passkeysSupported()) {
       throw new Error("This phone or browser does not support fingerprint/passkey login.");
     }
-    if (!db?.auth?.registerPasskey) {
-      throw new Error("RIHULA passkey authentication is not enabled yet.");
+    if (!client?.auth?.registerPasskey) {
+      throw new Error("RIHULA passkey authentication is not available in this browser.");
     }
-    const { data, error } = await db.auth.registerPasskey();
+    const { data, error } = await client.auth.registerPasskey();
     if (error) throw error;
     return data;
   }
 
   async function loginWithPasskey() {
-    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
+    const client = await ensurePasskeyClient();
     if (!passkeysSupported()) {
       throw new Error("This phone or browser does not support fingerprint/passkey login.");
     }
-    if (!db?.auth?.signInWithPasskey) {
-      throw new Error("RIHULA passkey authentication is not enabled yet.");
+    if (!client?.auth?.signInWithPasskey) {
+      throw new Error("RIHULA passkey authentication is not available in this browser.");
     }
 
-    const { data, error } = await db.auth.signInWithPasskey();
+    const { data, error } = await client.auth.signInWithPasskey();
     if (error) throw error;
     if (!data?.user?.id) throw new Error("Fingerprint login could not identify your account.");
 
-    const { data: member, error: memberError } = await db
+    const { data: member, error: memberError } = await client
       .from("members")
       .select("*")
       .eq("auth_id", data.user.id)
