@@ -147,7 +147,7 @@
 
                         await OneSignal.init({
                             appId:
-                                "9785cd9a-e4e0-432b-b63c-8115c8a3b833",
+                                "453dc903-a736-4d52-b7e2-8b45f4f7da61",
 
                             notifyButton: {
                                 enable: true

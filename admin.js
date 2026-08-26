@@ -30,6 +30,25 @@ async function recordContribution() {
 
         showPopup("Contribution saved successfully.", "success");
 
+        // Push notification is deliberately AFTER the existing insert succeeds.
+        // If push delivery fails, the contribution remains saved exactly as before.
+        try {
+            const pushResult = await db.functions.invoke("send-rihula-push", {
+                body: {
+                    member_phone: phone,
+                    title: "Saving Approved",
+                    message: `Your KSh ${Number(amount).toLocaleString()} saving has been approved and recorded successfully.`,
+                    url: "member.html"
+                }
+            });
+
+            if (pushResult.error) {
+                console.warn("RIHULA push notification failed:", pushResult.error);
+            }
+        } catch (pushError) {
+            console.warn("RIHULA push notification failed:", pushError);
+        }
+
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
 

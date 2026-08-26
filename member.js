@@ -32,6 +32,23 @@ async function loadMemberData() {
 
         user = data;
 
+        // Link this authenticated RIHULA member to OneSignal using the
+        // same Supabase Auth UUID targeted by the push Edge Function.
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        if (typeof window.OneSignalDeferred.push === "function") {
+            window.OneSignalDeferred.push(async function (OneSignal) {
+                try {
+                    await OneSignal.login(String(authData.user.id));
+                    console.info("RIHULA: OneSignal member identity linked.");
+                } catch (oneSignalError) {
+                    console.warn(
+                        "RIHULA: OneSignal member identity could not be linked.",
+                        oneSignalError
+                    );
+                }
+            });
+        }
+
         localStorage.setItem(
             "loggedUser",
             JSON.stringify(user)
