@@ -51,7 +51,12 @@
   }
   async function changeMemberPassword(_memberId, currentPassword, newPassword) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-    if (String(newPassword || "").length < 8) {
+
+    const current = String(currentPassword || "");
+    const next = String(newPassword || "");
+
+    if (!current) throw new Error("Enter your current password.");
+    if (next.length < 8) {
       throw new Error("New password must contain at least 8 characters.");
     }
 
@@ -60,14 +65,19 @@
       throw new Error("Your secure login session has expired. Please log in again.");
     }
 
-    const { error: verifyError } = await db.auth.signInWithPassword({
+    // Re-authenticate the currently signed-in member before changing the password.
+    const { data: reauthData, error: verifyError } = await db.auth.signInWithPassword({
       email: authData.user.email,
-      password: String(currentPassword || "")
+      password: current
     });
-    if (verifyError) throw new Error("Current password is incorrect.");
+    if (verifyError || !reauthData?.user?.id) {
+      throw new Error("Current password is incorrect.");
+    }
 
-    const { error } = await db.auth.updateUser({ password: newPassword });
-    if (error) throw error;
+    // Supabase Auth is the source of truth for the member's password.
+    const { error: updateError } = await db.auth.updateUser({ password: next });
+    if (updateError) throw updateError;
+
     return { success: true };
   }
   window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };
