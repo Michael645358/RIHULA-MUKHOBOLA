@@ -35,9 +35,6 @@
                         persistSession: true,
                         autoRefreshToken: true,
                         detectSessionInUrl: true,
-                        // Supabase Passkeys / WebAuthn (experimental)
-                        // is required for fingerprint / Face Unlock login.
-                        experimental: { passkey: true }
                     }
                 }
             );

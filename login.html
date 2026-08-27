@@ -99,15 +99,6 @@
 
     <button onclick="login()" class="login-btn">Login</button>
 
-    <button
-        type="button"
-        id="passkeyLoginButton"
-        class="passkey-btn"
-        onclick="loginWithFingerprint()">
-        👆 Login with Fingerprint / Passkey
-    </button>
-    <p class="passkey-note">Uses your phone's fingerprint, Face Unlock, PIN, or device passkey.</p>
-
     <div class="links">
         <a href="forgot-password.html">Forgot Password?</a>
         <br><br>
@@ -121,7 +112,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.105.0/dist/umd/supabase.js'"></script>
 <script src="supabase.js?v=20260826-0835"></script>
 <script src="rihula-db-guard.js?v=20260826-0835"></script>
-<script src="custom-auth.js?v=20260827-0155"></script>
+<script src="custom-auth.js?v=20260826-0835"></script>
 <script>
 async function redirectMember(member) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
@@ -151,63 +142,6 @@ function togglePassword(inputId, button) {
         button.setAttribute("aria-label", "Show password");
     }
 }
-async function loginWithFingerprint() {
-    const button = document.getElementById("passkeyLoginButton");
-    if (button) {
-        button.disabled = true;
-        button.textContent = "👆 Waiting for fingerprint...";
-    }
-
-    try {
-        const member = await RihulaCustomAuth.loginWithPasskey();
-
-        if (String(member.status || "").toLowerCase() === "pending") {
-            await RihulaCustomAuth.clearSession();
-            showPopup("Your member account is not active yet. Please contact the RIHULA administrator.", "warning");
-            return;
-        }
-
-        if (["blocked", "suspended", "inactive"].includes(String(member.status || "").toLowerCase())) {
-            await RihulaCustomAuth.clearSession();
-            showPopup("Your RIHULA account is currently inactive. Please contact an administrator.", "warning");
-            return;
-        }
-
-        await redirectMember(member);
-    } catch (error) {
-        console.error("PASSKEY LOGIN ERROR:", error);
-        showPopup(error.message || "Fingerprint/passkey login failed. You can still use your password.", "error");
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "👆 Login with Fingerprint / Passkey";
-        }
-    }
-}
-
-async function offerPasskeyEnrollment() {
-    try {
-        if (!RihulaCustomAuth.passkeysSupported()) return;
-        if (!db?.auth?.registerPasskey) return;
-
-        const alreadyAsked = sessionStorage.getItem("rihulaPasskeyAsked");
-        if (alreadyAsked === "1") return;
-        sessionStorage.setItem("rihulaPasskeyAsked", "1");
-
-        const wants = window.confirm(
-            "Make your RIHULA login faster and more secure?\n\n" +
-            "You can use your phone fingerprint, Face Unlock, PIN, or passkey next time."
-        );
-        if (!wants) return;
-
-        await RihulaCustomAuth.registerPasskey();
-        showPopup("Fingerprint/passkey login is now enabled on this device.", "success");
-    } catch (error) {
-        console.warn("PASSKEY ENROLLMENT SKIPPED:", error);
-        // Never block a normal password login if passkey enrollment fails/cancelled.
-    }
-}
-
 async function login() {
     const loginId = document.getElementById("loginId").value.trim();
     const password = document.getElementById("password").value;
@@ -235,7 +169,6 @@ async function login() {
             return;
         }
 
-        await offerPasskeyEnrollment();
         await redirectMember(member);
     } catch (error) {
         console.error("CUSTOM LOGIN ERROR:", error);
