@@ -16,7 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
 <script src="supabase.js?v=20260826-0835"></script>
 <script src="rihula-db-guard.js?v=20260826-0835"></script>
-<script src="admin-auth.js?v=20260826-0835"></script>
+<script src="admin-auth.js?v=20260827-activity"></script>
 <script>
 document.documentElement.style.visibility = "hidden";
 (async function () {
@@ -474,7 +474,7 @@ document.documentElement.style.visibility = "hidden";
 </div>
 
 <script src="popups.js?v=20260826-0835"></script>
-<script src="admin.js?v=20260826-0835"></script>
+<script src="admin.js?v=20260827-activity"></script>
 
 <script>
 async function adminLogout() {
@@ -567,11 +567,13 @@ async function loadRecentActivity() {
                 ? new Date(item.created_at).toLocaleString()
                 : "Unknown time";
 
+            const adminName = item.admin_name || "Admin";
+
             return `
                 <div class="admin-activity-item">
                     <span class="activity-dot"></span>
                     <div>
-                        <strong>${escapeAdminHtml(item.action || "Admin activity")}</strong>
+                        <strong>${escapeAdminHtml(adminName)}: ${escapeAdminHtml(item.action || "Admin activity")}</strong>
                         <small>${escapeAdminHtml(date)}</small>
                     </div>
                 </div>
@@ -632,11 +634,18 @@ async function refreshAdminDashboard() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
     loadAdminOverview();
     loadRecentActivity();
     setRefreshTime();
+
+    if (!sessionStorage.getItem("rihulaAdminActivityLogged") && window.RihulaAdmin) {
+        if (await RihulaAdmin.logActivity("Opened Admin Dashboard")) {
+            sessionStorage.setItem("rihulaAdminActivityLogged", "true");
+            loadRecentActivity();
+        }
+    }
 
     const goalButton = document.getElementById("updateGroupGoalBtn");
 

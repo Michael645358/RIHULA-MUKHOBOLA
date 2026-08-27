@@ -10,6 +10,7 @@
   function clearAdminSession() {
     sessionStorage.removeItem("adminVerified");
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem("rihulaAdminActivityLogged");
     localStorage.removeItem("adminAccess");
   }
 
@@ -69,8 +70,26 @@
     }
   }
 
+  async function logActivity(action) {
+    try {
+      if (!window.db || !action) return false;
+      const { error } = await window.db.rpc("log_admin_activity", {
+        p_action: String(action).trim()
+      });
+      if (error) {
+        console.warn("Admin activity log failed:", error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn("Admin activity log failed:", error);
+      return false;
+    }
+  }
+
   async function adminLogout() {
     try {
+      await logActivity("Signed out of Admin Dashboard");
       await window.db.auth.signOut();
     } catch (error) {
       console.warn("Admin sign out:", error);
@@ -79,5 +98,5 @@
     location.replace("admin-login.html");
   }
 
-  window.RihulaAdmin = { getAdminUser, requireAdmin, adminLogout, clearAdminSession };
+  window.RihulaAdmin = { getAdminUser, requireAdmin, adminLogout, clearAdminSession, logActivity };
 })();

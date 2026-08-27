@@ -17,7 +17,6 @@
     try { await db.auth.signOut(); } catch (_) {}
   }
   function getSessionMember() { try { return JSON.parse(localStorage.getItem("loggedUser") || "null"); } catch (_) { return null; } }
-
   async function registerMember({name, phone, email, password}) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
     const cleanEmail = String(email || "").trim().toLowerCase();
@@ -51,12 +50,7 @@
   }
   async function changeMemberPassword(_memberId, currentPassword, newPassword) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-
-    const current = String(currentPassword || "");
-    const next = String(newPassword || "");
-
-    if (!current) throw new Error("Enter your current password.");
-    if (next.length < 8) {
+    if (String(newPassword || "").length < 8) {
       throw new Error("New password must contain at least 8 characters.");
     }
 
@@ -65,19 +59,14 @@
       throw new Error("Your secure login session has expired. Please log in again.");
     }
 
-    // Re-authenticate the currently signed-in member before changing the password.
-    const { data: reauthData, error: verifyError } = await db.auth.signInWithPassword({
+    const { error: verifyError } = await db.auth.signInWithPassword({
       email: authData.user.email,
-      password: current
+      password: String(currentPassword || "")
     });
-    if (verifyError || !reauthData?.user?.id) {
-      throw new Error("Current password is incorrect.");
-    }
+    if (verifyError) throw new Error("Current password is incorrect.");
 
-    // Supabase Auth is the source of truth for the member's password.
-    const { error: updateError } = await db.auth.updateUser({ password: next });
-    if (updateError) throw updateError;
-
+    const { error } = await db.auth.updateUser({ password: newPassword });
+    if (error) throw error;
     return { success: true };
   }
   window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };

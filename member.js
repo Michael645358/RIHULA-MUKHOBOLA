@@ -1843,6 +1843,43 @@ async function loadNotifications() {
     `;
 });
 }
+async function saveRecoveryInfo() {
+
+    const user =
+        JSON.parse(localStorage.getItem("loggedUser"));
+
+        console.log("Logged User:", user.name);
+
+    const answer1 =
+        document.getElementById("answer1").value;
+
+    const answer2 =
+        document.getElementById("answer2").value;
+
+    const idNumber =
+        document.getElementById("idNumber").value;
+
+    if (!answer1 || !answer2 || !idNumber) {
+        showPopup("Fill all fields");
+        return;
+    }
+
+    const { error } = await db
+        .from("members")
+        .update({
+            answer1: answer1,
+            answer2: answer2,
+            id_number: idNumber
+        })
+        .eq("phone", user.phone);
+
+    if (error) {
+        showPopup(error.message);
+        return;
+    }
+
+    showPopup("Recovery information saved successfully");
+}
 async function updateUnreadCount() {
     try {
         await window.waitForRihulaDb();

@@ -684,19 +684,10 @@ function searchMembers() {
     });
 }
 async function addActivity(action) {
-
-    const { error } = await db
-        .from("activity_logs")
-        .insert([
-            {
-                admin_name: "Admin",
-                action: action
-            }
-        ]);
-
-    if (error) {
-        console.log(error.message);
+    if (window.RihulaAdmin && typeof RihulaAdmin.logActivity === "function") {
+        return RihulaAdmin.logActivity(action);
     }
+    return false;
 }
 async function loadOnlineCount() {
 
