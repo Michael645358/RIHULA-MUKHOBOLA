@@ -51,6 +51,7 @@ async function recordContribution() {
 
         document.getElementById("contributorPhone").value = "";
         document.getElementById("contributionAmount").value = "";
+        loadRecentActivity();
 
         loadLeaderboard();
         loadStats();
@@ -145,6 +146,7 @@ async function editMember() {
         showPopup(error.message, "error");
     } else {
         showPopup("Member updated successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
     }
 }
 
@@ -171,6 +173,7 @@ async function editContribution() {
         showPopup(error.message, "error");
     } else {
         showPopup("Contribution updated successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
     }
 }
 async function loadMembers() {
@@ -246,6 +249,7 @@ async function deleteMember(phone) {
         showPopup(error.message, "error");
     } else {
         showPopup("Member deleted successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
         loadMembers();
     }
 }
@@ -262,10 +266,7 @@ async function approveMember(phone) {
         showPopup(error.message, "error");
     } else {
         showPopup("Member approved successfully.", "success");
-
-if (typeof addActivity === "function") {
-    await addActivity("Approved member: " + phone);
-}
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
 
 if (typeof loadMembers === "function") loadMembers();
 if (typeof loadPendingMembers === "function") loadPendingMembers();
@@ -295,9 +296,6 @@ async function rejectMember(phone) {
 
     showPopup("Member rejected.", "success");
 
-    if (typeof addActivity === "function") {
-        await addActivity("Rejected member: " + phone);
-    }
 
     if (typeof loadMembers === "function") loadMembers();
     if (typeof loadPendingMembers === "function") loadPendingMembers();
@@ -454,6 +452,7 @@ async function addAnnouncement() {
         document.getElementById(
             "announcementMessage"
         ).value = "";
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
     }
 }
 async function loadAnnouncementsList() {
@@ -507,6 +506,7 @@ async function deleteAnnouncement(id) {
         showPopup("Could not delete the announcement: " + error.message, "error");
     } else {
         showPopup("Announcement deleted successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
         loadAnnouncementsList();
     }
 }
@@ -874,6 +874,8 @@ async function updateGroupGoal() {
         currentGoal.innerText = "KSh " + newGoal.toLocaleString();
     }
 
+    if (typeof loadRecentActivity === "function") loadRecentActivity();
+
     showPopup(
         "Group goal updated successfully.\n\nNew goal: KSh " +
         newGoal.toLocaleString(),
@@ -928,6 +930,8 @@ async function recordWithdrawal() {
             const el = document.getElementById(id);
             if (el) el.value = "";
         });
+
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
 
         if (typeof refreshRihulaFinance === "function") await refreshRihulaFinance();
         else {

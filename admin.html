@@ -89,6 +89,11 @@ document.documentElement.style.visibility = "hidden";
                 <span>Gallery</span>
             </a>
 
+            <a href="admin-activities.html" class="admin-nav-item">
+                <span>🕘</span>
+                <span>Admin Activities</span>
+            </a>
+
         </nav>
 
         <div class="admin-sidebar-bottom">
@@ -393,33 +398,17 @@ document.documentElement.style.visibility = "hidden";
                         <small>Correct a contribution</small>
                     </a>
 
-                </div>
+                    <a href="admin-activities.html" class="admin-tool">
+                        <span>🕘</span>
+                        <strong>Admin Activities</strong>
+                        <small>View the complete admin audit trail</small>
+                    </a>
+</div>
 
             </section>
 
 
             <section class="admin-two-column">
-
-                <article class="admin-panel-card">
-
-                    <div class="admin-card-heading">
-                        <div>
-                            <span class="admin-card-kicker">Activity</span>
-                            <h3>Recent Admin Activity</h3>
-                        </div>
-                        <span class="admin-card-icon">🕘</span>
-                    </div>
-
-                    <div id="recentActivity" class="admin-activity-list">
-                        <div class="admin-empty-state">
-                            <span>⏳</span>
-                            <p>Loading recent activity...</p>
-                        </div>
-                    </div>
-
-                </article>
-
-
                 <article class="admin-panel-card system-card">
 
                     <div class="admin-card-heading">
@@ -537,72 +526,6 @@ async function loadAdminOverview() {
     }
 }
 
-async function loadRecentActivity() {
-
-    const container = document.getElementById("recentActivity");
-
-    try {
-
-        const { data, error } = await db
-            .from("activity_logs")
-            .select("*")
-            .order("created_at", { ascending: false })
-            .limit(6);
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-            container.innerHTML = `
-                <div class="admin-empty-state">
-                    <span>📋</span>
-                    <p>No admin activity recorded yet.</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = data.map(item => {
-
-            const date = item.created_at
-                ? new Date(item.created_at).toLocaleString()
-                : "Unknown time";
-
-            const adminName = item.admin_name || "Admin";
-
-            return `
-                <div class="admin-activity-item">
-                    <span class="activity-dot"></span>
-                    <div>
-                        <strong>${escapeAdminHtml(adminName)}: ${escapeAdminHtml(item.action || "Admin activity")}</strong>
-                        <small>${escapeAdminHtml(date)}</small>
-                    </div>
-                </div>
-            `;
-
-        }).join("");
-
-    } catch (error) {
-
-        console.warn("Activity log unavailable:", error);
-
-        container.innerHTML = `
-            <div class="admin-empty-state">
-                <span>📋</span>
-                <p>Activity log is not available yet.</p>
-            </div>
-        `;
-    }
-}
-
-function escapeAdminHtml(value) {
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
 function setRefreshTime() {
     document.getElementById("lastRefresh").textContent =
         new Date().toLocaleTimeString([], {
@@ -621,7 +544,6 @@ async function refreshAdminDashboard() {
 
     await Promise.all([
         loadAdminOverview(),
-        loadRecentActivity(),
         typeof loadAdminGroupGoal === "function"
             ? loadAdminGroupGoal()
             : Promise.resolve()
@@ -637,15 +559,7 @@ async function refreshAdminDashboard() {
 document.addEventListener("DOMContentLoaded", async () => {
 
     loadAdminOverview();
-    loadRecentActivity();
     setRefreshTime();
-
-    if (!sessionStorage.getItem("rihulaAdminActivityLogged") && window.RihulaAdmin) {
-        if (await RihulaAdmin.logActivity("Opened Admin Dashboard")) {
-            sessionStorage.setItem("rihulaAdminActivityLogged", "true");
-            loadRecentActivity();
-        }
-    }
 
     const goalButton = document.getElementById("updateGroupGoalBtn");
 
