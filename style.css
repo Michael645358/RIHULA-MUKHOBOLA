@@ -5148,3 +5148,92 @@ th,td{border-bottom:1px solid var(--border);padding:12px 10px}
         font-size: 30px;
     }
 }
+/* =========================================================
+   RIHULA MEMBER NAVIGATION - SINGLE SCREEN MODE
+   Only the active member screen may be visible.
+   ========================================================= */
+#dashboardScreen,
+#historyScreen,
+#announcementsScreen,
+#profileScreen,
+#leadersScreen,
+#groupMembersScreen,
+#groupGoalScreen,
+#contributeScreen,
+#chatScreen,
+#aiScreen {
+    box-sizing: border-box;
+}
+
+#dashboardScreen:not(.active),
+#historyScreen:not(.active),
+#announcementsScreen:not(.active),
+#profileScreen:not(.active),
+#leadersScreen:not(.active),
+#groupMembersScreen:not(.active),
+#groupGoalScreen:not(.active),
+#contributeScreen:not(.active),
+#chatScreen:not(.active),
+#aiScreen:not(.active),
+#dashboardScreen[hidden],
+#historyScreen[hidden],
+#announcementsScreen[hidden],
+#profileScreen[hidden],
+#leadersScreen[hidden],
+#groupMembersScreen[hidden],
+#groupGoalScreen[hidden],
+#contributeScreen[hidden],
+#chatScreen[hidden],
+#aiScreen[hidden] {
+    display: none !important;
+}
+
+#dashboardScreen.active,
+#historyScreen.active,
+#announcementsScreen.active,
+#profileScreen.active,
+#leadersScreen.active,
+#groupMembersScreen.active,
+#groupGoalScreen.active,
+#contributeScreen.active,
+#chatScreen.active,
+#aiScreen.active {
+    display: block !important;
+}
+
+/* RIHULA MEMBER NAVIGATION: only one screen can be visible. */
+#dashboardScreen:not(.active),
+#historyScreen:not(.active),
+#announcementsScreen:not(.active),
+#profileScreen:not(.active),
+#leadersScreen:not(.active),
+#groupMembersScreen:not(.active),
+#groupGoalScreen:not(.active),
+#contributeScreen:not(.active),
+#chatScreen:not(.active),
+#aiScreen:not(.active),
+#dashboardScreen[hidden],
+#historyScreen[hidden],
+#announcementsScreen[hidden],
+#profileScreen[hidden],
+#leadersScreen[hidden],
+#groupMembersScreen[hidden],
+#groupGoalScreen[hidden],
+#contributeScreen[hidden],
+#chatScreen[hidden],
+#aiScreen[hidden] {
+    display: none !important;
+}
+
+#dashboardScreen.active,
+#historyScreen.active,
+#announcementsScreen.active,
+#profileScreen.active,
+#leadersScreen.active,
+#groupMembersScreen.active,
+#groupGoalScreen.active,
+#contributeScreen.active,
+#chatScreen.active,
+#aiScreen.active {
+    display: block !important;
+}

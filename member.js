@@ -171,138 +171,107 @@ setInterval(() => {
     updateLastSeen();
     loadOnlineMembers();
 }, 30000); // Refresh every 30 seconds
-function showHistory() {
-
-    document.getElementById("dashboardScreen")
-        .style.display = "none";
-
-    document.getElementById("historyScreen")
-        .style.display = "block";
-
-        document.getElementById("chatScreen")
-    .style.display = "none";
+function getRihulaMemberScreenIds() {
+    return [
+        "dashboardScreen",
+        "historyScreen",
+        "announcementsScreen",
+        "profileScreen",
+        "leadersScreen",
+        "groupMembersScreen",
+        "groupGoalScreen",
+        "contributeScreen",
+        "chatScreen",
+        "aiScreen"
+    ];
 }
+
+function hideAllMemberScreens() {
+    getRihulaMemberScreenIds().forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.classList.remove("active");
+        el.hidden = true;
+        el.style.display = "none";
+    });
+}
+
+function openMemberScreen(id, addHistory = true) {
+    const screen = document.getElementById(id);
+
+    if (!screen) {
+        console.warn("RIHULA: Member screen not found:", id);
+        return;
+    }
+
+    /* Always close every other member screen first. */
+    hideAllMemberScreens();
+
+    /* Open only the selected screen. */
+    screen.hidden = false;
+    screen.style.display = "block";
+    screen.classList.add("active");
+
+    /* Keep Android/browser Back navigation working. */
+    if (addHistory && !window.__rihulaHandlingPopState) {
+        const state = { rihulaScreenId: id };
+        if (!history.state || history.state.rihulaScreenId !== id) {
+            history.pushState(state, "", "#" + id);
+        }
+    }
+
+    window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function showHistory() {
+    openMemberScreen("historyScreen");
+}
+
 
 
 async function showProfile() {
+    openMemberScreen("profileScreen");
 
-    let user =
-    JSON.parse(localStorage.getItem("loggedUser"));
+    let user = JSON.parse(localStorage.getItem("loggedUser"));
+    if (!user) return;
 
-const { data } = await db
-    .from("members")
-    .select("*")
-    .eq("phone", user.phone)
-    .single();
-
-if (data) {
-    user = data;
-
-    localStorage.setItem(
-        "loggedUser",
-        JSON.stringify(user)
-    );
-}
-
-    document.getElementById("dashboardScreen")
-        .style.display = "none";
-
-    document.getElementById("profileScreen")
-        .style.display = "block";
-
-        document.getElementById("chatScreen")
-    .style.display = "none";
-
-    document.getElementById("passwordnName")
-    .innerText = user.name;
-
-    document.getElementById("profileScreenPhone")
-        .innerText = user.phone;
-
-    if (user.online) {
-
-    document.getElementById("profileScreenStatus")
-    .innerText = "🟢 Online";
-
-} else if (user.last_seen) {
-
-    const lastSeen = new Date(user.last_seen);
-    const now = new Date();
-
-    const diffMinutes =
-        Math.floor((now - lastSeen) / 60000);
-
-    if (diffMinutes < 1) {
-
-        document.getElementById("profileScreenStatus")
-        .innerText = "⏰ Last seen just now";
-
-    } else if (diffMinutes < 60) {
-
-        document.getElementById("profileScreenStatus")
-        .innerText =
-        `⏰ Last seen ${diffMinutes} min ago`;
-
-    } else if (diffMinutes < 1440) {
-
-        document.getElementById("profileScreenStatus")
-        .innerText =
-        `⏰ Last seen ${Math.floor(diffMinutes / 60)} hr ago`;
-
-    } else {
-
-        document.getElementById("profileScreenStatus")
-        .innerText =
-        `⏰ Last seen ${Math.floor(diffMinutes / 1440)} day(s) ago`;
+    const { data } = await db.from("members").select("*").eq("phone", user.phone).single();
+    if (data) {
+        user = data;
+        localStorage.setItem("loggedUser", JSON.stringify(user));
     }
 
-} else {
+    document.getElementById("passwordnName").innerText = user.name || "Member";
+    document.getElementById("profileScreenPhone").innerText = user.phone || "";
 
-    document.getElementById("profileScreenStatus")
-    .innerText = "⚫ Offline";
-
-}
-
-
-    if (user.photo_url) {
-        document.getElementById("profileScreenImage")
-            .src = user.photo_url;
+    const status = document.getElementById("profileScreenStatus");
+    if (status) {
+        if (user.online) status.innerText = "🟢 Online";
+        else if (user.last_seen) {
+            const diffMinutes = Math.floor((new Date() - new Date(user.last_seen)) / 60000);
+            if (diffMinutes < 1) status.innerText = "⏰ Last seen just now";
+            else if (diffMinutes < 60) status.innerText = `⏰ Last seen ${diffMinutes} min ago`;
+            else if (diffMinutes < 1440) status.innerText = `⏰ Last seen ${Math.floor(diffMinutes / 60)} hr ago`;
+            else status.innerText = `⏰ Last seen ${Math.floor(diffMinutes / 1440)} day(s) ago`;
+        } else status.innerText = "⚫ Offline";
     }
-    document.getElementById("goalInput").value =
-    user.goal || 5000;
+
+    const image = document.getElementById("profileScreenImage");
+    if (image && user.photo_url) image.src = user.photo_url;
+    const goal = document.getElementById("goalInput");
+    if (goal) goal.value = user.goal || 5000;
 }
+
 function showLeaders() {
-
-    document.getElementById("dashboardScreen")
-        .style.display = "none";
-
-    document.getElementById("historyScreen")
-        .style.display = "none";
-
-    document.getElementById("profileScreen")
-        .style.display = "none";
-
-    document.getElementById("leadersScreen")
-        .style.display = "block";
-
-        document.getElementById("chatScreen")
-    .style.display = "none";
+    openMemberScreen("leadersScreen");
 }
+
 function showGroupMembers() {
-
-    document.getElementById("dashboardScreen").style.display = "none";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-    document.getElementById("announcementsScreen").style.display = "none";
-    document.getElementById("aiScreen").style.display = "none";
-
-    document.getElementById("groupMembersScreen").style.display = "block";
-    
+    openMemberScreen("groupMembersScreen");
     loadGroupMembers();
 }
+
 async function loadGroupMembers() {
 
     const { data, error } = await db
@@ -535,40 +504,14 @@ async function loadGroupGoal() {
     }
 }
 function showContribute() {
-
-    document.getElementById("dashboardScreen")
-        .style.display = "none";
-
-    document.getElementById("historyScreen")
-        .style.display = "none";
-
-    document.getElementById("profileScreen")
-        .style.display = "none";
-
-    document.getElementById("leadersScreen")
-        .style.display = "none";
-
-    document.getElementById("contributeScreen")
-        .style.display = "block";
-
-        document.getElementById("chatScreen")
-    .style.display = "none";
+    openMemberScreen("contributeScreen");
 }
+
 
 function showGroupGoal() {
-
-    document.getElementById("dashboardScreen").style.display = "none";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("announcementsScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-    document.getElementById("aiScreen").style.display = "none";
-    document.getElementById("groupMembersScreen").style.display = "none";
-
-    document.getElementById("groupGoalScreen").style.display = "block";
+    openMemberScreen("groupGoalScreen");
 }
+
 
 function getContributionCollectionDate(value) {
     const date = new Date(value);
@@ -1541,48 +1484,23 @@ function scrollToBottom() {
 }
 
 function showAI() {
-
-    document.getElementById("dashboardScreen").style.display = "none";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-    document.getElementById("announcementsScreen").style.display = "none";
-
-    document.getElementById("aiScreen").style.display = "block";
+    openMemberScreen("aiScreen");
 }
+
 
 function showDashboard() {
-
-    document.getElementById("dashboardScreen").style.display = "block";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-    document.getElementById("announcementsScreen").style.display = "none";
-    document.getElementById("aiScreen").style.display = "none";
-    document.getElementById("groupGoalScreen").style.display = "none";
-    document.getElementById("groupMembersScreen").style.display = "none";
-
-    
+    openMemberScreen("dashboardScreen", false);
 }
+
 function showChat() {
-
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-
-    document.getElementById("chatScreen").style.display = "block";
-
-    document.getElementById("unreadBadge").style.display = "none";
-
+    openMemberScreen("chatScreen");
+    const unread = document.getElementById("unreadBadge");
+    if (unread) unread.style.display = "none";
     loadMessages();
     loadOnlineMembers();
     scrollToBottom();
 }
+
 async function sendMessage() {
 
     const user =
@@ -2196,46 +2114,22 @@ function cancelHold() {
 }
 
 async function showAnnouncements() {
-
-    document.getElementById("dashboardScreen").style.display = "none";
-    document.getElementById("historyScreen").style.display = "none";
-    document.getElementById("profileScreen").style.display = "none";
-    document.getElementById("leadersScreen").style.display = "none";
-    document.getElementById("contributeScreen").style.display = "none";
-    document.getElementById("chatScreen").style.display = "none";
-    document.getElementById("groupMembersScreen").style.display = "none";
-    document.getElementById("aiScreen").style.display = "none";
-
-    document.getElementById("announcementsScreen").style.display = "block";
-
+    openMemberScreen("announcementsScreen");
     const container = document.getElementById("announcementsOnlyContainer");
-
-    const { data, error } = await db
-        .from("announcements")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+    if (!container) return;
+    const { data, error } = await db.from("announcements").select("*").order("created_at", { ascending: false });
     if (error) {
         container.innerHTML = "<p>Failed to load announcements.</p>";
         return;
     }
-
-    if (!data || data.length === 0) {
-        container.innerHTML = "<p>No announcements available.</p>";
-        return;
-    }
-
-    container.innerHTML = "";
-
-    data.forEach(item => {
-        container.innerHTML += `
-            <div class="card">
-                <h3>${item.title}</h3>
-                <p>${item.message}</p>
-            </div>
-        `;
-    });
+    container.innerHTML = (data || []).map(item => `
+        <article class="announcement">
+            <span class="date-badge">${new Date(item.created_at).toLocaleDateString()}</span>
+            <h3>${item.title || "Announcement"}</h3>
+            <p>${item.message || ""}</p>
+        </article>`).join("") || "<p>No announcements yet.</p>";
 }
+
 async function deleteNotification(id) {
 
     const ok = confirm("Delete this notification?");
@@ -2400,88 +2294,8 @@ async function loadContributionDayTotals() {
         console.error("Contribution day error:", error);
     }
 }
-/* =========================================================
-   ANDROID / PHONE BACK BUTTON NAVIGATION
-   Keeps member dashboard screens in browser history
-   ========================================================= */
+/* Android/browser Back is handled by openMemberScreen/popstate above. */
 
-(function () {
-
-    const screens = [
-        "showDashboard",
-        "showHistory",
-        "showAnnouncements",
-        "showProfile",
-        "showLeaders",
-        "showGroupMembers",
-        "showGroupGoal",
-        "showContribute",
-        "showChat",
-        "showAI"
-    ];
-
-    const originalFunctions = {};
-    let handlingBack = false;
-
-    // Save the original functions
-    screens.forEach(name => {
-        if (typeof window[name] === "function") {
-            originalFunctions[name] = window[name];
-        }
-    });
-
-    // Replace each function with a history-aware version
-    screens.forEach(name => {
-
-        if (!originalFunctions[name]) return;
-
-        window[name] = function () {
-
-            // Don't create another history entry when
-            // the Android/browser Back button is being handled
-            if (!handlingBack) {
-                history.pushState(
-                    { rihulaScreen: name },
-                    "",
-                    "#" + name
-                );
-            }
-
-            originalFunctions[name]();
-        };
-    });
-
-    // Initial dashboard state
-    if (!history.state || !history.state.rihulaScreen) {
-        history.replaceState(
-            { rihulaScreen: "showDashboard" },
-            "",
-            "#dashboard"
-        );
-    }
-
-    // Android / browser Back button
-    window.addEventListener("popstate", function (event) {
-
-        const state = event.state;
-
-        if (!state || !state.rihulaScreen) {
-            return;
-        }
-
-        const screen = state.rihulaScreen;
-
-        if (originalFunctions[screen]) {
-
-            handlingBack = true;
-
-            originalFunctions[screen]();
-
-            handlingBack = false;
-        }
-    });
-
-})();
 function createSimplePdf(lines, title) {
     const pageWidth = 595;
     const pageHeight = 842;
