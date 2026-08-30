@@ -119,6 +119,9 @@ DECLARE
   allowed boolean;
 BEGIN
   requested_phone := regexp_replace(COALESCE(p_phone, ''), '[^0-9]', '', 'g');
+  IF requested_phone LIKE '254%' THEN
+    requested_phone := '0' || substring(requested_phone from 4);
+  END IF;
 
   IF requested_phone = '' THEN
     RAISE EXCEPTION 'A valid member phone number is required.';
@@ -127,7 +130,7 @@ BEGIN
   SELECT EXISTS (
     SELECT 1
     FROM public.members m
-    WHERE regexp_replace(m.phone::text, '[^0-9]', '', 'g') = requested_phone
+    WHERE (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END) = requested_phone
       AND (m.auth_id = auth.uid() OR public.is_rihula_admin())
   ) INTO allowed;
 
@@ -197,6 +200,9 @@ DECLARE
   result_rank bigint;
 BEGIN
   requested_phone := regexp_replace(COALESCE(p_phone, ''), '[^0-9]', '', 'g');
+  IF requested_phone LIKE '254%' THEN
+    requested_phone := '0' || substring(requested_phone from 4);
+  END IF;
 
   IF requested_phone = '' THEN
     RAISE EXCEPTION 'A valid member phone number is required.';
@@ -205,7 +211,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM public.members m
-    WHERE regexp_replace(m.phone::text, '[^0-9]', '', 'g') = requested_phone
+    WHERE (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END) = requested_phone
       AND (m.auth_id = auth.uid() OR public.is_rihula_admin())
   ) THEN
     RAISE EXCEPTION 'Not authorized to view this member rank.';
@@ -219,13 +225,13 @@ BEGIN
         COALESCE((
           SELECT SUM(c.amount)
           FROM public.contributions c
-          WHERE regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') = regexp_replace(m.phone::text, '[^0-9]', '', 'g')
+          WHERE (CASE WHEN regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') END) = (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END)
         ), 0)
         -
         COALESCE((
           SELECT SUM(w.amount)
           FROM public.withdrawals w
-          WHERE regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') = regexp_replace(m.phone::text, '[^0-9]', '', 'g')
+          WHERE (CASE WHEN regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') END) = (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END)
         ), 0),
         0
       ) AS net_savings
@@ -239,7 +245,7 @@ BEGIN
   )
   SELECT rank INTO result_rank
   FROM ranked
-  WHERE regexp_replace(phone, '[^0-9]', '', 'g') = requested_phone;
+  WHERE (CASE WHEN regexp_replace(phone, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(phone, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(phone, '[^0-9]', '', 'g') END) = requested_phone;
 
   RETURN result_rank;
 END;
@@ -265,9 +271,9 @@ AS $$
       COALESCE(m.name, 'Member')::text AS member_name,
       m.phone::text AS phone,
       COALESCE((SELECT SUM(c.amount) FROM public.contributions c
-        WHERE regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') = regexp_replace(m.phone::text, '[^0-9]', '', 'g')), 0)::numeric AS contributions,
+        WHERE (CASE WHEN regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(c.member_phone::text, '[^0-9]', '', 'g') END) = (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END)), 0)::numeric AS contributions,
       COALESCE((SELECT SUM(w.amount) FROM public.withdrawals w
-        WHERE regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') = regexp_replace(m.phone::text, '[^0-9]', '', 'g')), 0)::numeric AS withdrawals
+        WHERE (CASE WHEN regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(w.member_phone::text, '[^0-9]', '', 'g') END) = (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END)), 0)::numeric AS withdrawals
     FROM public.members m
   ),
   calculated AS (
@@ -304,17 +310,20 @@ BEGIN
   END IF;
 
   requested_phone := regexp_replace(COALESCE(p_phone, ''), '[^0-9]', '', 'g');
+  IF requested_phone LIKE '254%' THEN
+    requested_phone := '0' || substring(requested_phone from 4);
+  END IF;
   IF requested_phone = '' THEN RAISE EXCEPTION 'A valid member phone number is required.'; END IF;
   IF p_amount IS NULL OR p_amount <= 0 THEN RAISE EXCEPTION 'Withdrawal amount must be greater than zero.'; END IF;
 
   IF NOT EXISTS (SELECT 1 FROM public.members m
-    WHERE regexp_replace(m.phone::text, '[^0-9]', '', 'g') = requested_phone) THEN
+    WHERE (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END) = requested_phone) THEN
     RAISE EXCEPTION 'Member with that phone number was not found.';
   END IF;
 
   -- Serialize withdrawals for this member so two admins cannot spend the same balance.
   PERFORM 1 FROM public.members m
-    WHERE regexp_replace(m.phone::text, '[^0-9]', '', 'g') = requested_phone
+    WHERE (CASE WHEN regexp_replace(m.phone::text, '[^0-9]', '', 'g') LIKE '254%' THEN '0' || substring(regexp_replace(m.phone::text, '[^0-9]', '', 'g') from 4) ELSE regexp_replace(m.phone::text, '[^0-9]', '', 'g') END) = requested_phone
     FOR UPDATE;
 
   SELECT GREATEST(

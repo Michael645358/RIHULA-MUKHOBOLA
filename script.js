@@ -309,9 +309,6 @@ async function approveMember(phone) {
     } else {
         showPopup("Member Approved");
 
-if (typeof addActivity === "function") {
-    await addActivity("Approved member: " + phone);
-}
 
 if (typeof loadMembers === "function") loadMembers();
 if (typeof loadPendingMembers === "function") loadPendingMembers();
@@ -339,9 +336,6 @@ async function rejectMember(phone) {
     } else {
         showPopup("Member Rejected");
 
-        if (typeof addActivity === "function") {
-            await addActivity("Rejected member: " + phone);
-        }
 
         if (typeof loadMembers === "function") loadMembers();
         if (typeof loadPendingMembers === "function") loadPendingMembers();

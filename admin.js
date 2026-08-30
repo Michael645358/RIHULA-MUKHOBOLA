@@ -908,11 +908,31 @@ async function recordWithdrawal() {
         const admin = await RihulaAdmin.getAdminUser();
         if (!admin) return showPopup("Admin session expired. Please sign in again.", "error");
 
-        const { data: member, error: memberError } = await db
+        // Accept the common Kenyan phone formats used by existing records:
+        // 07..., 01..., 2547..., 2541..., +2547..., and +2541... . The database RPC also normalizes
+        // numbers, so the admin lookup must use the same matching rule.
+        const phoneCandidates = [
+            phone,
+            phone.startsWith("0") ? "254" + phone.slice(1) : phone,
+            phone.startsWith("0") ? "+254" + phone.slice(1) : phone
+        ].filter((value, index, list) => value && list.indexOf(value) === index);
+
+        let memberQuery = db
             .from("members")
             .select("id, name, phone")
-            .eq("phone", phone)
-            .maybeSingle();
+            .in("phone", phoneCandidates);
+
+        const { data: members, error: memberError } = await memberQuery;
+        if (memberError) throw memberError;
+
+        // Keep the normalized comparison as the final guard in case the
+        // stored value contains spaces, dashes, or parentheses.
+        const normalizeForMatch = (value) =>
+            String(value || "").replace(/\D/g, "").replace(/^254/, "0");
+
+        const member = (members || []).find(
+            (item) => normalizeForMatch(item.phone) === normalizeForMatch(phone)
+        );
 
         if (memberError) throw memberError;
         if (!member) return showPopup("Member with that phone number was not found.", "error");

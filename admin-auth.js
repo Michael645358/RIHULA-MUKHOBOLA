@@ -89,7 +89,6 @@
 
   async function adminLogout() {
     try {
-      await logActivity("Signed out of Admin Dashboard");
       await window.db.auth.signOut();
     } catch (error) {
       console.warn("Admin sign out:", error);

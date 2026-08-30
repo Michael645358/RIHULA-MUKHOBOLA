@@ -22,7 +22,6 @@
     const admin=await RihulaAdmin.requireAdmin();
     if(!admin) return;
     document.documentElement.style.visibility='visible';
-    if(typeof RihulaAdmin.logActivity==='function') RihulaAdmin.logActivity('Opened Admin Activities');
     loadActivities();
   }catch(e){ console.error('Admin Activities security error:',e); }
 })();

@@ -27,3 +27,5 @@
 
 ## Important Supabase step
 Run `RIHULA-AUTH-FIX.sql` in the CURRENT RIHULA Supabase SQL project before testing registration/activation. This is necessary because the missing database trigger/RPC cannot be fixed by frontend code alone.
+
+- Admin activity audit: stopped recording page-open events and ordinary member profile edits; member add/delete and approval/rejection remain audited.
