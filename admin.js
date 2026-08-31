@@ -2,64 +2,7 @@
 if (window.RihulaAdmin) {
     RihulaAdmin.requireAdmin();
 }
-async function recordContribution() {
 
-    const phone =
-        document.getElementById("contributorPhone").value;
-
-    const amount =
-        document.getElementById("contributionAmount").value;
-
-    if (!phone || !amount) {
-        showPopup("Please fill in all required fields.", "warning");
-        return;
-    }
-
-    const { error } = await db
-        .from("contributions")
-        .insert([
-            {
-                member_phone: phone,
-                amount: amount
-            }
-        ]);
-
-    if (error) {
-        showPopup("Could not save the contribution: " + error.message, "error");
-    } else {
-
-        showPopup("Contribution saved successfully.", "success");
-
-        // Push notification is deliberately AFTER the existing insert succeeds.
-        // If push delivery fails, the contribution remains saved exactly as before.
-        try {
-            const pushResult = await db.functions.invoke("send-rihula-push", {
-                body: {
-                    member_phone: phone,
-                    title: "Saving Approved",
-                    message: `Your KSh ${Number(amount).toLocaleString()} saving has been approved and recorded successfully.`,
-                    url: "member.html"
-                }
-            });
-
-            if (pushResult.error) {
-                console.warn("RIHULA push notification failed:", pushResult.error);
-            }
-        } catch (pushError) {
-            console.warn("RIHULA push notification failed:", pushError);
-        }
-
-        document.getElementById("contributorPhone").value = "";
-        document.getElementById("contributionAmount").value = "";
-        loadRecentActivity();
-
-        loadLeaderboard();
-        loadStats();
-        loadDashboardStats();
-loadAdminGroupGoal();
-
-    }
-}
 async function loadStats() {
 
     const { count: memberCount } = await db

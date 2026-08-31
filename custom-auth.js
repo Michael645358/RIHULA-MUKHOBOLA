@@ -39,14 +39,56 @@
 
     return { success: true, user: data.user, session: data.session };
   }
-  async function loginMember(email, password) {
+  async function loginMember(loginValue, password) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-    const { data, error } = await db.auth.signInWithPassword({ email: String(email).trim().toLowerCase(), password });
+
+    const rawLogin = String(loginValue || "").trim();
+    if (!rawLogin || !password) throw new Error("Enter your phone number and password.");
+
+    // RIHULA members log in with their registered phone number.
+    // Supabase Auth still uses the member's verified email internally, so
+    // the secure RPC maps phone -> Auth email without exposing the members table.
+    let authEmail = rawLogin.toLowerCase();
+    const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawLogin);
+
+    if (!looksLikeEmail) {
+      const cleanPhone = normalizeKenyanPhone(rawLogin);
+      if (!/^(?:07|01)\d{8}$/.test(cleanPhone)) {
+        throw new Error("Enter a valid Kenyan phone number, e.g. 0712345678 or 0112345678.");
+      }
+
+      const { data: lookup, error: lookupError } = await db.rpc(
+        "rihula_get_auth_email_by_phone",
+        { p_phone: cleanPhone }
+      );
+
+      if (lookupError) {
+        console.error("PHONE LOGIN LOOKUP ERROR:", lookupError);
+        throw new Error("Phone login is not configured yet. Please run the RIHULA phone-login SQL in Supabase.");
+      }
+
+      authEmail = String(lookup || "").trim().toLowerCase();
+      if (!authEmail) throw new Error("No registered member was found with that phone number.");
+    }
+
+    const { data, error } = await db.auth.signInWithPassword({
+      email: authEmail,
+      password: String(password)
+    });
     if (error) throw error;
-    const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
+    if (!data?.user) throw new Error("Login could not be completed.");
+
+    const { data: member, error: memberError } = await db
+      .from("members")
+      .select("*")
+      .eq("auth_id", data.user.id)
+      .single();
+
     if (memberError || !member) throw new Error("Your member profile could not be found.");
     if (member.is_member !== true) throw new Error("This account does not have member access.");
-    saveSession(member); return member;
+
+    saveSession(member);
+    return member;
   }
   async function changeMemberPassword(_memberId, currentPassword, newPassword) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();

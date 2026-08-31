@@ -1,3 +1,10 @@
+-- RIHULA SQL NOTE (2026-08-31)
+-- This file contains the finance/withdrawal function definitions that are also
+-- included in RIHULA-FINANCE-FIX.sql. Use RIHULA-FINANCE-FIX.sql as the
+-- canonical combined finance + withdrawal installation file. Do not run both
+-- files unnecessarily; running this file after the canonical file will replace
+-- the same functions with this file's definitions.
+--
 -- RIHULA finance/withdrawal read functions
 -- Run AFTER RLS hardening has been applied.
 -- These functions preserve the existing UI while preventing members

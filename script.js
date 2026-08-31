@@ -47,44 +47,7 @@ const idNumber =
         showPopup("CATCH ERROR: " + err.message);
     }
 }
-async function recordContribution() {
 
-    const phone =
-        document.getElementById("contributorPhone").value;
-
-    const amount =
-        document.getElementById("contributionAmount").value;
-
-    if (!phone || !amount) {
-        showPopup("Fill all fields");
-        return;
-    }
-
-    const { error } = await db
-        .from("contributions")
-        .insert([
-            {
-                member_phone: phone,
-                amount: amount
-            }
-        ]);
-
-    if (error) {
-        showPopup("ERROR: " + error.message);
-    } else {
-
-        showPopup("Contribution Saved Successfully");
-
-        document.getElementById("contributorPhone").value = "";
-        document.getElementById("contributionAmount").value = "";
-
-        await window.refreshRihulaFinance?.();
-        loadLeaderboard();
-        loadStats();
-        loadDashboardStats();
-
-    }
-}
 async function loadStats() {
 
     const { count: memberCount } = await db
@@ -439,46 +402,4 @@ function logout() {
     sessionStorage.removeItem("adminVerified");
 
     window.location.href = "login.html";
-}async function loadPendingContributions() {
-    try {
-        await window.waitForRihulaDb();
-    } catch (error) {
-        console.warn("RIHULA: Pending contributions wait failed.", error.message);
-        return;
-    }
-
-
-    const container = document.getElementById("pendingContributions");
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    const { data, error } = await db
-        .from("pending_contributions")
-        .select("*")
-        .eq("status", "Pending")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        container.innerHTML = "Failed to load requests.";
-        return;
-    }
-
-    if (!data || !data.length) {
-        container.innerHTML = "<p>No pending contributions.</p>";
-        return;
-    }
-
-    container.innerHTML = data.map(item => `
-        <div class="member-card">
-            <h3>${item.name || "Pending Contribution"}</h3>
-            <p><strong>Phone:</strong> ${item.phone || ""}</p>
-            <p><strong>Status:</strong> ${item.status || "Pending"}</p>
-        </div>
-    `).join("");
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadPendingContributions();
-});
