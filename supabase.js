@@ -77,7 +77,7 @@
      * Load fallback SDK asynchronously.
      */
     const fallbackUrl =
-        "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+        "https://unpkg.com/@supabase/supabase-js@2.103.3/dist/umd/supabase.js";
 
     const fallbackScript =
         document.createElement("script");

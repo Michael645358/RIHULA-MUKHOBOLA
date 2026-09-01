@@ -1,15 +1,12 @@
-RIHULA PASSWORD CHANGE FIX
+RIHULA GLOBAL LANGUAGE UPDATE
 
-Replace these three files:
+Replaces only the member dashboard files:
 - member.html
 - member.js
-- custom-auth.js
 
-The password change now:
-1. Checks the current password.
-2. Gets a fresh Supabase Auth session.
-3. Explicitly installs that session.
-4. Verifies the same user is still authenticated.
-5. Changes the password.
+Languages:
+- English
+- Kiswahili
 
-No database tables or SQL were changed.
+The language selector applies across the member dashboard screens, not only Profile.
+No SQL/database changes are required.

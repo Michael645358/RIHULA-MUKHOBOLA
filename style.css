@@ -5237,3 +5237,10 @@ th,td{border-bottom:1px solid var(--border);padding:12px 10px}
 #aiScreen.active {
     display: block !important;
 }
+
+
+/* RIHULA language setting */
+.language-card { margin-top: 18px; }
+.language-help, .language-saved { color: #667085; margin: 6px 0 12px; }
+.language-select { width: 100%; padding: 13px 14px; border: 1px solid #d0d5dd; border-radius: 12px; background: #fff; font-size: 16px; }
+.language-card label { display:block; font-weight:600; margin: 10px 0 7px; }

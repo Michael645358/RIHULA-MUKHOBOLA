@@ -48,51 +48,6 @@
     if (member.is_member !== true) throw new Error("This account does not have member access.");
     saveSession(member); return member;
   }
-  async function changeMemberPassword(_memberId, currentPassword, newPassword) {
-    if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-    if (String(newPassword || "").length < 8) {
-      throw new Error("New password must contain at least 8 characters.");
-    }
+  window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, saveSession, clearSession, getSessionMember };
 
-    const { data: authData, error: authError } = await db.auth.getUser();
-    if (authError || !authData?.user?.email) {
-      throw new Error("Your secure login session has expired. Please log in again.");
-    }
-
-    // Re-authenticate with the current password first.
-    // Explicitly install the fresh session so updateUser() never runs
-    // against a stale session. This is important when Supabase requires
-    // recent authentication before allowing a password change.
-    const { data: loginData, error: verifyError } = await db.auth.signInWithPassword({
-      email: authData.user.email,
-      password: String(currentPassword || "")
-    });
-
-    if (verifyError || !loginData?.session) {
-      throw new Error("Current password is incorrect.");
-    }
-
-    const { error: sessionError } = await db.auth.setSession({
-      access_token: loginData.session.access_token,
-      refresh_token: loginData.session.refresh_token
-    });
-
-    if (sessionError) {
-      throw new Error("Could not refresh your secure login session. Please log in again.");
-    }
-
-    const { data: freshUserData, error: freshUserError } = await db.auth.getUser();
-    if (freshUserError || !freshUserData?.user) {
-      throw new Error("Could not verify your account session. Please log in again.");
-    }
-
-    if (freshUserData.user.id !== authData.user.id) {
-      throw new Error("Account verification failed. Please log in again.");
-    }
-
-    const { error } = await db.auth.updateUser({ password: newPassword });
-    if (error) throw error;
-    return { success: true };
-  }
-  window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, changeMemberPassword, saveSession, clearSession, getSessionMember };
 })();

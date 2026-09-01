@@ -305,58 +305,15 @@
             </span>
         </p>
        <hr>
-<div class="profile-card password-card">
-
-    <h3>🔐 Change Password</h3>
-
-    <div class="password-input">
-        <input
-            type="password"
-            id="currentPassword"
-            placeholder="Current Password">
-
-        <button
-            type="button"
-            onclick="toggleSinglePassword('currentPassword', this)">
-            👁
-        </button>
-    </div>
-
-
-    <div class="password-input">
-        <input
-            type="password"
-            id="newPassword"
-            placeholder="New Password">
-
-        <button
-            type="button"
-            onclick="toggleSinglePassword('newPassword', this)">
-            👁
-        </button>
-    </div>
-
-
-    <div class="password-input">
-        <input
-            type="password"
-            id="confirmPassword"
-            placeholder="Confirm New Password">
-
-        <button
-            type="button"
-            onclick="toggleSinglePassword('confirmPassword', this)">
-            👁
-        </button>
-    </div>
-
-
-    <button
-        onclick="changePassword()"
-        class="btn password-update-btn">
-        🔐 Update Password
-    </button>
-
+<hr>
+<div class="profile-card rihula-language-card" id="languageSettingsCard">
+<h3 data-i18n="Language">🌐 Language</h3>
+<p data-i18n="Choose your preferred language">Choose your preferred language</p>
+<select id="rihulaLanguageSelect" aria-label="Language">
+    <option value="en">🇬🇧 English</option>
+    <option value="sw">🇰🇪 Kiswahili</option>
+</select>
+<p class="upload-hint" data-i18n="Your language preference is saved automatically.">Your language preference is saved automatically.</p>
 </div>
 
 <hr>
@@ -749,15 +706,15 @@
 </div>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
-<script src="supabase.js?v=20260826-0835"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.3" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.103.3/dist/umd/supabase.js'"></script>
+<script src="supabase.js?v=20260901-password-current"></script>
 <script src="rihula-db-guard.js?v=20260826-0835"></script>
-<script src="custom-auth.js?v=20260826-0835"></script>
+<script src="custom-auth.js?v=20260901-password-current"></script>
 <script src="finance.js?v=20260826-0835"></script>
 <script src="ai.js?v=20260826-0835"></script>
 
 
-<script src="member.js?v=20260901-passwordfix"></script>
+<script src="member.js?v=20260901-language-v3"></script>
 <script src="v22.js?v=20260826-0835"></script>
 
 <div id="memberStatusPopup" class="member-status-popup">

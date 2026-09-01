@@ -1,3 +1,188 @@
+/* =========================================================
+   RIHULA GLOBAL LANGUAGE SYSTEM — English / Kiswahili
+   This translates the member interface, not just the Profile screen.
+   It is client-side only; no Supabase/database changes are needed.
+   ========================================================= */
+(function () {
+    const STORAGE_KEY = "rihulaLanguage";
+    const translations = {
+        "en": {},
+        "sw": {
+            "Members Dashboard":"Dashibodi ya Wanachama",
+            "Member account":"Akaunti ya mwanachama",
+            "Logout":"Ondoka",
+            "Today":"Leo",
+            "This week":"Wiki hii",
+            "This month":"Mwezi huu",
+            "My contributions":"Michango yangu",
+            "View Group Insights":"Angalia Taarifa za Kikundi",
+            "RIHULA Savings":"Akiba ya RIHULA",
+            "Group Goal":"Lengo la Kikundi",
+            "Do more with your RIHULA account":"Fanya zaidi kupitia akaunti yako ya RIHULA",
+            "Manage savings, members and association activities.":"Dhibiti akiba, wanachama na shughuli za chama.",
+            "Contribute":"Changia",
+            "My Savings history":"Historia ya Akiba Yangu",
+            "Members":"Wanachama",
+            "Leadership":"Uongozi",
+            "Announcements":"Matangazo",
+            "Community Chat":"Mazungumzo ya Jumuiya",
+            "My Account":"Akaunti Yangu",
+            "YOUR RIHULA SPACE":"NAFASI YAKO YA RIHULA",
+            "Save. Grow. Belong.":"Okoa. Kua. Shiriki.",
+            "Everything you need for your membership, savings and community life in one place.":"Kila unachohitaji kuhusu uanachama, akiba na maisha ya jumuiya katika sehemu moja.",
+            "Quick tools":"Zana za Haraka",
+            "Useful actions without leaving your dashboard.":"Vitendo muhimu bila kuondoka kwenye dashibodi yako.",
+            "Statement":"Taarifa ya Akiba",
+            "View my history":"Angalia historia yangu",
+            "Track progress":"Fuatilia maendeleo",
+            "Badges":"Beji",
+            "See achievements":"Angalia mafanikio",
+            "Updates":"Taarifa Mpya",
+            "Latest news":"Habari za hivi karibuni",
+            "My savings":"Akiba yangu",
+            "Active member":"Mwanachama hai",
+            "My goal":"Lengo langu",
+            "RIHULA Updates 🔥":"Taarifa za RIHULA 🔥",
+            "View all":"Angalia zote",
+            "Latest announcement":"Tangazo la hivi karibuni",
+            "Welcome to RIHULA Mukhobola":"Karibu RIHULA Mukhobola",
+            "Stay updated with contributions, meetings and association news.":"Endelea kupata taarifa kuhusu michango, mikutano na habari za chama.",
+            "My Achievements":"Mafanikio Yangu",
+            "Loading achievements...":"Inapakia mafanikio...",
+            "Keep saving to unlock achievements.":"Endelea kuweka akiba ili kufungua mafanikio.",
+            "Notifications":"Arifa",
+            "Back":"Rudi",
+            "My Contribution History":"Historia ya Michango Yangu",
+            "Latest Announcements":"Matangazo ya Hivi Karibuni",
+            "My Profile":"Wasifu Wangu",
+            "Upload Profile Photo":"Pakia Picha ya Wasifu",
+            "Tap to choose a photo. It uploads automatically.":"Gusa kuchagua picha. Itapakiwa kiotomatiki.",
+            "My Savings Goal":"Lengo Langu la Akiba",
+            "Enter Goal Amount":"Weka Kiasi cha Lengo",
+            "Save Goal":"Hifadhi Lengo",
+            "Leadership Team":"Timu ya Uongozi",
+            "Chairman":"Mwenyekiti",
+            "Secretary":"Katibu",
+            "Treasurer":"Mweka Hazina",
+            "Organiser":"Mratibu",
+            "Association Members":"Wanachama wa Chama",
+            "Search member...":"Tafuta mwanachama...",
+            "Contribution Days":"Siku za Michango",
+            "Make Contribution":"Fanya Mchango",
+            "Payment Instructions":"Maelekezo ya Malipo",
+            "Community Chat":"Mazungumzo ya Jumuiya",
+            "AI Assistant":"Msaidizi wa AI",
+            "Ask me anything...":"Niulize chochote...",
+            "Send":"Tuma",
+            "Home":"Nyumbani",
+            "Savings":"Akiba",
+            "Chat":"Mazungumzo",
+            "Profile":"Wasifu",
+            "Delete Message":"Futa Ujumbe",
+            "Copy Message":"Nakili Ujumbe",
+            "Cancel":"Ghairi",
+            "Close":"Funga",
+            "No transactions found.":"Hakuna miamala iliyopatikana.",
+            "No members found.":"Hakuna wanachama waliopatikana.",
+            "No announcements yet.":"Hakuna matangazo bado.",
+            "Loading...":"Inapakia...",
+            "Language":"Lugha",
+            "Choose your preferred language":"Chagua lugha unayopendelea",
+            "Your language preference is saved automatically.":"Chaguo lako la lugha linahifadhiwa kiotomatiki.",
+            "English":"Kiingereza",
+            "Kiswahili":"Kiswahili",
+            "Welcome back!":"Karibu tena!",
+            "Good Morning":"Habari za Asubuhi",
+            "Good Afternoon":"Habari za Mchana",
+            "Good Evening":"Habari za Jioni",
+            "Good Night":"Usiku Mwema"
+        }
+    };
+
+    // Text nodes do not have .dataset. Keep original text safely in a WeakMap.
+    // This prevents the language observer from throwing when it encounters
+    // normal text nodes inside the page.
+    const originalTextNodes = new WeakMap();
+
+    function canonicalText(node) {
+        if (!node || node.nodeType !== Node.TEXT_NODE) return "";
+
+        if (!originalTextNodes.has(node)) {
+            originalTextNodes.set(node, node.nodeValue || "");
+        }
+
+        return String(originalTextNodes.get(node) || "").trim();
+    }
+
+    function translateTextNode(node, lang) {
+        const original = canonicalText(node);
+        if (!original) return;
+        const translated = (translations[lang] && translations[lang][original]) || original;
+        if (node.nodeValue.trim() === original) {
+            node.nodeValue = node.nodeValue.replace(original, translated);
+        } else if (node.nodeValue.trim() === (translations.sw[original] || "__none__")) {
+            node.nodeValue = node.nodeValue.replace(node.nodeValue.trim(), translated);
+        }
+    }
+
+    function translateRoot(root, lang) {
+        if (!root) return;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) {
+            const n = walker.currentNode;
+            if (n.parentElement && !["SCRIPT","STYLE","NOSCRIPT","OPTION"].includes(n.parentElement.tagName)) nodes.push(n);
+        }
+        nodes.forEach(n => translateTextNode(n, lang));
+
+        root.querySelectorAll && root.querySelectorAll("input[placeholder], textarea[placeholder], [aria-label]").forEach(el => {
+            ["placeholder","aria-label"].forEach(attr => {
+                if (!el.hasAttribute(attr)) return;
+                const original = el.dataset["rihulaOriginal"+attr.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())] || el.getAttribute(attr);
+                const key = attr === "placeholder" ? "rihulaOriginalPlaceholder" : "rihulaOriginalAriaLabel";
+                if (!el.dataset[key]) el.dataset[key] = original;
+                const base = el.dataset[key];
+                el.setAttribute(attr, (translations[lang] && translations[lang][base]) || base);
+            });
+        });
+    }
+
+    function apply(lang) {
+        lang = lang === "sw" ? "sw" : "en";
+        localStorage.setItem(STORAGE_KEY, lang);
+        document.documentElement.lang = lang === "sw" ? "sw" : "en";
+        translateRoot(document.body, lang);
+        const select = document.getElementById("rihulaLanguageSelect");
+        if (select) select.value = lang;
+        const options = document.querySelectorAll("#rihulaLanguageSelect option");
+        options.forEach(option => {
+            if (option.value === "en") option.textContent = "🇬🇧 " + (lang === "sw" ? "Kiingereza" : "English");
+            if (option.value === "sw") option.textContent = "🇰🇪 Kiswahili";
+        });
+        window.dispatchEvent(new CustomEvent("rihulaLanguageChanged", { detail: { language: lang } }));
+    }
+
+    function init() {
+        const select = document.getElementById("rihulaLanguageSelect");
+        if (select && !select.dataset.bound) {
+            select.dataset.bound = "1";
+            select.addEventListener("change", () => apply(select.value));
+        }
+        apply(localStorage.getItem(STORAGE_KEY) || "en");
+        const observer = new MutationObserver(mutations => {
+            const lang = localStorage.getItem(STORAGE_KEY) || "en";
+            mutations.forEach(m => m.addedNodes.forEach(n => {
+                if (n.nodeType === Node.ELEMENT_NODE || n.nodeType === Node.TEXT_NODE) translateRoot(n.nodeType === Node.TEXT_NODE ? n.parentElement : n, lang);
+            }));
+        });
+        if (document.body) observer.observe(document.body, { childList:true, subtree:true });
+    }
+
+    window.RihulaLanguage = { apply, get: () => localStorage.getItem(STORAGE_KEY) || "en" };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once:true });
+    else init();
+})();
+
 async function loadMemberData() {
     try {
         await window.waitForRihulaDb();
@@ -669,7 +854,18 @@ async function loadSavingsStats(phone) {
             withdrawals = Number(row.withdrawals || 0);
             usedRpc = true;
         } else {
-            console.warn("get_member_finance failed; using personal row fallback:", error.message);
+            // Some deployments do not yet have the RPC in PostgREST's schema
+            // cache. That is a compatibility condition, not a member-facing
+            // JavaScript error, so use the personal-row fallback quietly.
+            const rpcMissing =
+                error &&
+                (error.code === "PGRST202" ||
+                 /schema cache/i.test(error.message || "") ||
+                 /get_member_finance/i.test(error.message || ""));
+
+            if (!rpcMissing) {
+                console.warn("get_member_finance failed; using personal row fallback:", error.message);
+            }
 
             // Fallback for projects where the RPC has not yet been deployed.
             const [cResult, wResult] = await Promise.all([
@@ -750,27 +946,6 @@ async function loadSavingsStats(phone) {
     }
 }
 
-function toggleSinglePassword(inputId, button) {
-
-    const input =
-        document.getElementById(inputId);
-
-    if (!input) return;
-
-    if (input.type === "password") {
-
-        input.type = "text";
-
-        button.innerText = "🙈";
-
-    } else {
-
-        input.type = "password";
-
-        button.innerText = "👁";
-
-    }
-}
 async function loadCollectionPeriods() {
     try {
         const user = JSON.parse(
@@ -888,40 +1063,6 @@ async function loadCollectionPeriods() {
     }
 }
 
-async function changePassword() {
-    const user = JSON.parse(localStorage.getItem("loggedUser") || "null");
-    const currentPassword = document.getElementById("currentPassword").value.trim();
-    const newPassword = document.getElementById("newPassword").value.trim();
-    const confirmPassword = document.getElementById("confirmPassword").value.trim();
-
-    if (!user || !user.id) {
-        showPopup("Your login session has expired. Please log in again.", "error");
-        return;
-    }
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showPopup("Please fill all fields.");
-        return;
-    }
-    if (newPassword !== confirmPassword) {
-        showPopup("New passwords do not match.");
-        return;
-    }
-    if (newPassword.length < 8) {
-        showPopup("Password must be at least 8 characters long.");
-        return;
-    }
-
-    try {
-        await RihulaCustomAuth.changeMemberPassword(user.id, currentPassword, newPassword);
-        document.getElementById("currentPassword").value = "";
-        document.getElementById("newPassword").value = "";
-        document.getElementById("confirmPassword").value = "";
-        showPopup("Password changed successfully.");
-    } catch (error) {
-        console.error("CHANGE PASSWORD ERROR:", error);
-        showPopup(error.message || "Could not change password.", "error");
-    }
-}
 function togglePasswordVisibility() {
 
     const fields = [
