@@ -276,6 +276,74 @@
     }
   }
 
+
+  function normalizeKenyanPhone(raw) {
+    let s = String(raw ?? "").trim().replace(/[\s()\-]/g, "");
+    if (!s) return null;
+    if (s.startsWith("+254")) s = s.slice(1);
+    if (s.startsWith("254")) return /^254(?:1|7)\d{8}$/.test(s) ? s : null;
+    if (/^0(?:1|7)\d{8}$/.test(s)) return "254" + s.slice(1);
+    return null;
+  }
+
+  function contributionWhatsAppMessage(member, amount, dateText) {
+    return `Hello ${member.name || "RIHULA Member"},\n\nThank you for your commitment to RIHULA Mukhobola Association. This is to confirm that your contribution of KSh ${money(amount)} has been successfully recorded on ${dateText}.\n\nPlease keep your payment confirmation for your records. If you have any question about your savings, kindly contact the RIHULA administration.\n\nThank you for saving consistently with RIHULA.\nSave. Grow. Belong. 💚`;
+  }
+
+  function openContributionWhatsApp(member, amount, dateText) {
+    const phone = normalizeKenyanPhone(member.phone);
+    if (!phone) {
+      notify(`${member.name || "This member"} has an invalid Kenyan phone number.`, "warning");
+      return;
+    }
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(contributionWhatsAppMessage(member, amount, dateText))}`;
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) {
+      notify("Your browser blocked WhatsApp. Allow pop-ups for RIHULA and try again.", "warning");
+      return;
+    }
+    try { window.RihulaAdmin?.logActivity?.(`Opened WhatsApp contribution confirmation for: ${member.name}`); } catch (_) {}
+  }
+
+  function showContributionWhatsApp(targets) {
+    const overlay = $("waContributionOverlay");
+    const list = $("waContributionList");
+    if (!overlay || !list || !targets.length) return;
+
+    const dateText = new Intl.DateTimeFormat("en-KE", {
+      day: "2-digit", month: "long", year: "numeric"
+    }).format(new Date());
+
+    list.innerHTML = targets.map((item, index) => {
+      const member = item.member;
+      const valid = !!normalizeKenyanPhone(member.phone);
+      return `<div class="wa-contrib-item">
+        <div class="wa-contrib-info">
+          <strong>${esc(member.name)}</strong>
+          <small>KSh ${money(item.amount)} • ${esc(member.phone || "No phone")}</small>
+        </div>
+        <button type="button" class="wa-contrib-send" data-wa-index="${index}" ${valid ? "" : "disabled"}>💬 WhatsApp</button>
+      </div>`;
+    }).join("");
+
+    list.querySelectorAll("[data-wa-index]").forEach(button => {
+      button.addEventListener("click", () => {
+        const item = targets[Number(button.dataset.waIndex)];
+        if (item) openContributionWhatsApp(item.member, item.amount, dateText);
+      });
+    });
+
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeContributionWhatsApp() {
+    const overlay = $("waContributionOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
   async function saveBatch() {
     const { batch, errors } = collectBatch();
     if (!batch.length || errors.length) {
@@ -301,9 +369,14 @@
     if (error) throw error;
 
     const total = rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const whatsappTargets = finalBatch.map(item => ({
+      member: finalCheck.get(String(item.member.id)),
+      amount: item.amount
+    })).filter(item => item.member);
     notify(`${rows.length} contribution${rows.length === 1 ? "" : "s"} recorded successfully. Total: KSh ${money(total)}`, "success");
     selected.clear();
     renderSelected();
+    setTimeout(() => showContributionWhatsApp(whatsappTargets), 250);
 
     try { await window.refreshRihulaFinance?.(); } catch (_) {}
     try { window.loadLeaderboard?.(); } catch (_) {}
@@ -382,12 +455,17 @@
     $("reviewContributionsBtn")?.addEventListener("click", reviewContributions);
     $("confirmContributionCancel")?.addEventListener("click", () => finishConfirm(false));
     $("confirmContributionSave")?.addEventListener("click", () => finishConfirm(true));
+    $("waContributionClose")?.addEventListener("click", closeContributionWhatsApp);
+    $("waContributionOverlay")?.addEventListener("click", e => {
+      if (e.target === $("waContributionOverlay")) closeContributionWhatsApp();
+    });
     $("contributionConfirmOverlay")?.addEventListener("click", e => {
       if (e.target === $("contributionConfirmOverlay")) finishConfirm(false);
     });
     document.addEventListener("keydown", e => {
       if (e.key === "Escape") {
-        if ($("contributionConfirmOverlay")?.classList.contains("open")) finishConfirm(false);
+        if ($("waContributionOverlay")?.classList.contains("open")) closeContributionWhatsApp();
+        else if ($("contributionConfirmOverlay")?.classList.contains("open")) finishConfirm(false);
         else closeMemberPicker();
       }
     });
