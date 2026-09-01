@@ -39,56 +39,14 @@
 
     return { success: true, user: data.user, session: data.session };
   }
-  async function loginMember(loginValue, password) {
+  async function loginMember(email, password) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-
-    const rawLogin = String(loginValue || "").trim();
-    if (!rawLogin || !password) throw new Error("Enter your phone number and password.");
-
-    // RIHULA members log in with their registered phone number.
-    // Supabase Auth still uses the member's verified email internally, so
-    // the secure RPC maps phone -> Auth email without exposing the members table.
-    let authEmail = rawLogin.toLowerCase();
-    const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawLogin);
-
-    if (!looksLikeEmail) {
-      const cleanPhone = normalizeKenyanPhone(rawLogin);
-      if (!/^(?:07|01)\d{8}$/.test(cleanPhone)) {
-        throw new Error("Enter a valid Kenyan phone number, e.g. 0712345678 or 0112345678.");
-      }
-
-      const { data: lookup, error: lookupError } = await db.rpc(
-        "rihula_get_auth_email_by_phone",
-        { p_phone: cleanPhone }
-      );
-
-      if (lookupError) {
-        console.error("PHONE LOGIN LOOKUP ERROR:", lookupError);
-        throw new Error("Phone login is not configured yet. Please run the RIHULA phone-login SQL in Supabase.");
-      }
-
-      authEmail = String(lookup || "").trim().toLowerCase();
-      if (!authEmail) throw new Error("No registered member was found with that phone number.");
-    }
-
-    const { data, error } = await db.auth.signInWithPassword({
-      email: authEmail,
-      password: String(password)
-    });
+    const { data, error } = await db.auth.signInWithPassword({ email: String(email).trim().toLowerCase(), password });
     if (error) throw error;
-    if (!data?.user) throw new Error("Login could not be completed.");
-
-    const { data: member, error: memberError } = await db
-      .from("members")
-      .select("*")
-      .eq("auth_id", data.user.id)
-      .single();
-
+    const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
     if (memberError || !member) throw new Error("Your member profile could not be found.");
     if (member.is_member !== true) throw new Error("This account does not have member access.");
-
-    saveSession(member);
-    return member;
+    saveSession(member); return member;
   }
   async function changeMemberPassword(_memberId, currentPassword, newPassword) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
@@ -101,11 +59,36 @@
       throw new Error("Your secure login session has expired. Please log in again.");
     }
 
-    const { error: verifyError } = await db.auth.signInWithPassword({
+    // Re-authenticate with the current password first.
+    // Explicitly install the fresh session so updateUser() never runs
+    // against a stale session. This is important when Supabase requires
+    // recent authentication before allowing a password change.
+    const { data: loginData, error: verifyError } = await db.auth.signInWithPassword({
       email: authData.user.email,
       password: String(currentPassword || "")
     });
-    if (verifyError) throw new Error("Current password is incorrect.");
+
+    if (verifyError || !loginData?.session) {
+      throw new Error("Current password is incorrect.");
+    }
+
+    const { error: sessionError } = await db.auth.setSession({
+      access_token: loginData.session.access_token,
+      refresh_token: loginData.session.refresh_token
+    });
+
+    if (sessionError) {
+      throw new Error("Could not refresh your secure login session. Please log in again.");
+    }
+
+    const { data: freshUserData, error: freshUserError } = await db.auth.getUser();
+    if (freshUserError || !freshUserData?.user) {
+      throw new Error("Could not verify your account session. Please log in again.");
+    }
+
+    if (freshUserData.user.id !== authData.user.id) {
+      throw new Error("Account verification failed. Please log in again.");
+    }
 
     const { error } = await db.auth.updateUser({ password: newPassword });
     if (error) throw error;

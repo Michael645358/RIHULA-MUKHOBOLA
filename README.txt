@@ -1,18 +1,15 @@
-RIHULA EMAIL OR PHONE + PASSWORD LOGIN
+RIHULA PASSWORD CHANGE FIX
 
-Members can now log in using either:
-1. The email address used during registration + password
-2. Their registered Kenyan phone number + password
+Replace these three files:
+- member.html
+- member.js
+- custom-auth.js
 
-Supported phone formats include:
-07XXXXXXXX
-01XXXXXXXX
-2547XXXXXXXX
-2541XXXXXXXX
-+2547XXXXXXXX
-+2541XXXXXXXX
+The password change now:
+1. Checks the current password.
+2. Gets a fresh Supabase Auth session.
+3. Explicitly installs that session.
+4. Verifies the same user is still authenticated.
+5. Changes the password.
 
-No new SQL is required if rihula_get_auth_email_by_phone already exists.
-If phone login has not yet been configured, run RIHULA-PHONE-LOGIN.sql once in Supabase.
-
-Replace login.html and custom-auth.js in the project.
+No database tables or SQL were changed.
