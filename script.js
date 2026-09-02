@@ -241,8 +241,7 @@ let totalSavings = 0;
 }
 async function deleteMember(phone) {
 
-    const confirmDelete =
-        confirm("Delete this member?");
+    const confirmDelete = await showConfirm("Delete this member? This action cannot be undone.", { title: "Delete member", confirmText: "Delete", danger: true });
 
     if (!confirmDelete) return;
 
@@ -392,9 +391,7 @@ async function approveMember(phone) {
 }
 async function rejectMember(phone) {
 
-    const confirmed = confirm(
-        "Are you sure you want to reject this member?"
-    );
+    const confirmed = await showConfirm("Are you sure you want to reject this member?", { title: "Reject member", confirmText: "Reject", danger: true, icon: "⚠" });
 
     if (!confirmed) return;
 

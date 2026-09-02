@@ -167,9 +167,7 @@
   }
 
   async function deleteImage(item) {
-    const confirmed = typeof showConfirm === "function"
-      ? await showConfirm("Delete this gallery photo? This cannot be undone.", { title: "Delete gallery photo", confirmText: "Delete", danger: true })
-      : window.confirm("Delete this gallery photo?");
+    const confirmed = await showConfirm("Delete this gallery photo? This cannot be undone.", { title: "Delete gallery photo", confirmText: "Delete", danger: true });
     if (!confirmed) return;
 
     try {

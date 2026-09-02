@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="rihula-modern-design.css">
 <link rel="stylesheet" href="rihula-v3-ui.css">
 <link rel="stylesheet" href="admin-activities.css">
+<script src="popups.js?v=20260902-1"></script>
 </head>
 <body class="admin-activities-page">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
@@ -149,7 +150,7 @@ async function copySelectedActivities(){
 async function deleteSelectedActivities(){
   const rows=selectedRows();
   if(!rows.length) return;
-  const confirmed=window.confirm(`Delete ${rows.length} selected admin activit${rows.length===1?'y':'ies'} permanently?\n\nThis cannot be undone.`);
+  const confirmed=await showConfirm(`Delete ${rows.length} selected admin activit${rows.length===1?'y':'ies'} permanently?\n\nThis cannot be undone.`, { title: "Delete admin activity", confirmText: "Delete", danger: true });
   if(!confirmed) return;
   const ids=rows.map(r=>r.id);
   const btn=document.getElementById('deleteActivitiesBtn');

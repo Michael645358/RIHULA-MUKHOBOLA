@@ -19,7 +19,7 @@ function escapeHtml(value) {
 
 function notify(message) {
     if (typeof showPopup === "function") showPopup(message);
-    else alert(message);
+    else if (typeof window.RihulaPopups !== "undefined") window.RihulaPopups.info(message);
 }
 
 function formatTime(value) {
@@ -123,7 +123,7 @@ async function deleteMessage(id) {
         return;
     }
 
-    if (!confirm("Delete this message? This cannot be undone.")) return;
+    if (!(await showConfirm("Delete this message? This cannot be undone.", { title: "Delete message", confirmText: "Delete", danger: true }))) return;
 
     const { error } = await db
         .from("messages")

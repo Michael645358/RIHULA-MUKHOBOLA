@@ -172,13 +172,11 @@ async function addAnnouncement() {
 }
 
 async function deleteAnnouncement(id) {
-    const confirmed = typeof showConfirm === "function"
-        ? await showConfirm("Delete this announcement? This action cannot be undone.", {
-            title: "Delete announcement",
-            confirmText: "Delete",
-            danger: true
-        })
-        : window.confirm("Delete this announcement? This action cannot be undone.");
+    const confirmed = await showConfirm("Delete this announcement? This action cannot be undone.", {
+        title: "Delete announcement",
+        confirmText: "Delete",
+        danger: true
+    });
 
     if (!confirmed) return;
 

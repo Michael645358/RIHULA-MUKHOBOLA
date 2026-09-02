@@ -2055,8 +2055,7 @@ async function loadOfflineMembers() {
 }
 async function deleteMessage(id) {
 
-    const confirmDelete =
-        confirm("Delete this message?");
+    const confirmDelete = await showConfirm("Delete this message? This cannot be undone.", { title: "Delete message", confirmText: "Delete", danger: true });
 
     if (!confirmDelete) return;
 
@@ -2236,7 +2235,7 @@ async function showAnnouncements() {
 
 async function deleteNotification(id) {
 
-    const ok = confirm("Delete this notification?");
+    const ok = await showConfirm("Delete this notification? This cannot be undone.", { title: "Delete notification", confirmText: "Delete", danger: true, icon: "🗑" });
 
     if (!ok) return;
 

@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="admin-dashboard-3.css">
 <link rel="stylesheet" href="all-member-modern.css">
+<script src="popups.js?v=20260902-1"></script>
 <link rel="stylesheet" href="rihula-v3-ui.css">
 </head>
 
@@ -409,7 +410,7 @@ function financeFor(member) {
   function closeHistory(){document.getElementById("historyModal").setAttribute("aria-hidden","true");}
   function edit(phone){window.location.href="edit-member.html?phone="+encodeURIComponent(phone);}
   async function remove(id,phone,name){
-    if(!confirm(`Delete ${name || phone}? This cannot be undone.`)) return;
+    if(!(await showConfirm(`Delete ${name || phone}? This cannot be undone.`, { title: "Delete member", confirmText: "Delete", danger: true }))) return;
     try {
       let q=window.db.from("members").delete();
       q=id ? q.eq("id",id) : q.eq("phone",phone);

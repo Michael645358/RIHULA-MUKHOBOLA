@@ -29,7 +29,7 @@
 
   function notify(message, type) {
     if (typeof window.showPopup === "function") window.showPopup(message, type || "info");
-    else alert(message);
+    else if (typeof window.RihulaPopups !== "undefined") window.RihulaPopups.info(message);
   }
 
   function getMember(id) {
