@@ -39,14 +39,52 @@
 
     return { success: true, user: data.user, session: data.session };
   }
-  async function loginMember(email, password) {
+  async function loginMember(loginId, password) {
     if (typeof window.waitForRihulaDb === "function") await window.waitForRihulaDb();
-    const { data, error } = await db.auth.signInWithPassword({ email: String(email).trim().toLowerCase(), password });
+
+    let loginEmail = String(loginId || "").trim().toLowerCase();
+
+    // Supabase password login requires an email. If the member enters a
+    // Kenyan phone number, resolve that number to the member's registered email.
+    if (!loginEmail.includes("@")) {
+      const phone = normalizeKenyanPhone(loginId);
+      const { data: phoneMember, error: phoneError } = await db
+        .from("members")
+        .select("email, auth_id, is_member")
+        .eq("phone", phone)
+        .maybeSingle();
+
+      if (phoneError) {
+        console.error("PHONE LOOKUP ERROR:", phoneError);
+        throw new Error("We could not verify that phone number. Please try again.");
+      }
+
+      if (!phoneMember || !phoneMember.email) {
+        throw new Error("No member account was found for that phone number.");
+      }
+
+      loginEmail = String(phoneMember.email).trim().toLowerCase();
+    }
+
+    const { data, error } = await db.auth.signInWithPassword({
+      email: loginEmail,
+      password
+    });
+
     if (error) throw error;
-    const { data: member, error: memberError } = await db.from("members").select("*").eq("auth_id", data.user.id).single();
+    if (!data || !data.user) throw new Error("The login could not be completed.");
+
+    const { data: member, error: memberError } = await db
+      .from("members")
+      .select("*")
+      .eq("auth_id", data.user.id)
+      .single();
+
     if (memberError || !member) throw new Error("Your member profile could not be found.");
     if (member.is_member !== true) throw new Error("This account does not have member access.");
-    saveSession(member); return member;
+
+    saveSession(member);
+    return member;
   }
   window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, saveSession, clearSession, getSessionMember };
 
