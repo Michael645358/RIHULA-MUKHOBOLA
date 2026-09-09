@@ -1,0 +1,283 @@
+/* =========================================================
+   RIHULA AI ASSISTANT — WIDE RESPONSIVE LAYOUT
+   Keeps the existing AI functionality; only modernizes the layout.
+========================================================= */
+
+#aiScreen{
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100dvh - 76px);
+  box-sizing:border-box!important;
+  padding:18px clamp(12px,3vw,42px) 100px!important;
+  margin:0!important;
+  background:linear-gradient(180deg,#f5fbf8 0%,#eef7f3 100%)!important;
+}
+
+#aiScreen.active{
+  display:block!important;
+}
+
+#aiScreen > .ai-wide-shell{
+  width:100%;
+  max-width:1450px;
+  margin:0 auto;
+  background:rgba(255,255,255,.96);
+  border:1px solid #dcebe4;
+  border-radius:24px;
+  box-shadow:0 18px 55px rgba(4,72,43,.10);
+  overflow:hidden;
+}
+
+.ai-wide-header{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:22px 24px;
+  border-bottom:1px solid #e5eee9;
+  background:#fff;
+}
+
+.ai-back-btn{
+  flex:0 0 auto;
+  border:0;
+  border-radius:12px;
+  padding:11px 17px;
+  background:#087c54;
+  color:#fff;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.ai-brand-icon{
+  width:52px;
+  height:52px;
+  flex:0 0 52px;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  background:linear-gradient(135deg,#087c54,#0aa878);
+  color:#fff;
+  font-size:28px;
+  box-shadow:0 8px 20px rgba(8,124,84,.20);
+}
+
+.ai-brand-copy{min-width:0;flex:1}
+.ai-brand-copy h2{margin:0;color:#12352c;font-size:clamp(21px,2.5vw,30px);line-height:1.1}
+.ai-brand-copy p{margin:6px 0 0;color:#71817b;font-size:14px}
+
+.ai-private-badge{
+  flex:0 0 auto;
+  min-width:190px;
+  padding:11px 15px;
+  border-radius:16px;
+  background:#e8f7f0;
+  color:#087052;
+  font-size:14px;
+  font-weight:800;
+}
+.ai-private-badge small{display:block;margin-top:3px;color:#67857a;font-weight:500;font-size:11px}
+
+.ai-wide-body{
+  display:grid;
+  grid-template-columns:minmax(0,1.05fr) minmax(390px,.95fr);
+  gap:18px;
+  padding:20px;
+}
+
+.ai-info-column,.ai-chat-column{min-width:0}
+
+.ai-quick-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+
+.ai-quick-card{
+  min-height:104px;
+  padding:13px 9px;
+  border:1px solid #dceee7;
+  border-radius:16px;
+  background:linear-gradient(145deg,#f0fbf6,#fff);
+  color:#12483a;
+  text-align:center;
+  cursor:pointer;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.ai-quick-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(5,83,52,.10);border-color:#b8dfd0}
+.ai-quick-card:active{transform:scale(.98)}
+.ai-quick-icon{display:block;font-size:27px;margin-bottom:7px}
+.ai-quick-card strong{display:block;font-size:13px;line-height:1.2}
+.ai-quick-card small{display:block;margin-top:5px;color:#789087;font-size:10px;line-height:1.25}
+
+#aiMessages{
+  height:min(62vh,620px)!important;
+  min-height:360px!important;
+  padding:16px!important;
+  border:1px solid #dfece6!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,#fbfefd,#f3faf7)!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+}
+
+#aiScreen #aiMessages .my-msg,
+#aiScreen #aiMessages .other-msg{
+  display:block;
+  width:fit-content;
+  max-width:min(88%,620px);
+  margin:8px 0;
+  padding:11px 14px;
+  border-radius:15px;
+  font-size:14px;
+  line-height:1.5;
+  white-space:pre-wrap;
+  box-sizing:border-box;
+}
+#aiScreen #aiMessages .my-msg{
+  margin-left:auto;
+  background:#087c54;
+  color:#fff;
+  border-bottom-right-radius:5px;
+}
+#aiScreen #aiMessages .other-msg{
+  margin-right:auto;
+  background:#fff;
+  color:#263b34;
+  border:1px solid #dce9e4;
+  box-shadow:0 2px 7px rgba(0,0,0,.04);
+  border-bottom-left-radius:5px;
+}
+
+.ai-chat-column .ai-suggestions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:12px 0;
+}
+.ai-suggestion{
+  border:1px solid #bfe4d6;
+  background:#effaf5;
+  color:#096b4d;
+  border-radius:999px;
+  padding:8px 11px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+#aiScreen .ai-input-area{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border:1px solid #dbe9e4;
+  border-radius:18px;
+  background:#fff;
+}
+#aiScreen #aiInput{
+  flex:1;
+  min-width:0;
+  min-height:45px;
+  max-height:120px;
+  resize:none;
+  border:1px solid #d8e4df;
+  border-radius:14px;
+  padding:12px 13px;
+  box-sizing:border-box;
+  font:14px/1.4 Arial,sans-serif;
+  outline:none;
+}
+#aiScreen #aiInput:focus{border-color:#0a8a5d;box-shadow:0 0 0 3px rgba(10,138,93,.08)}
+#aiScreen .ai-send-btn{
+  width:48px;height:48px;flex:0 0 48px;border:0;border-radius:14px;
+  background:#087c54;color:#fff;font-size:21px;cursor:pointer;
+}
+
+.ai-security-note{text-align:center;color:#7a8983;font-size:10px;margin:8px 0 0}
+
+@media(max-width:1100px){
+  .ai-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ai-wide-body{grid-template-columns:1fr}
+  #aiMessages{height:52vh!important}
+}
+
+@media(max-width:600px){
+  #aiScreen{padding:8px 8px 88px!important}
+  #aiScreen > .ai-wide-shell{border-radius:18px}
+  .ai-wide-header{padding:14px 10px;gap:9px;align-items:flex-start}
+  .ai-back-btn{padding:10px 12px;font-size:14px}
+  .ai-brand-icon{width:42px;height:42px;flex-basis:42px;border-radius:13px;font-size:23px}
+  .ai-brand-copy h2{font-size:21px}
+  .ai-brand-copy p{font-size:11px}
+  .ai-private-badge{display:none}
+  .ai-wide-body{padding:10px;gap:10px}
+  .ai-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ai-quick-card{min-height:88px;padding:10px 7px}
+  .ai-quick-icon{font-size:23px;margin-bottom:5px}
+  .ai-quick-card strong{font-size:12px}
+  .ai-quick-card small{font-size:9px}
+  #aiMessages{height:48vh!important;min-height:300px!important;padding:10px!important;border-radius:15px!important}
+  #aiScreen #aiMessages .my-msg,#aiScreen #aiMessages .other-msg{max-width:92%;font-size:13px;padding:10px 11px}
+  .ai-chat-column .ai-suggestions{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .ai-suggestion{white-space:nowrap}
+}
+
+/* =========================================================
+   RIHULA AI — FLOATING LAUNCH BUTTON
+   Opens the existing #aiScreen through showAI().
+========================================================= */
+.ai-floating-button{
+  position:fixed;
+  right:22px;
+  bottom:92px;
+  width:66px;
+  height:66px;
+  border:0;
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  background:linear-gradient(145deg,#0b9b6b,#08744f);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(4,93,61,.28),0 3px 8px rgba(0,0,0,.12);
+  cursor:pointer;
+  z-index:9998;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.ai-floating-button:hover{
+  transform:translateY(-3px) scale(1.03);
+  box-shadow:0 16px 32px rgba(4,93,61,.32),0 4px 10px rgba(0,0,0,.14);
+}
+.ai-floating-button:active{transform:scale(.94);}
+.ai-floating-icon{font-size:25px;line-height:25px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18));}
+.ai-floating-label{font-size:10px;font-weight:900;line-height:12px;letter-spacing:.4px;margin-top:1px;}
+.ai-floating-sparkle{
+  position:absolute;
+  top:6px;
+  right:8px;
+  font-size:13px;
+  color:#fff;
+  animation:aiSparkle 1.8s ease-in-out infinite;
+}
+@keyframes aiSparkle{0%,100%{opacity:.55;transform:scale(.85) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(15deg)}}
+
+/* Keep the launcher out of the way while the full AI screen is open. */
+body:has(#aiScreen[style*="display: block"]) .ai-floating-button,
+body:has(#aiScreen.active) .ai-floating-button{display:none;}
+
+@media (max-width:700px){
+  .ai-floating-button{
+    right:14px;
+    bottom:76px;
+    width:58px;
+    height:58px;
+    border-radius:19px;
+  }
+  .ai-floating-icon{font-size:22px;line-height:22px;}
+  .ai-floating-label{font-size:9px;line-height:11px;}
+  .ai-floating-sparkle{top:5px;right:7px;font-size:12px;}
+}

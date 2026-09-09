@@ -312,3 +312,21 @@ else {
     messages.scrollTop =
         messages.scrollHeight;
 }
+function aiQuickAsk(question) {
+    const input = document.getElementById("aiInput");
+    if (!input) return;
+    input.value = question;
+    askAI();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("aiInput");
+    if (input) {
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                askAI();
+            }
+        });
+    }
+});

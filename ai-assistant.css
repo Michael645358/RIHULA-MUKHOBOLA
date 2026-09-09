@@ -1,0 +1,40 @@
+/* RIHULA AI Assistant — modern dashboard treatment */
+.rihula-ai-action{position:relative;overflow:hidden}
+.rihula-ai-action .action-icon{font-size:1.25rem}
+
+.rihula-ai-screen{position:fixed;inset:0;z-index:4000;overflow-y:auto;box-sizing:border-box;padding:18px 14px 105px;background:linear-gradient(180deg,#f4faf8 0%,#f7fbfa 48%,#edf7f4 100%)}
+.rihula-ai-shell{width:min(980px,100%);margin:0 auto;background:rgba(255,255,255,.96);border:1px solid #e0ebe7;border-radius:24px;box-shadow:0 18px 50px rgba(5,76,62,.10);padding:18px}
+.rihula-ai-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-bottom:15px;border-bottom:1px solid #e4eee9}
+.rihula-ai-back{border:0;background:#087f63;color:#fff;border-radius:12px;padding:11px 14px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 16px rgba(8,127,99,.18)}
+.rihula-ai-title{display:flex;align-items:center;gap:12px;min-width:0}
+.rihula-ai-icon{width:50px;height:50px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#0c9b78,#1d3bb8);color:#fff;font-size:25px;box-shadow:0 9px 22px rgba(24,76,165,.20)}
+.rihula-ai-title h2{margin:0;color:#102d2b;font-size:22px;line-height:1.2}
+.rihula-ai-title p{margin:4px 0 0;color:#778a89;font-size:13px}
+.rihula-ai-safe{display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:17px;background:#e9f8f1;color:#086b56}
+.rihula-ai-safe strong,.rihula-ai-safe small{display:block}.rihula-ai-safe strong{font-size:13px}.rihula-ai-safe small{font-size:10px;color:#5e8078;margin-top:2px}
+
+.rihula-ai-tools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:16px 0;border-bottom:1px solid #edf1ef}
+.rihula-ai-tools button{min-height:105px;border:1px solid #dcece6;border-radius:15px;background:linear-gradient(145deg,#fff,#f4fbf8);padding:13px 10px;text-align:center;cursor:pointer;transition:.18s ease;box-shadow:0 3px 10px rgba(16,72,61,.035)}
+.rihula-ai-tools button:hover{transform:translateY(-2px);border-color:#8ed1bd;box-shadow:0 8px 18px rgba(16,72,61,.09)}
+.rihula-ai-tools span{display:block;font-size:24px;margin-bottom:7px}.rihula-ai-tools strong{display:block;color:#123f39;font-size:13px}.rihula-ai-tools small{display:block;color:#708783;font-size:10px;line-height:1.3;margin-top:4px}
+
+.rihula-ai-messages{min-height:340px;max-height:47vh;overflow-y:auto;padding:18px 8px;background:#fff;border:0;border-radius:0;box-shadow:none}
+.rihula-ai-messages .my-msg,.rihula-ai-messages .other-msg{max-width:78%;padding:11px 14px;margin:9px 4px;border-radius:15px;line-height:1.45;font-size:14px;white-space:pre-wrap;box-sizing:border-box}
+.rihula-ai-messages .my-msg{margin-left:auto;background:#087f63;color:#fff;border-bottom-right-radius:5px}
+.rihula-ai-messages .other-msg{margin-right:auto;background:#f5f9f8;color:#243d39;border:1px solid #dfeae6;border-bottom-left-radius:5px;box-shadow:0 2px 7px rgba(16,40,34,.04)}
+.rihula-ai-messages .other-msg::before{content:'✦';display:inline-grid;place-items:center;width:25px;height:25px;margin-right:7px;vertical-align:middle;border-radius:50%;background:#087f63;color:#fff;font-size:13px}
+.rihula-ai-suggestions{display:none}
+
+.rihula-ai-suggestion-row{display:flex;gap:8px;overflow-x:auto;padding:5px 0 12px;scrollbar-width:none}.rihula-ai-suggestion-row::-webkit-scrollbar{display:none}
+.rihula-ai-suggestion-row button{flex:0 0 auto;border:1px solid #b8ddd2;background:#f5fcf9;color:#176c5a;border-radius:18px;padding:8px 12px;font:600 12px inherit;cursor:pointer}
+.rihula-ai-suggestion-row button:hover{background:#e7f7f1}
+
+.rihula-ai-input-area{display:flex;align-items:center;gap:7px;margin-top:2px;padding:7px 8px;background:#fff;border:1px solid #d8e7e2;border-radius:18px;box-shadow:0 5px 20px rgba(13,75,62,.07)}
+.rihula-ai-input-sparkle{width:30px;text-align:center;color:#087f63;font-size:20px}.rihula-ai-input-area textarea{flex:1;min-height:38px;max-height:90px;resize:none;border:0;outline:0;padding:9px 5px;font:14px inherit;background:transparent;color:#183a35}.rihula-ai-send{width:44px;height:44px;flex:0 0 44px;border:0;border-radius:13px;background:#087f63;color:#fff;cursor:pointer;font-size:20px;box-shadow:0 5px 14px rgba(8,127,99,.22)}
+.rihula-ai-footer{text-align:center;color:#839793;font-size:10px;margin:8px 0 0}.rihula-ai-privacy{text-align:center;color:#718681;font-size:10px;margin:5px 0 0}
+
+.rihula-ai-float{position:fixed;right:18px;bottom:82px;z-index:5000;width:58px;height:58px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:#087f63;color:#fff;box-shadow:0 10px 28px rgba(8,127,99,.30)}
+.rihula-ai-float span{font-size:22px;line-height:1}.rihula-ai-float strong{font-size:9px;margin-top:-12px}
+
+@media(max-width:760px){.rihula-ai-screen{padding:0 0 88px}.rihula-ai-shell{width:100%;min-height:100vh;border:0;border-radius:0;padding:14px 12px 18px;box-shadow:none}.rihula-ai-header{grid-template-columns:auto 1fr;gap:9px}.rihula-ai-safe{grid-column:1/-1;justify-content:center}.rihula-ai-back{padding:10px 12px}.rihula-ai-back span{display:none}.rihula-ai-title h2{font-size:18px}.rihula-ai-title p{font-size:11px}.rihula-ai-icon{width:43px;height:43px;border-radius:14px;font-size:21px}.rihula-ai-tools{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rihula-ai-tools button{min-height:82px;padding:9px 7px}.rihula-ai-tools span{font-size:20px;margin-bottom:4px}.rihula-ai-tools strong{font-size:12px}.rihula-ai-tools small{font-size:9px}.rihula-ai-messages{min-height:330px;max-height:50vh;padding:13px 2px}.rihula-ai-messages .my-msg,.rihula-ai-messages .other-msg{max-width:86%;font-size:13px}.rihula-ai-float{right:13px;bottom:76px}}
+@media(min-width:761px) and (max-width:900px){.rihula-ai-tools{grid-template-columns:repeat(4,minmax(0,1fr))}}

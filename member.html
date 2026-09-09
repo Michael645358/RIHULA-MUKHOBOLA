@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="rihula-modern-design.css">
 <link rel="stylesheet" href="rihula-v3-ui.css?v=20260906-cardsfix">
 <link rel="stylesheet" href="chat-modern.css?v=20260909-chatfix2">
+<link rel="stylesheet" href="rihula-ai-wide.css?v=20260909-wideai">
 </head>
 <body>
 
@@ -646,31 +647,63 @@
 </div>
 
 <div id="aiScreen" style="display:none;">
-
-    <button onclick="showDashboard()" class="btn">
-        ← Back
-    </button>
-
-    <h2>AI Assistant</h2>
-
-    <div id="aiMessages" class="chat-container"></div>
-
-    <div class="chat-input-area">
-
-        <textarea
-            id="aiInput"
-            placeholder="Ask me anything...">
-        </textarea>
-
-        <button onclick="askAI()">
-            Send
-        </button>
-
+  <div class="ai-wide-shell">
+    <div class="ai-wide-header">
+      <button onclick="showDashboard()" class="ai-back-btn" type="button">← Back</button>
+      <div class="ai-brand-icon" aria-hidden="true">✦</div>
+      <div class="ai-brand-copy">
+        <h2>RIHULA AI Assistant</h2>
+        <p>Your personal help companion • Always here for you</p>
+      </div>
+      <div class="ai-private-badge">🛡️ Safe &amp; Private<small>No other members’ details are shared.</small></div>
     </div>
+
+    <div class="ai-wide-body">
+      <div class="ai-info-column">
+        <div class="ai-quick-grid">
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How much have I saved?')"><span class="ai-quick-icon">💰</span><strong>My Savings</strong><small>Check your personal savings</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('What is my rank?')"><span class="ai-quick-icon">🏆</span><strong>My Rank</strong><small>See your current rank</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How is my goal progressing?')"><span class="ai-quick-icon">🎯</span><strong>My Goal</strong><small>View your goal progress</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('What is the group savings?')"><span class="ai-quick-icon">👥</span><strong>Group Savings</strong><small>Total group information</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How many members are registered?')"><span class="ai-quick-icon">👨‍👩‍👧‍👦</span><strong>Member Count</strong><small>Registered members</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('What is the latest announcement?')"><span class="ai-quick-icon">📢</span><strong>Announcements</strong><small>View recent updates</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How do I contribute?')"><span class="ai-quick-icon">💳</span><strong>Contribution Guide</strong><small>How to contribute</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How can I view my savings history?')"><span class="ai-quick-icon">📋</span><strong>Savings History</strong><small>Understand your transactions</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How do I change my password?')"><span class="ai-quick-icon">🔐</span><strong>Account Help</strong><small>Password &amp; profile help</small></button>
+          <button class="ai-quick-card" type="button" onclick="aiQuickAsk('How do I use the dashboard?')"><span class="ai-quick-icon">⚙️</span><strong>Dashboard Guide</strong><small>Learn the dashboard</small></button>
+        </div>
+      </div>
+
+      <div class="ai-chat-column">
+        <div id="aiMessages" class="chat-container" aria-live="polite"></div>
+        <div class="ai-suggestions">
+          <button class="ai-suggestion" type="button" onclick="aiQuickAsk('How do I change my password?')">🔐 Change password</button>
+          <button class="ai-suggestion" type="button" onclick="aiQuickAsk('What is my rank?')">🏆 My rank</button>
+          <button class="ai-suggestion" type="button" onclick="aiQuickAsk('How much have I saved?')">💰 My savings</button>
+          <button class="ai-suggestion" type="button" onclick="aiQuickAsk('How do I contribute?')">💳 Contribute</button>
+          <button class="ai-suggestion" type="button" onclick="aiQuickAsk('How can I contact admin?')">🎧 Contact admin</button>
+        </div>
+        <div class="ai-input-area">
+          <textarea id="aiInput" maxlength="2000" placeholder="Ask your RIHULA Assistant anything..." aria-label="Ask your RIHULA Assistant"></textarea>
+          <button class="ai-send-btn" onclick="askAI()" type="button" aria-label="Send">➤</button>
+        </div>
+        <div class="ai-security-note">🔒 Your assistant only uses information needed to help with your own account.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
     
+
+<!-- RIHULA AI floating button -->
+<button id="aiFloatingButton" class="ai-floating-button" type="button" onclick="showAI()" aria-label="Open RIHULA AI Assistant" title="RIHULA AI Assistant">
+  <span class="ai-floating-sparkle">✦</span>
+  <span class="ai-floating-icon">🤖</span>
+  <span class="ai-floating-label">AI</span>
+</button>
+
+
 <nav class="bottom-nav">
 
 <div onclick="showDashboard()" class="nav-item">

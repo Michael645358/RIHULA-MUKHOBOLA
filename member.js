@@ -1641,6 +1641,7 @@ function scrollToBottom() {
 
 function showAI() {
     openMemberScreen("aiScreen");
+    if (typeof window.initRihulaAI === "function") window.initRihulaAI();
 }
 
 
