@@ -4489,23 +4489,6 @@ th,td{border-bottom:1px solid var(--border);padding:12px 10px}
 }
 
 
-.group-goal-member-summary {
-    margin-top: 0;
-    margin-bottom: 14px;
-}
-
-.group-goal-member-summary .goal-stat {
-    min-height: 104px;
-    box-sizing: border-box;
-}
-
-@media (max-width: 380px) {
-    .group-goal-member-summary .goal-stat {
-        min-height: 100px;
-    }
-}
-
-
 /* CONTRIBUTION DAYS */
 
 .contribution-days-card {
@@ -5166,57 +5149,6 @@ th,td{border-bottom:1px solid var(--border);padding:12px 10px}
     }
 }
 /* =========================================================
-   DASHBOARD - ANNOUNCEMENT & ACHIEVEMENTS BUTTONS
-   ========================================================= */
-.dashboard-feature-buttons {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin: 18px 0;
-}
-
-.dashboard-feature-button {
-    width: 100%;
-    min-height: 64px;
-    padding: 14px 10px;
-    border-radius: 16px;
-    border: 1px solid #d7eee4;
-    background: #ffffff;
-    color: #123c2d;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 80, 50, 0.07);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.dashboard-feature-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 9px 22px rgba(0, 80, 50, 0.11);
-}
-
-.dashboard-feature-button:active {
-    transform: scale(0.98);
-}
-
-@media (max-width: 480px) {
-    .dashboard-feature-buttons {
-        gap: 10px;
-        margin: 15px 0;
-    }
-
-    .dashboard-feature-button {
-        min-height: 58px;
-        padding: 12px 6px;
-        border-radius: 14px;
-        font-size: 14px;
-    }
-}
-
-/* =========================================================
    RIHULA MEMBER NAVIGATION - SINGLE SCREEN MODE
    Only the active member screen may be visible.
    ========================================================= */
@@ -5389,299 +5321,68 @@ body.r3-member-page {
     .bottom-nav { max-width: 760px !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; }
 }
 
+
 /* =========================================================
-   ASSOCIATION MEMBERS - PHOTO OVERLAY
-   The overlay lives inside #groupMembersScreen. It is NOT fixed
-   to the browser/page, so it stays within the Association Members area.
-========================================================= */
-#groupMembersScreen {
-    position: relative;
-    min-height: calc(100dvh - 130px);
+   MEMBER DASHBOARD - ANNOUNCEMENT & ACHIEVEMENTS ONLY
+   ========================================================= */
+.member-two-action-boxes {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0;
+    padding: 0;
 }
 
-.association-photo-overlay {
-    position: absolute;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    box-sizing: border-box;
-    background: rgba(5, 20, 12, 0.72);
-    border-radius: inherit;
-    z-index: 100;
-}
-
-.association-photo-overlay.is-open {
-    display: flex;
-}
-
-.association-photo-viewer {
-    position: relative;
-    max-width: min(88vw, 520px);
-    max-height: min(82%, 620px);
-    padding: 10px;
-    border-radius: 24px;
-    background: #fff;
-    box-shadow: 0 18px 50px rgba(0,0,0,.35);
-}
-
-.association-photo-viewer img {
-    display: block;
-    width: min(78vw, 460px);
-    height: min(72vh, 560px);
-    max-width: 100%;
-    max-height: 70vh;
-    object-fit: contain;
-    border-radius: 18px;
-}
-
-.association-photo-close {
-    position: absolute;
-    top: -14px;
-    right: -14px;
-    width: 42px;
-    height: 42px;
-    border: 3px solid #fff;
-    border-radius: 50%;
-    background: #0b6623;
-    color: #fff;
-    font-size: 28px;
-    line-height: 1;
+.member-two-action {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    min-height: 72px;
+    margin: 0;
+    padding: 14px 10px;
+    border-radius: 16px;
+    border: 1px solid #d7eee4;
+    background: #ffffff;
+    color: #123c2d;
+    box-shadow: 0 6px 18px rgba(0, 80, 50, 0.08);
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0,0,0,.28);
-    z-index: 2;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.association-photo-close:active {
-    transform: scale(.94);
+.member-two-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 80, 50, 0.12);
 }
 
-.association-member-photo {
-    cursor: zoom-in;
+.member-two-action:active {
+    transform: scale(0.98);
 }
 
-@media (max-width: 600px) {
-    .association-photo-overlay {
-        padding: 18px;
+.announcement-action {
+    border-color: #cfe2ff;
+}
+
+.achievement-action {
+    border-color: #ddd3ff;
+}
+
+@media (max-width: 480px) {
+    .member-two-action-boxes {
+        gap: 10px;
     }
 
-    .association-photo-viewer {
-        max-width: 86vw;
-        max-height: 76vh;
-        padding: 8px;
+    .member-two-action {
+        min-height: 64px;
+        padding: 12px 8px;
+        border-radius: 14px;
+        font-size: 14px;
     }
-
-    .association-photo-viewer img {
-        width: 78vw;
-        height: 65vh;
-        max-height: 65vh;
-    }
-
-    .association-photo-close {
-        width: 40px;
-        height: 40px;
-        top: -12px;
-        right: -12px;
-    }
-}
-
-
-/* =========================================
-   CALCULATED RIHULA GROUP GOAL — FIXED DATA UI
-   ========================================= */
-.goal-loading{display:flex;align-items:center;justify-content:center;gap:9px;min-height:52px}
-.goal-spinner{width:16px;height:16px;border:2px solid rgba(8,127,79,.18);border-top-color:#087f4f;border-radius:50%;animation:rihulaGoalSpin .8s linear infinite;display:inline-block}
-@keyframes rihulaGoalSpin{to{transform:rotate(360deg)}}
-.goal-empty-state,.goal-error-state{padding:18px 12px;text-align:center;border-radius:15px;background:#f7fbf9;border:1px dashed rgba(8,127,79,.18)}
-.goal-empty-state>span,.goal-error-state>span{display:block;font-size:28px;margin-bottom:7px}
-.goal-empty-state strong,.goal-error-state strong{display:block;color:#1d3931;font-size:14px}
-.goal-empty-state small,.goal-error-state small{display:block;color:#7b8783;font-size:11px;line-height:1.45;margin:5px auto 0;max-width:340px}
-.goal-error-state button{margin-top:11px;border:0;border-radius:10px;padding:9px 14px;background:#087f4f;color:#fff;font-weight:800;cursor:pointer}
-.member-goal-row{animation-delay:var(--goal-row-delay,0ms)!important}
-.member-goal-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;background:#e8f7f0;color:#087f4f;font-size:12px;font-weight:900}
-.member-goal-info{flex:1;min-width:0}
-.member-goal-progress{height:5px;background:#e6eeeb;border-radius:99px;overflow:hidden;margin-top:7px;max-width:180px}
-.member-goal-progress span{display:block;height:100%;background:#087f4f;border-radius:99px;transition:width .6s ease}
-@media(max-width:600px){
-  .group-goal-mini-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-  .group-goal-mini-stat{padding:11px 7px}
-  .member-goal-row{gap:8px;padding:11px 9px}
-  .member-goal-avatar{width:34px;height:34px;flex-basis:34px;font-size:11px}
-  .member-goal-values strong{font-size:12px}
-  .member-goal-values small{font-size:9px}
-}
-
-/* =========================================
-   CALCULATED RIHULA GROUP GOAL
-   ========================================= */
-.group-goal-meaning-card,
-.member-goal-breakdown-card {
-    background: rgba(255,255,255,.96);
-    border: 1px solid rgba(8,127,79,.10);
-    border-radius: 20px;
-    padding: 18px;
-    margin-top: 14px;
-    box-shadow: 0 10px 28px rgba(16,72,55,.07);
-}
-
-.group-goal-meaning-head,
-.member-goal-breakdown-head {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-}
-
-.group-goal-kicker {
-    display:block;
-    font-size:10px;
-    font-weight:800;
-    letter-spacing:.12em;
-    color:#087f4f;
-    margin-bottom:4px;
-}
-
-.group-goal-meaning-head h3,
-.member-goal-breakdown-head h3 {
-    margin:0;
-    font-size:18px;
-    color:#153b31;
-}
-
-.group-goal-meaning-icon {
-    width:42px;
-    height:42px;
-    display:grid;
-    place-items:center;
-    border-radius:14px;
-    background:#e8f7f0;
-    font-size:21px;
-}
-
-.group-goal-meaning-card p {
-    margin:12px 0 0;
-    color:#66736f;
-    line-height:1.55;
-    font-size:13px;
-}
-
-.group-goal-mini-stats {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-    margin-top:14px;
-}
-
-.group-goal-mini-stat {
-    min-width:0;
-    background:#fff;
-    border:1px solid rgba(8,127,79,.08);
-    border-radius:17px;
-    padding:13px 10px;
-    text-align:center;
-    box-shadow:0 8px 20px rgba(16,72,55,.05);
-}
-
-.group-goal-mini-stat span {
-    display:block;
-    font-size:19px;
-    margin-bottom:5px;
-}
-
-.group-goal-mini-stat strong {
-    display:block;
-    color:#087f4f;
-    font-size:16px;
-    line-height:1.2;
-    overflow-wrap:anywhere;
-}
-
-.group-goal-mini-stat small {
-    display:block;
-    color:#7b8783;
-    font-size:10px;
-    margin-top:5px;
-}
-
-.member-goal-breakdown-head {
-    margin-bottom:12px;
-}
-
-.member-goal-breakdown-head > span {
-    font-size:21px;
-}
-
-.member-goal-breakdown {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-}
-
-.member-goal-row {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:12px 13px;
-    border-radius:14px;
-    background:#f7fbf9;
-    border:1px solid rgba(8,127,79,.06);
-    animation: rihulaGoalRowIn .35s ease both;
-}
-
-.member-goal-info,
-.member-goal-values {
-    min-width:0;
-}
-
-.member-goal-info strong,
-.member-goal-values strong {
-    display:block;
-    color:#1d3931;
-    font-size:13px;
-}
-
-.member-goal-info small,
-.member-goal-values small {
-    display:block;
-    color:#7b8783;
-    font-size:10px;
-    margin-top:3px;
-}
-
-.member-goal-values {
-    text-align:right;
-    flex:0 0 auto;
-}
-
-.member-goal-values strong {
-    color:#087f4f;
-}
-
-.goal-empty {
-    margin:0;
-    text-align:center;
-    color:#7b8783;
-    padding:12px;
-    font-size:13px;
-}
-
-@keyframes rihulaGoalRowIn {
-    from { opacity:0; transform:translateY(5px); }
-    to { opacity:1; transform:translateY(0); }
-}
-
-@media (max-width:480px) {
-    .group-goal-mini-stats { gap:7px; }
-    .group-goal-mini-stat { padding:11px 7px; }
-    .group-goal-mini-stat strong { font-size:14px; }
-    .member-goal-row { padding:11px; }
-}
-
-@media (prefers-reduced-motion:reduce) {
-    .member-goal-row { animation:none; }
 }

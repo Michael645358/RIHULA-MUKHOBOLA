@@ -457,6 +457,39 @@ function showGroupMembers() {
     loadGroupMembers();
 }
 
+// Association Members photo viewer. It is deliberately rendered inside
+// #groupMembersScreen so it never becomes a page-level popup.
+function openAssociationPhoto(src) {
+    const overlay = document.getElementById("associationPhotoOverlay");
+    const image = document.getElementById("associationPhotoImage");
+    if (!overlay || !image || !src) return;
+
+    image.src = src;
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+}
+
+function closeAssociationPhoto() {
+    const overlay = document.getElementById("associationPhotoOverlay");
+    const image = document.getElementById("associationPhotoImage");
+    if (!overlay) return;
+
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+    if (image) image.src = "";
+}
+
+document.addEventListener("click", function (event) {
+    const overlay = document.getElementById("associationPhotoOverlay");
+    if (overlay && event.target === overlay) {
+        closeAssociationPhoto();
+    }
+});
+
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeAssociationPhoto();
+});
+
 async function loadGroupMembers() {
 
     const { data, error } = await db
@@ -500,7 +533,9 @@ data.sort((a, b) => {
         container.innerHTML += `
             <div class="card">
                 <img src="${member.photo_url || 'images/logo.jpg'}"
-                     class="leader-photo">
+                     class="leader-photo association-member-photo"
+                     alt="${member.name || 'Member'} photo"
+                     onclick="openAssociationPhoto(this.src)">
 
                 <h3>${member.name}</h3>
                 
@@ -529,165 +564,143 @@ ${member.role || "👤 Member"}
     });
 }
 async function loadGroupGoal() {
+    const money = value => "KSh " + Number(value || 0).toLocaleString("en-KE");
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    };
 
     try {
+        await window.waitForRihulaDb();
 
-        // Get group goal from settings
-        const { data: settings, error: settingsError } = await db
-            .from("settings")
-            .select("group_goal")
-            .eq("id", 1)
-            .single();
+        /*
+         * SECURITY/PRIVACY:
+         * Group Goal is calculated server-side. The RPC returns aggregate
+         * figures only and NEVER returns member names, personal goals or
+         * individual contribution totals.
+         */
+        const { data, error } = await db.rpc("get_group_goal_summary");
 
-        if (settingsError) {
-            console.error("Group goal error:", settingsError);
-            return;
+        if (error) throw error;
+
+        const summary = data || {};
+
+        // New RPC contract: member_count is a server-side anonymous count.
+        // Keep a small compatibility fallback for older RPC responses that
+        // returned a numeric `members` value. Never read member names/goals
+        // or individual contribution data in the browser.
+        let memberCount = Number(summary.member_count);
+        if (!Number.isFinite(memberCount) || memberCount < 0) {
+            memberCount = Number(summary.members);
+        }
+        if (!Number.isFinite(memberCount) || memberCount < 0) {
+            memberCount = 0;
         }
 
-        const goal = Number(settings.group_goal || 0);
-
-        // Get all contributions
-        const { data: contributions, error: contributionError } =
-            await db
-                .from("contributions")
-                .select("amount");
-
-        if (contributionError) {
-            console.error(
-                "Contribution error:",
-                contributionError
-            );
-            return;
+        const groupGoal = Number(summary.group_goal || 0);
+        const collected = Number(summary.collected || 0);
+        const remaining = Math.max(groupGoal - collected, 0);
+        const percent = groupGoal > 0
+            ? Math.round((collected / groupGoal) * 100)
+            : 0;
+        const progressPercent = Math.min(Math.max(percent, 0), 100);
+        // Prefer the server-calculated average. If an older RPC does not
+        // provide it, calculate only from anonymous group totals.
+        let averageGoal = Number(summary.average_goal);
+        if (!Number.isFinite(averageGoal) || averageGoal < 0) {
+            averageGoal = memberCount > 0
+                ? Math.round(groupGoal / memberCount)
+                : 0;
         }
 
-        // Calculate total collected
-        let collected = 0;
+        // Keep only anonymous group-level data available to the UI.
+        window.rihulaGroupGoalSummary = {
+            group_goal: groupGoal,
+            collected: collected,
+            remaining: remaining,
+            percent: percent,
+            member_count: memberCount,
+            average_goal: averageGoal,
+            wednesday_collected: Number(summary.wednesday_collected || 0),
+            saturday_collected: Number(summary.saturday_collected || 0),
+            calculated_at: summary.calculated_at
+        };
 
-        (contributions || []).forEach(item => {
-            collected += Number(item.amount || 0);
-        });
+        // Dashboard Group Goal
+        setText("groupGoal", money(groupGoal));
+        setText("groupCollected", money(collected));
+        setText("groupRemaining", money(remaining));
+        setText("groupPercent", percent + "% Complete");
+        const groupProgress = document.getElementById("groupProgress");
+        if (groupProgress) groupProgress.style.width = progressPercent + "%";
 
-        // Calculate remaining
-        const remaining = Math.max(goal - collected, 0);
-
-        // Calculate percentage
-        let percent = 0;
-
-        if (goal > 0) {
-            percent = Math.round(
-                (collected / goal) * 100
-            );
-        }
-
-        // Don't allow progress to visually exceed 100%
-        const progressPercent = Math.min(percent, 100);
-
-        // =========================
-        // DASHBOARD GROUP GOAL
-        // =========================
-
-        const groupGoal =
-            document.getElementById("groupGoal");
-
-        if (groupGoal) {
-            groupGoal.innerText =
-                "KSh " + goal.toLocaleString();
-        }
-
-        const groupCollected =
-            document.getElementById("groupCollected");
-
-        if (groupCollected) {
-            groupCollected.innerText =
-                "KSh " + collected.toLocaleString();
-        }
-
-        const groupRemaining =
-            document.getElementById("groupRemaining");
-
-        if (groupRemaining) {
-            groupRemaining.innerText =
-                "KSh " + remaining.toLocaleString();
-        }
-
-        const groupPercent =
-            document.getElementById("groupPercent");
-
-        if (groupPercent) {
-            groupPercent.innerText =
-                percent + "% Complete";
-        }
-
-        const groupProgress =
-            document.getElementById("groupProgress");
-
-        if (groupProgress) {
-            groupProgress.style.width =
-                progressPercent + "%";
-        }
-
-
-        // =========================
-        // GROUP GOAL SCREEN
-        // =========================
-
-        const goalAmount =
-            document.getElementById("groupGoalAmount");
-
-        if (goalAmount) {
-            goalAmount.innerText =
-                "KSh " + goal.toLocaleString();
-        }
-
-        const goalCollected =
-            document.getElementById("groupGoalCollected");
-
-        if (goalCollected) {
-            goalCollected.innerText =
-                "KSh " + collected.toLocaleString();
-        }
-
-        const goalRemaining =
-            document.getElementById("groupGoalRemaining");
-
-        if (goalRemaining) {
-            goalRemaining.innerText =
-                "KSh " + remaining.toLocaleString();
-        }
-
-        const goalPercent =
-            document.getElementById("groupGoalPercent");
-
-        if (goalPercent) {
-            goalPercent.innerText =
-                percent + "%";
-        }
-
-        const goalProgress =
-            document.getElementById("groupGoalProgress");
-
-        if (goalProgress) {
-            goalProgress.style.width =
-                progressPercent + "%";
-        }
-
-        const goalComplete =
-            document.getElementById("groupGoalComplete");
-
-        if (goalComplete) {
-            goalComplete.innerText =
-                percent + "% Complete";
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Group Goal Error:",
-            error
+        // Group Goal screen
+        setText("groupGoalAmount", money(groupGoal));
+        setText("groupGoalCollected", money(collected));
+        setText("groupGoalRemaining", money(remaining));
+        setText("groupGoalPercent", percent + "%");
+        const goalProgress = document.getElementById("groupGoalProgress");
+        if (goalProgress) goalProgress.style.width = progressPercent + "%";
+        setText(
+            "groupGoalComplete",
+            `${percent}% Complete • ${memberCount.toLocaleString("en-KE")} members`
         );
 
+        // Only anonymous group-level statistics are shown.
+        setText("groupGoalMemberCount", memberCount.toLocaleString("en-KE"));
+        setText("groupGoalAverage", money(averageGoal));
+
+        renderContributionDaySummary(summary);
+
+        console.log("RIHULA GROUP GOAL (ANONYMOUS)", {
+            memberCount,
+            averageGoal,
+            groupGoal,
+            collected,
+            remaining,
+            percent
+        });
+    } catch (error) {
+        console.error("Group Goal Error:", error);
+
+        setText("groupGoalAmount", "KSh —");
+        setText("groupGoalCollected", "KSh —");
+        setText("groupGoalRemaining", "KSh —");
+        setText("groupGoalPercent", "—");
+        setText("groupGoalMemberCount", "—");
+        setText("groupGoalAverage", "KSh —");
+
+        const goalProgress = document.getElementById("groupGoalProgress");
+        if (goalProgress) goalProgress.style.width = "0%";
+        const goalComplete = document.getElementById("groupGoalComplete");
+        if (goalComplete) goalComplete.innerText = "Unable to load group goal";
     }
 }
+
+function renderContributionDaySummary(summary) {
+    const wednesday = Number(summary?.wednesday_collected || 0);
+    const saturday = Number(summary?.saturday_collected || 0);
+
+    const wednesdayEl = document.getElementById("wednesdayAmount");
+    const saturdayEl = document.getElementById("saturdayAmount");
+
+    if (wednesdayEl) {
+        wednesdayEl.innerText = "KSh " + wednesday.toLocaleString("en-KE") + " collected";
+    }
+    if (saturdayEl) {
+        saturdayEl.innerText = "KSh " + saturday.toLocaleString("en-KE") + " collected";
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function showContribute() {
     openMemberScreen("contributeScreen");
 }
@@ -695,6 +708,8 @@ function showContribute() {
 
 function showGroupGoal() {
     openMemberScreen("groupGoalScreen");
+    // Refresh the server-side group calculation every time the screen opens.
+    loadGroupGoal();
 }
 
 
@@ -2349,54 +2364,26 @@ function getMostRecentWeekdayDate(value, targetDay) {
 
 async function loadContributionDayTotals() {
     try {
-        const { data, error } = await db
-            .from("contributions")
-            .select("amount, created_at");
-
-        if (error) {
-            console.error("Contribution day error:", error);
-            return;
+        // Prefer the same authoritative server-side summary used by Group Goal.
+        let summary = window.rihulaGroupGoalSummary;
+        if (!summary) {
+            await window.waitForRihulaDb();
+            const { data, error } = await db.rpc("get_group_goal_summary");
+            if (error) throw error;
+            summary = data || {};
+            window.rihulaGroupGoalSummary = summary;
         }
 
-        const contributions = data || [];
-        const now = new Date();
-
-        const currentSaturday = getMostRecentWeekdayDate(now, 6);
-        const currentWednesday = getMostRecentWeekdayDate(now, 3);
-
-        let wednesdayTotal = 0;
-        let saturdayTotal = 0;
-
-        contributions.forEach(item => {
-            const collectionDate = getContributionCollectionDate(item.created_at);
-            if (!collectionDate) return;
-
-            const amount = Number(item.amount || 0);
-
-            if (collectionDate.getTime() === currentSaturday.getTime()) {
-                saturdayTotal += amount;
-            }
-
-            if (collectionDate.getTime() === currentWednesday.getTime()) {
-                wednesdayTotal += amount;
-            }
-        });
-
-        const wednesdayEl = document.getElementById("wednesdayAmount");
-        const saturdayEl = document.getElementById("saturdayAmount");
-
-        if (wednesdayEl) {
-            wednesdayEl.innerText = "KSh " + wednesdayTotal.toLocaleString() + " collected";
-        }
-
-        if (saturdayEl) {
-            saturdayEl.innerText = "KSh " + saturdayTotal.toLocaleString() + " collected";
-        }
-
+        renderContributionDaySummary(summary);
     } catch (error) {
         console.error("Contribution day error:", error);
+        const wednesdayEl = document.getElementById("wednesdayAmount");
+        const saturdayEl = document.getElementById("saturdayAmount");
+        if (wednesdayEl) wednesdayEl.innerText = "Unable to load";
+        if (saturdayEl) saturdayEl.innerText = "Unable to load";
     }
 }
+
 /* Android/browser Back is handled by openMemberScreen/popstate above. */
 
 function createSimplePdf(lines, title) {

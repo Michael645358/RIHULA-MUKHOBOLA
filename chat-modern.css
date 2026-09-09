@@ -1,0 +1,186 @@
+/* =========================================================
+   RIHULA COMMUNITY CHAT — modern mobile / WhatsApp-inspired UI
+   Isolated styles for the chat screen and standalone chat page.
+========================================================= */
+:root{--rihula-green:#0b6623;--rihula-green-2:#15803d;--chat-bg:#efeae2;--chat-mine:#dcf8c6;--chat-white:#fff;--chat-muted:#66736b}
+
+.chat-screen,
+.rihula-chat-page{
+  position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;
+  display:none;flex-direction:column;background:var(--chat-bg);z-index:10000;
+  overflow:hidden;padding:0!important;margin:0!important;
+}
+.chat-screen.active,.rihula-chat-page.active{display:flex!important}
+
+.chat-topbar,.rihula-chat-topbar{
+  height:68px;min-height:68px;box-sizing:border-box;background:#075e54;color:#fff;
+  display:flex;align-items:center;gap:12px;padding:8px 14px;box-shadow:0 1px 5px rgba(0,0,0,.2);z-index:3;
+}
+.chat-topbar .back-btn,.rihula-chat-topbar .back-btn{
+  position:static!important;inset:auto!important;width:44px;height:44px;flex:0 0 44px;
+  border:0;border-radius:50%;background:rgba(255,255,255,.13);color:#fff;font-size:24px;
+  display:flex;align-items:center;justify-content:center;box-shadow:none;cursor:pointer;transition:transform .16s ease,background .16s ease;
+}
+.chat-topbar .back-btn:active,.rihula-chat-topbar .back-btn:active{transform:scale(.9);background:rgba(255,255,255,.23)}
+.chat-title-wrap{min-width:0;display:flex;align-items:center;gap:10px;flex:1}
+.chat-title-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#fff2;border:1px solid #ffffff44}
+.chat-title-main{min-width:0}.chat-title-main strong{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-title-main small{display:block;margin-top:2px;font-size:11px;opacity:.82}
+.chat-top-action{width:40px;height:40px;border:0;background:transparent;color:#fff;font-size:20px;border-radius:50%;cursor:pointer}.chat-top-action:active{background:#ffffff22}
+
+.online-members{
+  display:flex!important;gap:12px;align-items:center;overflow-x:auto;overflow-y:hidden;flex:0 0 auto;
+  min-height:88px;max-height:92px;padding:8px 12px;box-sizing:border-box;background:#fff;
+  border-bottom:1px solid #dfe7e1;scrollbar-width:none;box-shadow:0 1px 3px rgba(0,0,0,.06);z-index:2;
+}
+.online-members::-webkit-scrollbar{display:none}
+.online-members:empty{display:none!important}
+.online-members-label{font-size:10px;font-weight:800;color:#087f3e;letter-spacing:.05em;text-transform:uppercase;align-self:flex-start;position:absolute;left:12px;top:73px;display:none}
+.online-user{position:relative;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-width:58px!important;width:58px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;cursor:pointer;transition:transform .16s ease}
+.online-user:active{transform:scale(.92)}
+.online-user>div:first-child{position:relative!important;width:54px!important;height:54px!important}
+.online-avatar{width:54px!important;height:54px!important;border-radius:50%!important;object-fit:cover!important;border:2px solid #e4ece7!important;background:#eee!important;display:block!important}
+.online-user .online-dot{position:absolute;right:-1px;bottom:1px;width:12px;height:12px;background:#22c55e;border:2px solid #fff;border-radius:50%;box-sizing:border-box}
+.online-user small{font-size:10px!important;max-width:58px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:#37443c!important;font-weight:700!important}
+
+#chatMessages,.chat-container{
+  flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+  padding:14px 10px 14px!important;box-sizing:border-box;scroll-behavior:smooth;
+  background-color:var(--chat-bg);
+  background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:12px 12px;
+}
+#chatMessages{display:flex!important;flex-direction:column!important;gap:3px!important}
+.chat-message{position:relative;align-self:flex-start;max-width:min(84%,520px);padding:7px 9px 5px!important;margin:3px 4px!important;border-radius:9px!important;background:#fff!important;color:#1e2a24!important;box-shadow:0 1px 2px rgba(0,0,0,.12)!important;transition:transform .12s ease,box-shadow .12s ease;word-break:break-word}
+.chat-message::after{content:"";position:absolute;bottom:0;left:-6px;border-width:0 7px 7px 0;border-style:solid;border-color:transparent #fff transparent transparent}
+.chat-message.my-msg{align-self:flex-end;background:var(--chat-mine)!important}.chat-message.my-msg::after{left:auto;right:-6px;border-width:0 0 7px 7px;border-color:transparent transparent transparent var(--chat-mine)}
+.chat-message:active{transform:scale(.985);box-shadow:0 2px 6px rgba(0,0,0,.14)!important}
+.chat-header{display:flex!important;align-items:center!important;gap:7px!important;margin:0 0 3px!important}
+.chat-header .chat-avatar{width:27px!important;height:27px!important;border-radius:50%!important;object-fit:cover!important;flex:0 0 27px!important;border:1px solid #d8e3dc!important}
+.chat-header h4{margin:0!important;font-size:12px!important;color:#087f3e!important;font-weight:800!important}
+.my-msg .chat-header h4{color:#075e2b!important}
+.chat-message p{margin:1px 0 0!important;font-size:14px!important;line-height:1.42!important;white-space:pre-wrap!important}
+.chat-footer{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:4px!important;margin-top:3px!important;min-height:13px!important}
+.chat-time{font-size:9px!important;color:#66736b!important;line-height:1!important}
+.chat-status{font-size:12px!important;color:#2196f3!important;font-weight:800!important;line-height:1!important}
+.chat-audio{width:min(260px,100%)!important;height:36px!important;margin-top:4px!important}
+.chat-empty{text-align:center;padding:45px 20px;color:#68756d;font-size:13px}
+.chat-date-divider{align-self:center!important;margin:8px auto!important;padding:5px 10px!important;border-radius:12px!important;background:#d8dfd9!important;color:#59645e!important;font-size:10px!important;font-weight:700!important}
+
+.chat-input-area{
+  position:relative!important;left:auto!important;bottom:auto!important;width:100%!important;box-sizing:border-box!important;
+  display:flex!important;align-items:flex-end!important;gap:7px!important;padding:8px 8px max(8px,env(safe-area-inset-bottom))!important;
+  background:#f0f2f5!important;border-top:1px solid #d8ded9!important;z-index:4!important;flex:0 0 auto!important;
+}
+.chat-input-area textarea,#chatMessage{flex:1!important;min-height:42px!important;max-height:110px!important;resize:none!important;border:1px solid #d3dad5!important;border-radius:22px!important;padding:11px 14px!important;box-sizing:border-box!important;background:#fff!important;color:#1d2922!important;font:14px/1.35 Arial,sans-serif!important;outline:none!important;overflow-y:auto!important}
+.chat-input-area textarea:focus,#chatMessage:focus{border-color:#0b8b43!important;box-shadow:0 0 0 2px rgba(11,139,67,.1)!important}
+.send-btn,#recordBtn{width:46px!important;height:46px!important;min-width:46px!important;border:0!important;border-radius:50%!important;background:#0b7a38!important;color:#fff!important;font-size:20px!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;box-shadow:0 3px 8px rgba(0,0,0,.14)!important;transition:transform .15s ease,background .15s ease!important}
+.send-btn:active,#recordBtn:active{transform:scale(.88)!important}.send-btn:disabled{opacity:.55!important;transform:none!important}
+
+.chat-message .message-actions{display:flex;gap:6px;margin-top:6px;padding-top:5px;border-top:1px solid rgba(0,0,0,.06)}
+.chat-message .message-actions button{border:0;background:#ffffffaa;color:#526159;border-radius:8px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer}
+.chat-message .message-actions .danger{color:#b00020}
+.chat-recording{animation:rihulaPulse 1s infinite alternate}
+@keyframes rihulaPulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+
+.chat-scroll-bottom{position:absolute;right:76px;bottom:76px;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#087f3e;box-shadow:0 3px 12px #0002;z-index:5;display:none}
+
+/* Hide the global member bottom navigation while chat is open; chat owns the lower input bar. */
+body.rihula-chat-open .bottom-nav{display:none!important}
+body.rihula-chat-open{padding-bottom:0!important;overflow:hidden!important}
+
+/* Standalone chat page */
+.rihula-chat-page{position:relative!important;height:100dvh!important;display:flex!important}
+.rihula-chat-page .chat-input{position:relative!important;left:auto!important;bottom:auto!important;width:100%!important;box-sizing:border-box!important;display:flex!important;gap:8px!important;padding:8px max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom))!important;background:#f0f2f5!important;border-top:1px solid #d8ded9!important;z-index:4!important}
+.rihula-chat-page .chatInput{position:relative!important;left:auto!important;bottom:auto!important;width:100%!important;box-sizing:border-box!important;display:flex!important;gap:8px!important;padding:8px max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom))!important;background:#f0f2f5!important}
+.rihula-chat-page .chatInput input{min-width:0;padding:12px 15px!important;border:1px solid #d3dad5!important;border-radius:24px!important;background:#fff!important;font:14px Arial,sans-serif!important;outline:none!important}
+.rihula-chat-page .chatInput button{width:48px!important;min-width:48px!important;height:48px!important;padding:0!important;border-radius:50%!important;background:#0b7a38!important;font-size:0!important}
+.rihula-chat-page .chatInput button::before{content:"➤";font-size:20px}
+.rihula-chat-page #chatMessages{height:auto!important}
+
+@media(max-width:430px){
+  .chat-topbar,.rihula-chat-topbar{height:62px;min-height:62px;padding:7px 9px}.chat-title-avatar{width:40px;height:40px}.chat-title-main strong{font-size:16px}
+  .online-members{min-height:82px;max-height:86px;padding:7px 9px;gap:9px}.online-user{min-width:54px!important;width:54px!important}.online-user>div:first-child,.online-avatar{width:50px!important;height:50px!important}.chat-message{max-width:88%;margin-left:2px!important;margin-right:2px!important}
+}
+
+/* =========================================================
+   FINAL MOBILE OVERLAY FIX — Community Chat must own the
+   entire viewport when opened from member.html.
+========================================================= */
+html:has(#chatScreen.active),
+body.rihula-chat-open{
+  overflow:hidden!important;
+  height:100%!important;
+}
+
+body.rihula-chat-open > .bottom-nav,
+body.rihula-chat-open .bottom-nav{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+body.rihula-chat-open #chatScreen,
+#chatScreen.chat-screen.active,
+#chatScreen.active{
+  position:fixed!important;
+  inset:0!important;
+  top:0!important;
+  right:0!important;
+  bottom:0!important;
+  left:0!important;
+  width:100vw!important;
+  max-width:100vw!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:2147483000!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  background:var(--chat-bg)!important;
+}
+
+body.rihula-chat-open #dashboardScreen,
+body.rihula-chat-open #historyScreen,
+body.rihula-chat-open #announcementsScreen,
+body.rihula-chat-open #profileScreen,
+body.rihula-chat-open #leadersScreen,
+body.rihula-chat-open #groupMembersScreen,
+body.rihula-chat-open #groupGoalScreen,
+body.rihula-chat-open #contributeScreen,
+body.rihula-chat-open #aiScreen{
+  pointer-events:none!important;
+}
+
+body.rihula-chat-open #chatScreen .chat-topbar,
+body.rihula-chat-open #chatScreen .rihula-chat-topbar{
+  flex:0 0 62px!important;
+}
+
+body.rihula-chat-open #chatScreen #chatMessages,
+body.rihula-chat-open #chatScreen .chat-container{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+
+body.rihula-chat-open #chatScreen .chat-input-area{
+  flex:0 0 auto!important;
+  position:relative!important;
+  bottom:auto!important;
+  left:auto!important;
+  width:100%!important;
+  min-height:62px!important;
+  box-sizing:border-box!important;
+}
+
+@supports not (height: 100dvh){
+  body.rihula-chat-open #chatScreen{height:100vh!important;min-height:100vh!important;max-height:100vh!important}
+}

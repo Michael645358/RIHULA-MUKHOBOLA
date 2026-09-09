@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Member Dashboard</title>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20260906-navfix">
 
 <script src="popups.js?v=20260826-0835"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
 <link rel="stylesheet" href="rihula-modern-design.css">
-<link rel="stylesheet" href="rihula-v3-ui.css">
+<link rel="stylesheet" href="rihula-v3-ui.css?v=20260906-cardsfix">
+<link rel="stylesheet" href="chat-modern.css?v=20260909-chatfix2">
 </head>
 <body>
 
@@ -163,58 +164,22 @@
         </div>
     </section>
 
-    <!-- Latest announcement styled like a featured deal -->
-    <section class="featured-update">
-        <div class="featured-heading">
-            <h2>RIHULA Updates 🔥</h2>
-            <button onclick="showAnnouncements()">View all</button>
-        </div>
-        <div class="featured-card">
-            <div class="featured-icon">📢</div>
-            <div>
-                <span class="featured-label">Latest announcement</span>
-                <h3 id="dashboardAnnouncementTitle">Welcome to RIHULA Mukhobola</h3>
-                <p id="dashboardAnnouncementMessage">Stay updated with contributions, meetings and association news.</p>
-            </div>
-        </div>
+    <!-- Announcement & Achievements -->
+    <section class="member-two-action-boxes">
+        <button type="button"
+                class="member-two-action announcement-action"
+                onclick="showAnnouncements()"
+                aria-label="Open Announcement">
+            <span>Announcement</span>
+        </button>
+
+        <button type="button"
+                class="member-two-action achievement-action"
+                onclick="window.location.href='achievements.html'"
+                aria-label="Open Achievements">
+            <span>Achievements</span>
+        </button>
     </section>
-<!-- My Achievements -->
-<section class="member-achievements-preview">
-
-    <button
-        type="button"
-        class="member-achievements-card"
-        onclick="window.location.href='achievements.html'"
-        aria-label="Open My Achievements">
-
-        <div class="member-achievements-icon">
-            🏆
-        </div>
-
-        <div class="member-achievements-info">
-
-            <div class="member-achievements-heading">
-                <div>
-                    <h2>My Achievements</h2>
-                    <p id="dashboardAchievementProgress">
-                        Loading achievements...
-                    </p>
-                </div>
-
-                <span class="member-achievements-arrow">›</span>
-            </div>
-
-            <div
-                id="dashboardLatestAchievement"
-                class="member-achievements-latest">
-                Keep saving to unlock achievements.
-            </div>
-
-        </div>
-
-    </button>
-
-</section>
 
     <!-- Rank -->
     <section class="rankings dashboard-rank">
@@ -453,6 +418,14 @@
 
     </div>
 
+    <!-- Association Members photo overlay: intentionally INSIDE this screen -->
+    <div id="associationPhotoOverlay" class="association-photo-overlay" aria-hidden="true">
+        <div class="association-photo-viewer" role="dialog" aria-modal="true" aria-label="Member photo">
+            <button type="button" class="association-photo-close" onclick="closeAssociationPhoto()" aria-label="Close photo">×</button>
+            <img id="associationPhotoImage" src="" alt="Member photo" onclick="event.stopPropagation()">
+        </div>
+    </div>
+
 </div>
 <!-- GROUP GOAL SCREEN -->
 <div id="groupGoalScreen" class="modern-group-goal">
@@ -551,6 +524,36 @@
     </div>
 
 
+    <!-- Anonymous group statistics -->
+    <div class="goal-summary group-goal-member-summary">
+
+        <div class="goal-stat">
+            <span class="goal-stat-icon">👥</span>
+
+            <span class="goal-stat-label">
+                Members
+            </span>
+
+            <strong id="groupGoalMemberCount">
+                0
+            </strong>
+        </div>
+
+
+        <div class="goal-stat">
+            <span class="goal-stat-icon">🎯</span>
+
+            <span class="goal-stat-label">
+                Average goal
+            </span>
+
+            <strong id="groupGoalAverage">
+                KSh 0
+            </strong>
+        </div>
+
+    </div>
+
     <!-- Contribution Days -->
     <div class="contribution-days-card">
 
@@ -619,22 +622,26 @@
 <div id="chatScreen" class="chat-screen" style="display:none;">
 
     <div class="chat-topbar">
-        <button onclick="showDashboard()" class="back-btn">←</button>
-        <span>Community Chat</span>
+        <button onclick="showDashboard()" class="back-btn" aria-label="Back">←</button>
+        <div class="chat-title-wrap">
+            <img src="images/logo.jpg" class="chat-title-avatar" alt="RIHULA">
+            <div class="chat-title-main">
+                <strong>Community Chat</strong>
+                <small id="chatOnlineSummary">Association members</small>
+            </div>
+        </div>
+        <button type="button" class="chat-top-action" onclick="loadMessages();loadOnlineMembers();" aria-label="Refresh chat">↻</button>
     </div>
 
-    <div id="onlineMembers" class="online-members"></div>
+    <div id="onlineMembers" class="online-members" aria-label="Association members"></div>
 
-    <div id="chatMessages" class="chat-container">
-    </div>
+    <div id="chatMessages" class="chat-container" aria-live="polite"></div>
 
     <div class="chat-input-area">
-    <button id="recordBtn" onclick="startRecording()">🎤</button>
-
-    <textarea id="chatMessage"></textarea>
-
-    <button onclick="sendMessage()" class="send-btn">➤</button>
-</div>
+        <button id="recordBtn" type="button" onclick="startRecording()" aria-label="Record voice">🎤</button>
+        <textarea id="chatMessage" rows="1" maxlength="2000" placeholder="Type a message..." aria-label="Type a message"></textarea>
+        <button type="button" onclick="sendMessage()" class="send-btn" aria-label="Send message">➤</button>
+    </div>
 
 </div>
 
@@ -676,15 +683,19 @@
 <span>Savings</span>
 </div>
 
-<div onclick="showChat()" class="nav-item chat-nav">
-💬
-<span>Chat</span>
-<span id="unreadBadge" class="unread-badge">0</span>
+<div onclick="showContribute()" class="nav-item">
+➕
+<span>Contribute</span>
+</div>
+
+<div onclick="showGroupMembers()" class="nav-item">
+👥
+<span>Community</span>
 </div>
 
 <div onclick="showProfile()" class="nav-item">
 👤
-<span>Profile</span>
+<span>Account</span>
 </div>
 
 </nav>
@@ -714,7 +725,7 @@
 <script src="ai.js?v=20260826-0835"></script>
 
 
-<script src="member.js?v=20260901-language-v3"></script>
+<script src="member.js?v=20260909-group-goal-rpc-v1"></script>
 <script src="v22.js?v=20260826-0835"></script>
 
 <div id="memberStatusPopup" class="member-status-popup">
