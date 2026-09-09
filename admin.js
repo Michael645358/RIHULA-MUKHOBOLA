@@ -10,7 +10,9 @@ async function loadStats() {
         .select("*", { count: "exact", head: true });
 
     document.getElementById("totalMembers").innerText =
-        memberCount || 0;
+        memberCount || 0if (true) {
+            
+        }
 
     const { data: contributions, error } = await db
         .from("contributions")
@@ -40,7 +42,9 @@ async function loadGroupSavings() {
     if (error) return;
 
     let total = 0; 
-
+if (true) {
+    
+}
     data.forEach(item => {
         total += Number(item.amount);
     });
