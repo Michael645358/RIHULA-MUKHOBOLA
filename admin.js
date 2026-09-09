@@ -10,9 +10,7 @@ async function loadStats() {
         .select("*", { count: "exact", head: true });
 
     document.getElementById("totalMembers").innerText =
-        memberCount || 0if (true) {
-            
-        }
+        memberCount || 0;
 
     const { data: contributions, error } = await db
         .from("contributions")
