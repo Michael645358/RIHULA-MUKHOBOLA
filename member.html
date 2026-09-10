@@ -136,7 +136,9 @@
             <div><h2>Quick tools</h2><p>Useful actions without leaving your dashboard.</p></div>
         </div>
         <div class="r3-quick-grid">
-            <button type="button" onclick="showHistory()"><span>📜</span><strong>Statement</strong><small>View my history</small></button>
+            <button type="button" class="one-tap-statement-btn" onclick="downloadStatement(this)" aria-label="Download my statement in one tap">
+                <span>📥</span><strong>Download Statement</strong><small>One tap PDF</small>
+            </button>
             <button type="button" onclick="showGroupGoal()"><span>🎯</span><strong>Group Goal</strong><small>Track progress</small></button>
             <button type="button" onclick="location.href='achievements.html'"><span>🏆</span><strong>Badges</strong><small>See achievements</small></button>
             <button type="button" onclick="showAnnouncements()"><span>🔔</span><strong>Updates</strong><small>Latest news</small></button>
@@ -206,7 +208,7 @@
         ← Back
     </button>
 
-    <button onclick="downloadStatement()" class="btn">
+    <button type="button" id="historyDownloadStatementBtn" onclick="downloadStatement(this)" class="btn one-tap-statement-btn" aria-label="Download my statement">
         📥 Download Statement
     </button>
 

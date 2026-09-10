@@ -2480,8 +2480,9 @@ function saveStatementPdf(blob, fileName, pwaWindow) {
     setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
 }
 
-async function downloadStatement() {
-    const button = document.querySelector('[onclick="downloadStatement()"]');
+async function downloadStatement(triggerButton) {
+    // Use the exact button the member tapped, so the one-tap action always gives instant feedback.
+    const button = triggerButton || document.querySelector('.one-tap-statement-btn');
     const isPwa = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
     let pwaWindow = null;
 
@@ -2500,7 +2501,7 @@ async function downloadStatement() {
 
         if (button) {
             button.disabled = true;
-            button.innerText = "⏳ Preparing...";
+            button.innerText = "⏳ Preparing your PDF...";
         }
 
         const { data: contributions, error: contributionError } = await db
