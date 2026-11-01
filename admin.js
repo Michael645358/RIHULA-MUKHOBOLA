@@ -8,8 +8,9 @@ async function loadStats() {
     const { count: memberCount } = await db
         .from("members")
         .select("*", { count: "exact", head: true });
-    const totalMembers = document.getElementById("totalMembers");
-    if (totalMembers) totalMembers.innerText = memberCount || 0;
+
+    document.getElementById("totalMembers").innerText =
+        memberCount || 0;
 
     const { data: contributions, error } = await db
         .from("contributions")
@@ -37,8 +38,12 @@ async function loadGroupSavings() {
         .select("amount");
 
     if (error) return;
-    let total = 0;
-    (data || []).forEach(item => {
+
+    let total = 0; 
+if (true) {
+    
+}
+    data.forEach(item => {
         total += Number(item.amount);
     });
 
