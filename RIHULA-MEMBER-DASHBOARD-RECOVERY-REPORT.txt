@@ -1,0 +1,33 @@
+RIHULA MEMBER DASHBOARD RECOVERY — 1 NOVEMBER 2026
+
+WHAT WAS WRONG
+- member.html loads member.js.
+- The active member.js in the supplied ZIP was only the M-PESA payment handler (about 7 KB).
+- The existing member.js.bak contained the member dashboard application code (about 56 KB), including loadMemberData(), navigation, profile, history, announcements, goals, ranking and member activity functions.
+- Because the dashboard code was not in the active member.js, the member page could show its shell/navigation without loading the expected dashboard logic.
+
+WHAT WAS CHANGED
+- Restored the dashboard code from the ZIP's own member.js.bak into member.js.
+- Preserved the existing M-PESA handler and attached it after the restored dashboard code.
+- Improved post-payment refresh to call loadMemberData() so it refreshes the member's history, savings, collection periods, rank and group goal using the logged-in member context.
+- Added clearer UI text for common Safaricom result codes when the status service returns them.
+- Updated the member.js cache-busting version in member.html.
+- Bumped the service-worker cache name so older cached frontend assets are retired.
+- Added RIHULA-GET-MEMBER-FINANCE-404-FIX.sql because the frontend calls get_member_finance(p_phone), but the supplied ZIP alone cannot deploy that function to Supabase.
+
+NOT CHANGED
+- Supabase URL or publishable key.
+- Authentication setup, database tables, RLS policies, existing member/admin pages or styles.
+- Existing member dashboard layout and app navigation.
+- M-PESA Edge Function source or Daraja secrets (these are not included in the ZIP).
+
+IMPORTANT M-PESA LIMITATION
+- The frontend currently calls a separate Supabase Edge Function named rehula-mpesa-status to poll the transaction result.
+- That function's source/deployment configuration was not present in this ZIP, so this package cannot verify that it is deployed or that it returns status/resultCode/resultDescription fields.
+- Until the status endpoint is available and returns a final confirmation, the page correctly must not claim a payment succeeded just because an STK prompt was sent.
+
+DEPLOYMENT
+1. Replace the website files with the ZIP contents and push them to GitHub Pages.
+2. In Supabase SQL Editor, run RIHULA-GET-MEMBER-FINANCE-404-FIX.sql to resolve the missing get_member_finance(p_phone) RPC if it has not already been created.
+3. Open the member page again after the GitHub Pages deployment. If the PWA still shows the old page, close it fully and reopen it so the updated service worker can activate.
+4. Test the member dashboard first. Then test M-PESA using a small amount only after confirming the status Edge Function is deployed.

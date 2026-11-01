@@ -1,5 +1,5 @@
 /* RIHULA service worker: resilient cache installation and offline fallback. */
-const CACHE = 'rihula-v13-2026-10-31-mpesa-fix';
+const CACHE = 'rihula-v14-2026-11-01-dashboard-recovery';
 const CORE = [
   './', './index.html', './offline.html', './style.css',
   './rihula-modern-design.css', './rihula-v3-ui.css',
