@@ -6,9 +6,6 @@ async function addMember() {
 const phone =
     document.getElementById("memberPhone").value.trim();
 
-const password =
-    document.getElementById("memberPassword").value;
-
 const answer1 =
     document.getElementById("answer1").value;
 
@@ -28,7 +25,6 @@ const idNumber =
                 {
     name: name,
     phone: phone,
-    password: password,
     answer1: answer1,
     answer2: answer2,
     id_number: idNumber,

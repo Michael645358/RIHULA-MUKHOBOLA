@@ -6,7 +6,8 @@
 create extension if not exists pgcrypto;
 
 -- The current project already uses the legacy members.password field.
--- This bridge keeps that field for compatibility with the existing member dashboard.
+-- Compatibility bridge only. Passwords created/changed through these functions are bcrypt-hashed.
+-- Existing plain-text passwords remain a migration risk until members reset them.
 
 create or replace function public.rihula_custom_register(
   p_name text,
@@ -55,7 +56,7 @@ begin
   end if;
 
   insert into public.members (name, phone, email, password, role, status, online)
-  values (trim(p_name), v_phone, v_email, p_password, 'member', 'pending', false)
+  values (trim(p_name), v_phone, v_email, crypt(p_password, gen_salt('bf')), 'member', 'pending', false)
   returning to_jsonb(public.members.*) - 'password' into v_member;
 
   return jsonb_build_object('success',true,'member',v_member,'message','Registration successful.');
@@ -95,7 +96,7 @@ begin
     lower(coalesce(m.email,'')) = v_login
     or regexp_replace(coalesce(m.phone,''),'[^0-9]','','g') = regexp_replace(v_phone,'[^0-9]','','g')
   )
-  and coalesce(m.password,'') = coalesce(p_password,'')
+  and (m.password = p_password OR (m.password LIKE '$2%' AND m.password = crypt(p_password, m.password)))
   limit 1;
 
   if v_member is null then
@@ -122,9 +123,9 @@ begin
   end if;
 
   update public.members
-  set password = p_new_password
+  set password = crypt(p_new_password, gen_salt('bf'))
   where id = p_member_id
-    and password = p_current_password;
+    and (password = p_current_password OR (password LIKE '$2%' AND password = crypt(p_current_password, password)));
 
   if not found then
     return jsonb_build_object('success',false,'message','Current password is incorrect.');
@@ -139,7 +140,7 @@ revoke all on function public.rihula_custom_login(text,text) from public;
 revoke all on function public.rihula_custom_change_password(bigint,text,text) from public;
 grant execute on function public.rihula_custom_register(text,text,text,text) to anon, authenticated;
 grant execute on function public.rihula_custom_login(text,text) to anon, authenticated;
-grant execute on function public.rihula_custom_change_password(bigint,text,text) to anon, authenticated;
+revoke all on function public.rihula_custom_change_password(bigint,text,text) from anon, authenticated;
 
 -- IMPORTANT SECURITY NOTE:
 -- This is a temporary compatibility bridge because the current project keeps
