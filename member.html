@@ -595,7 +595,7 @@
             <input id="mpesaPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712345678" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 12px;border:1px solid #b9c8be;border-radius:8px;">
             <label for="mpesaAmount">Contribution amount (KSh)</label>
             <input id="mpesaAmount" type="number" min="1" max="250000" step="1" inputmode="numeric" placeholder="e.g. 500" style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 12px;border:1px solid #b9c8be;border-radius:8px;">
-            <button id="mpesaPayButton" type="button" class="btn" onclick="window.requestRihulaMpesaPayment()">Pay with M-Pesa</button>
+            <button id="mpesaPayButton" type="button" class="btn" onclick="requestRihulaMpesaPayment()">Pay with M-Pesa</button>
             <p id="mpesaPaymentStatus" role="status" aria-live="polite"></p>
         </div>
 
@@ -723,7 +723,7 @@
 <script src="ai.js?v=20260826-0835"></script>
 
 
-<script src="member.js?v=20261101-dashboard-recovery"></script>
+<script src="member.js?v=20261028-mpesa-auto-refresh-v2"></script>
 <script src="v22.js?v=20260826-0835"></script>
 
 <div id="memberStatusPopup" class="member-status-popup">
