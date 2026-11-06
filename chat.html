@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#075e54">
+<title>Community Chat</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
+<link rel="stylesheet" href="chat-modern.css?v=20260908-chatfix">
+</head>
+<body>
+<div class="rihula-chat-page">
+  <div class="rihula-chat-topbar">
+    <button type="button" class="back-btn" onclick="history.back()" aria-label="Back">←</button>
+    <div class="chat-title-wrap">
+      <img src="images/logo.jpg" class="chat-title-avatar" alt="RIHULA">
+      <div class="chat-title-main">
+        <strong>Community Chat</strong>
+        <small id="chatOnlineSummary">Association members</small>
+      </div>
+    </div>
+    <button type="button" class="chat-top-action" onclick="loadMessages(true);loadOnlineMembers();" aria-label="Refresh">↻</button>
+  </div>
+  <div id="onlineMembers" class="online-members" aria-label="Association members"></div>
+  <div id="chatMessages" class="chat-container" aria-live="polite"></div>
+  <div class="chatInput">
+    <input id="chatMessage" maxlength="2000" autocomplete="off" placeholder="Type a message..." aria-label="Type a message">
+    <button type="button" onclick="sendMessage()" aria-label="Send message">Send</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
+<script src="supabase.js?v=20260908-chatfix"></script>
+<script src="rihula-db-guard.js?v=20260908-chatfix"></script>
+<script src="chat.js?v=20260908-chatfix"></script>
+<script src="popups.js?v=20260908-chatfix"></script>
+</body>
+</html>

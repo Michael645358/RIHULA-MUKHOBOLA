@@ -8,16 +8,9 @@
     else if (value.startsWith("254")) value = "0" + value.slice(3);
     return value;
   }
-  function safeMemberForStorage(member) {
-    if (!member || typeof member !== "object") return member;
-    const safe = { ...member };
-    ["password", "answer1", "answer2", "id_number", "national_id", "security_answer", "security_question_answer", "pin", "otp", "access_token", "refresh_token"].forEach(key => delete safe[key]);
-    return safe;
-  }
   function saveSession(member) {
-    const safe = safeMemberForStorage(member);
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ member_id: safe.id, auth_id: safe.auth_id, created_at: new Date().toISOString() }));
-    localStorage.setItem("loggedUser", JSON.stringify(safe));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ member_id: member.id, auth_id: member.auth_id, created_at: new Date().toISOString() }));
+    localStorage.setItem("loggedUser", JSON.stringify(member));
   }
   async function clearSession() {
     localStorage.removeItem(SESSION_KEY); localStorage.removeItem("loggedUser");
@@ -83,7 +76,7 @@
 
     const { data: member, error: memberError } = await db
       .from("members")
-      .select("id,auth_id,name,phone,email,role,status,online,last_seen,photo_url,goal,is_member,is_admin")
+      .select("*")
       .eq("auth_id", data.user.id)
       .single();
 
@@ -91,7 +84,7 @@
     if (member.is_member !== true) throw new Error("This account does not have member access.");
 
     saveSession(member);
-    return safeMemberForStorage(member);
+    return member;
   }
   window.RihulaCustomAuth = { normalizeKenyanPhone, registerMember, loginMember, saveSession, clearSession, getSessionMember };
 

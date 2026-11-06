@@ -57,7 +57,6 @@ if (true) {
 }
 
 window.onload = function () {
-
     loadStats();
     loadOnlineCount();
     loadGroupSavings();
@@ -65,13 +64,41 @@ window.onload = function () {
     loadAnnouncements();
     loadAnnouncementsList();
     loadLeadership();
-    loadLeaderboard(); 
+    loadLeaderboard();
 
-    
-    if (document.getElementById("membersBody")) {
-        loadMembers();
-    }
+    if (document.getElementById("membersBody")) loadMembers();
 };
+
+// Keep admin financial summaries fresh while the admin page is open. This is
+// read-only: it never inserts or edits contributions. Avoid background refresh
+// while hidden and prevent overlapping refresh cycles on slow mobile networks.
+(function setupRihulaAdminFinanceAutoRefresh() {
+    if (window.__rihulaAdminFinanceRefreshInstalled) return;
+    window.__rihulaAdminFinanceRefreshInstalled = true;
+    let refreshing = false;
+
+    async function refreshFinancialViews() {
+        if (refreshing || document.visibilityState === "hidden" || !window.db) return;
+        refreshing = true;
+        try {
+            const tasks = [];
+            if (typeof window.loadStats === "function") tasks.push(window.loadStats());
+            if (typeof window.loadGroupSavings === "function") tasks.push(window.loadGroupSavings());
+            if (typeof window.loadLeaderboard === "function") tasks.push(window.loadLeaderboard());
+            if (typeof window.loadRecentActivity === "function") tasks.push(window.loadRecentActivity());
+            await Promise.allSettled(tasks);
+        } finally {
+            refreshing = false;
+        }
+    }
+
+    window.addEventListener("load", () => {
+        window.setInterval(refreshFinancialViews, 20000);
+    });
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") refreshFinancialViews();
+    });
+})();
 async function editMember() {
 
     const phone =
@@ -651,64 +678,33 @@ if (onlineMembers) {
 }
 
 async function loadLeaderboard() {
+    const container = document.getElementById("leaderboardContainer");
+    if (!container) return;
 
-    console.log("Leaderboard function running");
+    try {
+        // Use the same server-side net-savings leaderboard as the member finance
+        // dashboard, so withdrawals affect rankings consistently in both places.
+        const { data, error } = await db.rpc("get_finance_leaderboard");
+        if (error) throw error;
 
-    const container =
-        document.getElementById("leaderboardContainer");
+        const rankings = (data || []).map(row => ({
+            name: String(row.member_name || "Member"),
+            total: Number(row.net_savings || 0),
+            rank: Number(row.member_rank || 0)
+        }));
 
-    if (!container) {
-        console.log("Container not found");
-        return;
+        container.innerHTML = rankings.length ? rankings.map((member, index) => {
+            const rank = member.rank > 0 ? member.rank : index + 1;
+            const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "#" + rank;
+            const safeName = member.name.replace(/[&<>"']/g, char => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }[char]));
+            return `<div class="leaderboard-card"><h3>${medal} ${safeName}</h3><p>KSh ${member.total.toLocaleString("en-KE")}</p></div>`;
+        }).join("") : "<p>No members found.</p>";
+    } catch (error) {
+        console.error("Admin net-savings leaderboard could not load:", error);
+        container.innerHTML = "<p>Unable to load leaderboard. Please refresh and try again.</p>";
     }
-
-    console.log("Container found");
-
-    const { data: members } = await db
-        .from("members")
-        .select("*");
-
-    const rankings = [];
-
-    for (const member of members || []) {
-
-        const { data: contributions } = await db
-            .from("contributions")
-            .select("amount")
-            .eq("member_phone", member.phone);
-
-        let total = 0;
-
-        (contributions || []).forEach(item => {
-            total += Number(item.amount || 0);
-        });
-
-        rankings.push({
-            name: member.name,
-            total: total
-        });
-    }
-
-    rankings.sort((a, b) => b.total - a.total);
-
-    container.innerHTML = "";
-
-    rankings.forEach((member, index) => {
-
-        let medal = "";
-
-        if (index === 0) medal = "🥇";
-        else if (index === 1) medal = "🥈";
-        else if (index === 2) medal = "🥉";
-        else medal = "#" + (index + 1);
-
-        container.innerHTML += `
-        <div class="leaderboard-card">
-            <h3>${medal} ${member.name}</h3>
-            <p>KSh ${member.total.toLocaleString()}</p>
-        </div>
-        `;
-    });
 }
 async function loadHomeStats() {
 
